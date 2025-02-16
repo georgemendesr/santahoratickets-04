@@ -60,6 +60,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto px-4 py-8">
+        <div className="mb-8 flex justify-center">
+          <img 
+            src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
+            alt="Santa Hora" 
+            className="h-24 object-contain"
+          />
+        </div>
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 className="text-3xl font-bold">Meus Eventos</h1>
