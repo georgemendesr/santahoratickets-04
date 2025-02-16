@@ -12,6 +12,26 @@ const CreateEvent = () => {
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
+      // Se houver um arquivo de imagem, fazer o upload
+      const imageInput = document.getElementById("image") as HTMLInputElement;
+      const imageFile = imageInput?.files?.[0];
+      let imagePath = "";
+
+      if (imageFile) {
+        const fileName = `${crypto.randomUUID()}.${imageFile.name.split('.').pop()}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("event-images")
+          .upload(fileName, imageFile);
+
+        if (uploadError) {
+          console.error("Erro no upload:", uploadError);
+          throw new Error("Erro ao fazer upload da imagem");
+        }
+
+        imagePath = `event-images/${fileName}`;
+      }
+
       const eventData = {
         title: data.title,
         description: data.description,
@@ -20,7 +40,7 @@ const CreateEvent = () => {
         location: data.location,
         price: parseFloat(data.price),
         available_tickets: parseInt(data.available_tickets),
-        image: "event-images/a5a97e40-4b68-46da-83c8-7d95c4b280c8.jpg",
+        image: imagePath || "event-images/default-event.jpg", // Você pode definir uma imagem padrão
         status: "published" as const
       };
 
@@ -69,7 +89,7 @@ const CreateEvent = () => {
             onSubmit={onSubmit}
             isSubmitting={createEventMutation.isPending}
             submitText={createEventMutation.isPending ? "Criando evento..." : "Criar Evento"}
-            showImageField={false}
+            showImageField={true}
           />
         </div>
       </div>
