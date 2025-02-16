@@ -16,9 +16,11 @@ export function EventImage({ src, alt }: EventImageProps) {
 
   useEffect(() => {
     if (src) {
+      console.log('EventImage - Origem da imagem:', src);
       const url = supabase.storage
         .from('event-images')
         .getPublicUrl(src).data.publicUrl;
+      console.log('EventImage - URL pública gerada:', url);
       setImageUrl(url);
     }
   }, [src]);
@@ -34,6 +36,7 @@ export function EventImage({ src, alt }: EventImageProps) {
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
+            console.error('EventImage - Erro ao carregar imagem. URL tentada:', imageUrl);
             e.currentTarget.src = placeholderUrl;
           }}
         />
@@ -50,6 +53,7 @@ export function EventImage({ src, alt }: EventImageProps) {
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={(e) => {
+              console.error('EventImage (Dialog) - Erro ao carregar imagem. URL tentada:', imageUrl);
               e.currentTarget.src = placeholderUrl;
             }}
           />
