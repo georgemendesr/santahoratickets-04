@@ -9,6 +9,7 @@ export interface Event {
   price: number;
   image: string;
   available_tickets: number;
+  status?: 'published' | 'draft' | 'ended';
   created_at?: string;
 }
 
@@ -54,4 +55,3 @@ export interface Database {
     };
   };
 }
-

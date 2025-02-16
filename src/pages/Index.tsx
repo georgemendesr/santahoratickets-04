@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, Search, MapPin, Eye, Ticket } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Search, MapPin, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   
   const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
@@ -33,10 +35,27 @@ const Index = () => {
     },
   });
 
-  const filteredEvents = events?.filter(event => 
-    event.title.toLowerCase().includes(search.toLowerCase()) ||
-    event.location.toLowerCase().includes(search.toLowerCase())
-  );
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "published":
+        return <Badge className="bg-green-500">Publicado</Badge>;
+      case "draft":
+        return <Badge variant="secondary">Rascunho</Badge>;
+      case "ended":
+        return <Badge variant="destructive">Encerrado</Badge>;
+      default:
+        return <Badge variant="outline">Status desconhecido</Badge>;
+    }
+  };
+
+  const filteredEvents = events?.filter(event => {
+    const matchesSearch = 
+      event.title.toLowerCase().includes(search.toLowerCase()) ||
+      event.location.toLowerCase().includes(search.toLowerCase());
+    
+    if (statusFilter === "all") return matchesSearch;
+    return matchesSearch && event.status === statusFilter;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
@@ -55,7 +74,6 @@ const Index = () => {
                 />
               </div>
               <Button onClick={() => navigate("/validate")}>
-                <Ticket className="mr-2" />
                 Validar Ingressos
               </Button>
               <Button onClick={() => navigate("/create-event")}>
@@ -93,9 +111,7 @@ const Index = () => {
                   filteredEvents?.map((event) => (
                     <TableRow key={event.id}>
                       <TableCell>
-                        <div className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-green-100 text-green-800">
-                          Publicado
-                        </div>
+                        {getStatusBadge(event.status || 'published')}
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{event.title}</div>
