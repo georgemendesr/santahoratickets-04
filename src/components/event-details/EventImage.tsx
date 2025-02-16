@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventImageProps {
   src: string;
@@ -12,7 +13,17 @@ export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
 
-  console.log('URL da imagem (EventImage):', src); // Adicionando log para debug
+  // Tratando a URL da imagem da mesma forma que no EventCard
+  const fileName = src.startsWith('event-images/') 
+    ? src.replace('event-images/', '')
+    : src;
+    
+  const imageUrl = supabase.storage
+    .from('event-images')
+    .getPublicUrl(fileName)
+    .data?.publicUrl;
+
+  console.log('URL da imagem (EventImage):', imageUrl, 'Arquivo original:', src);
 
   return (
     <>
@@ -21,7 +32,7 @@ export function EventImage({ src, alt }: EventImageProps) {
         className="relative group cursor-zoom-in overflow-hidden rounded-xl shadow-lg"
       >
         <img
-          src={src}
+          src={imageUrl}
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
@@ -37,7 +48,7 @@ export function EventImage({ src, alt }: EventImageProps) {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
           <img
-            src={src}
+            src={imageUrl}
             alt={alt}
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
