@@ -10,7 +10,7 @@ const testEvents = [
     location: "Allianz Parque, São Paulo",
     price: 850.00,
     available_tickets: 15,
-    image: "https://i.imgur.com/ZLjuBUH.jpeg",
+    image: "/placeholder.svg",
     status: "published"
   },
   {
@@ -21,7 +21,7 @@ const testEvents = [
     location: "Teatro Municipal, Rio de Janeiro",
     price: 180.00,
     available_tickets: 150,
-    image: "https://i.imgur.com/1234567.jpeg",
+    image: "/placeholder.svg",
     status: "published"
   },
   {
@@ -32,7 +32,7 @@ const testEvents = [
     location: "Comedy Club, Curitiba",
     price: 90.00,
     available_tickets: 8,
-    image: "https://i.imgur.com/abcdefg.jpeg",
+    image: "/placeholder.svg",
     status: "published"
   },
   {
@@ -43,7 +43,7 @@ const testEvents = [
     location: "Studio Pro, São Paulo",
     price: 450.00,
     available_tickets: 25,
-    image: "https://i.imgur.com/hijklmn.jpeg",
+    image: "/placeholder.svg",
     status: "draft"
   },
   {
@@ -54,7 +54,7 @@ const testEvents = [
     location: "Expo Center, Belo Horizonte",
     price: 120.00,
     available_tickets: 5,
-    image: "https://i.imgur.com/opqrstu.jpeg",
+    image: "/placeholder.svg",
     status: "published"
   }
 ];
