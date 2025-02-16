@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@radix-ui/react-dialog";
 import { Image as ImageIcon } from "lucide-react";
 
 interface EventImageProps {
@@ -28,14 +28,18 @@ export function EventImage({ src, alt }: EventImageProps) {
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="!max-w-[90vw] !w-auto !p-0 !m-0">
+        <div className="fixed inset-0 z-50 bg-black/80" onClick={() => setIsOpen(false)} />
+        <div className="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]">
           <img
             src={src}
             alt={alt}
-            className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
-            onClick={() => setIsOpen(false)}
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
           />
-        </DialogContent>
+        </div>
       </Dialog>
     </>
   );
