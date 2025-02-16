@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Ticket, Gift, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Index() {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
@@ -25,31 +28,59 @@ export default function Index() {
 
   const currentEvent = events?.[0];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-8">
-        <div className="container mx-auto">
-          <div className="text-center">
-            <p>Carregando evento...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handlePurchase = () => {
+    if (!session) {
+      toast.error(
+        "É necessário fazer login para comprar pulseiras",
+        {
+          description: "Você será redirecionado para a página de login",
+          action: {
+            label: "Fazer Login",
+            onClick: () => navigate("/auth")
+          },
+          duration: 5000
+        }
+      );
+      return;
+    }
 
-  if (!currentEvent) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-8">
-        <div className="container mx-auto">
-          <div className="text-center mt-8">
-            <p className="text-lg text-muted-foreground">
-              Nenhum evento disponível no momento.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    // Criar preferência de pagamento
+    createPaymentPreference.mutate();
+  };
+
+  const createPaymentPreference = useMutation({
+    mutationFn: async () => {
+      if (!session?.user.id || !currentEvent) return null;
+
+      const { data, error } = await supabase
+        .from("payment_preferences")
+        .insert([
+          {
+            user_id: session.user.id,
+            event_id: currentEvent.id,
+            ticket_quantity: 1,
+            total_amount: currentEvent.price,
+            init_point: "URL_DO_CHECKOUT",
+            status: "pending"
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data) {
+        toast.success("Pedido criado com sucesso!");
+        navigate("/");
+      }
+    },
+    onError: (error) => {
+      console.error("Erro ao criar preferência de pagamento:", error);
+      toast.error("Erro ao processar pedido. Por favor, tente novamente.");
+    }
+  });
 
   const getLowStockAlert = (availableTickets: number) => {
     if (availableTickets <= 5 && availableTickets > 0) {
@@ -68,6 +99,32 @@ export default function Index() {
     }
     return null;
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+        <div className="container mx-auto">
+          <div className="text-center">
+            <p>Carregando evento...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentEvent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+        <div className="container mx-auto">
+          <div className="text-center mt-8">
+            <p className="text-lg text-muted-foreground">
+              Nenhum evento disponível no momento.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
@@ -93,7 +150,16 @@ export default function Index() {
               </div>
               <div className="p-8 space-y-6 flex flex-col justify-between">
                 <div className="space-y-4">
-                  <h2 className="text-3xl font-bold">{currentEvent.title}</h2>
+                  <div className="flex justify-between items-start">
+                    <h2 className="text-3xl font-bold">{currentEvent.title}</h2>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate(`/event/${currentEvent.id}`)}
+                    >
+                      Ver detalhes
+                    </Button>
+                  </div>
                   <p className="text-muted-foreground">{currentEvent.description}</p>
                   
                   <div className="space-y-2">
@@ -120,12 +186,12 @@ export default function Index() {
                   
                   <Button 
                     size="lg"
-                    className="w-full"
-                    onClick={() => navigate(`/event/${currentEvent.id}`)}
-                    disabled={currentEvent.available_tickets === 0}
+                    className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-semibold shadow-lg"
+                    onClick={handlePurchase}
+                    disabled={currentEvent.available_tickets === 0 || createPaymentPreference.isPending}
                   >
                     <Ticket className="mr-2 h-5 w-5" />
-                    Comprar Pulseira
+                    {createPaymentPreference.isPending ? "Processando..." : "Comprar Pulseira"}
                   </Button>
                 </div>
               </div>
