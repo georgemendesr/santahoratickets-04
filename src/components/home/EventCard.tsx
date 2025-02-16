@@ -1,4 +1,3 @@
-
 import { Event } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Ticket } from "lucide-react";
@@ -21,16 +20,12 @@ export function EventCard({
 }: EventCardProps) {
   const navigate = useNavigate();
   
-  // Remove 'public/' do início do caminho se existir
-  const imagePath = event.image.replace(/^public\//, '');
-
+  console.log('EventCard - carregando imagem:', event.image);
   const { data } = supabase.storage
     .from('event-images')
-    .getPublicUrl(imagePath);
+    .getPublicUrl(event.image);
 
   const imageUrl = data?.publicUrl;
-  console.log('EventCard - image original:', event.image);
-  console.log('EventCard - image limpo:', imagePath);
   console.log('EventCard - URL gerada:', imageUrl);
 
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
@@ -44,7 +39,7 @@ export function EventCard({
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
-              console.error('Erro ao carregar imagem:', imagePath, 'URL tentada:', imageUrl);
+              console.error('Erro ao carregar imagem:', event.image, 'URL tentada:', imageUrl);
               e.currentTarget.src = placeholderUrl;
             }}
           />

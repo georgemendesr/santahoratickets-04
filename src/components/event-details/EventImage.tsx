@@ -16,14 +16,11 @@ export function EventImage({ src, alt }: EventImageProps) {
 
   useEffect(() => {
     if (src) {
-      // Limpar o path da mesma forma que o EventCard
-      const cleanPath = src.replace(/^public\//, '');
-      console.log('Path original:', src);
-      console.log('Path limpo:', cleanPath);
+      console.log('Tentando carregar imagem:', src);
       
       const url = supabase.storage
         .from('event-images')
-        .getPublicUrl(cleanPath).data.publicUrl;
+        .getPublicUrl(src).data.publicUrl;
       
       console.log('URL pública gerada:', url);
       setImageUrl(url);
@@ -41,7 +38,7 @@ export function EventImage({ src, alt }: EventImageProps) {
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            console.error('URL tentada:', imageUrl);
+            console.error('Erro ao carregar imagem:', imageUrl);
             e.currentTarget.src = placeholderUrl;
           }}
         />
@@ -58,7 +55,7 @@ export function EventImage({ src, alt }: EventImageProps) {
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={(e) => {
-              console.error('URL tentada:', imageUrl);
+              console.error('Erro ao carregar imagem:', imageUrl);
               e.currentTarget.src = placeholderUrl;
             }}
           />
