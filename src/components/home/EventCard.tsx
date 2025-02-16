@@ -4,12 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface EventCardProps {
   event: Event;
   batchInfo: { name: string; class: string; };
-  getLowStockAlert: (availableTickets: number) => JSX.Element | null;
   onPurchase: () => void;
   isPending: boolean;
 }
@@ -17,7 +15,6 @@ interface EventCardProps {
 export function EventCard({ 
   event, 
   batchInfo, 
-  getLowStockAlert, 
   onPurchase,
   isPending 
 }: EventCardProps) {
@@ -69,8 +66,6 @@ export function EventCard({
                 <span>{event.location}</span>
               </div>
             </div>
-            
-            {getLowStockAlert(event.available_tickets)}
           </div>
 
           <div className="space-y-4">
@@ -85,7 +80,7 @@ export function EventCard({
               size="lg"
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg transition-all duration-300"
               onClick={onPurchase}
-              disabled={event.available_tickets === 0 || isPending}
+              disabled={isPending}
             >
               <Ticket className="mr-2 h-5 w-5" />
               {isPending ? "Processando..." : "Comprar Pulseira"}

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -72,6 +73,17 @@ export default function Index() {
     mutationFn: async () => {
       if (!session?.user.id || !currentEvent) return null;
 
+      const { data: batch, error: batchError } = await supabase
+        .from("batches")
+        .select("*")
+        .eq("event_id", currentEvent.id)
+        .eq("status", "active")
+        .order("order_number", { ascending: true })
+        .limit(1)
+        .single();
+
+      if (batchError) throw batchError;
+
       const { data, error } = await supabase
         .from("payment_preferences")
         .insert([
@@ -79,7 +91,7 @@ export default function Index() {
             user_id: session.user.id,
             event_id: currentEvent.id,
             ticket_quantity: 1,
-            total_amount: currentEvent.price,
+            total_amount: batch.price,
             init_point: "URL_DO_CHECKOUT",
             status: "pending"
           }
@@ -115,24 +127,6 @@ export default function Index() {
       return { name: "2º Lote", class: "text-yellow-600" };
     }
     return { name: "3º Lote", class: "text-red-600" };
-  };
-
-  const getLowStockAlert = (availableTickets: number) => {
-    if (availableTickets <= 5 && availableTickets > 0) {
-      return (
-        <p className="text-sm text-yellow-600 font-medium">
-          Últimas unidades disponíveis!
-        </p>
-      );
-    }
-    if (availableTickets === 0) {
-      return (
-        <p className="text-sm text-red-600 font-medium">
-          Pulseiras esgotadas
-        </p>
-      );
-    }
-    return null;
   };
 
   if (isLoading) {
@@ -172,7 +166,6 @@ export default function Index() {
           <EventCard 
             event={currentEvent}
             batchInfo={batchInfo}
-            getLowStockAlert={getLowStockAlert}
             onPurchase={handlePurchase}
             isPending={createPaymentPreference.isPending}
           />
