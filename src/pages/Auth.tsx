@@ -54,6 +54,7 @@ export default function Auth() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const name = formData.get("name") as string;
+    const cpf = formData.get("cpf") as string;
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -62,6 +63,7 @@ export default function Auth() {
         options: {
           data: {
             name,
+            cpf: cpf.replace(/\D/g, ''), // Remove caracteres não numéricos
           },
         },
       });
@@ -123,8 +125,18 @@ export default function Auth() {
                   <Input
                     type="text"
                     name="name"
-                    placeholder="Digite seu nome"
+                    placeholder="Digite seu nome completo"
                     required
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="text"
+                    name="cpf"
+                    placeholder="Digite seu CPF"
+                    required
+                    pattern="\d{3}\.?\d{3}\.?\d{3}-?\d{2}"
+                    title="Digite um CPF válido: 000.000.000-00"
                   />
                 </div>
                 <div>
