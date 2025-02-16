@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ const EventDetails = () => {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
 
@@ -76,7 +78,7 @@ const EventDetails = () => {
 
   const createProfileMutation = useMutation({
     mutationFn: async () => {
-      const result = await createProfile(cpf, birthDate);
+      const result = await createProfile(cpf, birthDate, phone);
       if (!result) throw new Error("Erro ao criar perfil");
       return result;
     },
@@ -319,8 +321,10 @@ const EventDetails = () => {
           onOpenChange={setShowProfileDialog}
           cpf={cpf}
           birthDate={birthDate}
+          phone={phone}
           onCpfChange={setCpf}
           onBirthDateChange={setBirthDate}
+          onPhoneChange={setPhone}
           onSubmit={handleProfileSubmit}
           isPending={createProfileMutation.isPending}
         />
