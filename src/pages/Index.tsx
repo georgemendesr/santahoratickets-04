@@ -14,15 +14,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Search, MapPin, Eye } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar, Search, MapPin, Eye, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
-  const { data: events, isLoading } = useQuery({
+  const { data: events, isLoading, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -35,6 +43,31 @@ const Index = () => {
     },
   });
 
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Evento excluído com sucesso!");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error("Erro ao excluir evento");
+      console.error("Erro:", error);
+    },
+  });
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este evento?")) {
+      await deleteEventMutation.mutateAsync(eventId);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "published":
@@ -46,6 +79,18 @@ const Index = () => {
       default:
         return <Badge variant="outline">Status desconhecido</Badge>;
     }
+  };
+
+  const formatDate = (date: string, time: string) => {
+    const [year, month, day] = date.split("-");
+    return `${day}/${month}/${year} ${time}`;
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
   };
 
   const filteredEvents = events?.filter(event => {
@@ -70,7 +115,7 @@ const Index = () => {
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 className="text-3xl font-bold">Meus Eventos</h1>
-            <div className="flex gap-4 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
               <div className="relative flex-1 md:w-[300px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -80,6 +125,20 @@ const Index = () => {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="published">Publicado</SelectItem>
+                  <SelectItem value="draft">Rascunho</SelectItem>
+                  <SelectItem value="ended">Encerrado</SelectItem>
+                </SelectContent>
+              </Select>
               <Button onClick={() => navigate("/validate")}>
                 Validar Ingressos
               </Button>
@@ -97,20 +156,21 @@ const Index = () => {
                   <TableHead>Evento</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Local</TableHead>
-                  <TableHead>Vendas</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Ingressos</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                       Carregando eventos...
                     </TableCell>
                   </TableRow>
                 ) : filteredEvents?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                       Nenhum evento encontrado
                     </TableCell>
                   </TableRow>
@@ -126,7 +186,7 @@ const Index = () => {
                       <TableCell>
                         <div className="flex items-center text-muted-foreground">
                           <Calendar className="mr-2 h-4 w-4" />
-                          <span>{event.date} {event.time}</span>
+                          <span>{formatDate(event.date, event.time)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -136,16 +196,35 @@ const Index = () => {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {formatPrice(event.price)}
+                      </TableCell>
+                      <TableCell>
                         {event.available_tickets} disponíveis
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/event/${event.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/event/${event.id}`)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/edit-event/${event.id}`)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteEvent(event.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
