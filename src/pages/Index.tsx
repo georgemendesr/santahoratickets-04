@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -31,7 +32,7 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [recentPurchase, setRecentPurchase] = useState<{eventId: string, quantity: number} | null>(null);
   
-  const { data: events, isLoading, error } = useQuery({
+  const { data: events, isLoading, error, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
       console.log('Iniciando busca de eventos...');
