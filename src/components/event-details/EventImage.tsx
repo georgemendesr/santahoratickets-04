@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog } from "@radix-ui/react-dialog";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Image as ImageIcon } from "lucide-react";
 
 interface EventImageProps {
@@ -27,20 +27,22 @@ export function EventImage({ src, alt }: EventImageProps) {
         </div>
       </div>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <div className="fixed inset-0 z-50 bg-black/80" onClick={() => setIsOpen(false)} />
-        <div className="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]">
-          <img
-            src={src}
-            alt={alt}
-            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOpen(false);
-            }}
-          />
-        </div>
-      </Dialog>
+      <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[99] bg-black/80 backdrop-blur-sm" />
+          <Dialog.Content 
+            className="fixed left-[50%] top-[50%] z-[100] translate-x-[-50%] translate-y-[-50%] outline-none"
+            onPointerDownOutside={() => setIsOpen(false)}
+          >
+            <img
+              src={src}
+              alt={alt}
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }
