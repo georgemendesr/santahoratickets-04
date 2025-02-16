@@ -11,8 +11,10 @@ const CreateEvent = () => {
   const navigate = useNavigate();
 
   const createEventMutation = useMutation({
-    mutationFn: async (data: EventFormData & { image: string }) => {
-      // Garantir que todos os campos obrigatórios estejam presentes
+    mutationFn: async (data: EventFormData) => {
+      // Usar uma imagem placeholder do Unsplash
+      const placeholderImage = "photo-1514525253161-7a46d19cd819";
+      
       const eventData = {
         title: data.title,
         description: data.description,
@@ -21,7 +23,7 @@ const CreateEvent = () => {
         location: data.location,
         price: parseFloat(data.price),
         available_tickets: parseInt(data.available_tickets),
-        image: data.image,
+        image: placeholderImage,
         status: "published" as const
       };
 
@@ -42,38 +44,8 @@ const CreateEvent = () => {
   });
 
   const onSubmit = async (data: EventFormData) => {
-    const imageInput = document.getElementById("image") as HTMLInputElement;
-    const imageFile = imageInput.files?.[0];
-
-    if (!imageFile) {
-      toast.error("Por favor, selecione uma imagem");
-      return;
-    }
-
     try {
-      // Upload da imagem com nome sanitizado
-      const fileName = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-      console.log('Fazendo upload da imagem:', fileName);
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("event-images")
-        .upload(fileName, imageFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Erro no upload:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('Upload realizado com sucesso:', uploadData.path);
-
-      // Criar evento com o caminho completo da imagem incluindo o bucket
-      await createEventMutation.mutateAsync({
-        ...data,
-        image: `event-images/${uploadData.path}`, // Usando o caminho completo com o bucket
-      });
+      await createEventMutation.mutateAsync(data);
     } catch (error) {
       console.error('Erro completo:', error);
       toast.error("Erro ao criar evento");
@@ -100,6 +72,7 @@ const CreateEvent = () => {
             onSubmit={onSubmit}
             isSubmitting={createEventMutation.isPending}
             submitText={createEventMutation.isPending ? "Criando evento..." : "Criar Evento"}
+            showImageField={false}
           />
         </div>
       </div>
