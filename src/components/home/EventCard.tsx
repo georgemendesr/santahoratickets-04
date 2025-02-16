@@ -20,19 +20,12 @@ export function EventCard({
   isPending 
 }: EventCardProps) {
   const navigate = useNavigate();
-  // Removendo 'event-images/' do início da string apenas se ela existir
-  const fileName = event.image.startsWith('event-images/') 
-    ? event.image.replace('event-images/', '')
-    : event.image;
-    
   const imageUrl = supabase.storage
     .from('event-images')
-    .getPublicUrl(fileName)
+    .getPublicUrl(event.image)
     .data?.publicUrl;
 
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
-
-  console.log('URL da imagem:', imageUrl, 'Arquivo original:', event.image); // Log melhorado
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-purple-100 hover:shadow-xl transition-all duration-300">
@@ -43,7 +36,7 @@ export function EventCard({
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
-              console.error('Erro ao carregar imagem:', e.currentTarget.src);
+              console.error('Erro ao carregar imagem:', event.image);
               e.currentTarget.src = placeholderUrl;
             }}
           />

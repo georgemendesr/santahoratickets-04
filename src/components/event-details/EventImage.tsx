@@ -13,17 +13,10 @@ export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
 
-  // Tratando a URL da imagem da mesma forma que no EventCard
-  const fileName = src.startsWith('event-images/') 
-    ? src.replace('event-images/', '')
-    : src;
-    
   const imageUrl = supabase.storage
     .from('event-images')
-    .getPublicUrl(fileName)
+    .getPublicUrl(src)
     .data?.publicUrl;
-
-  console.log('URL da imagem (EventImage):', imageUrl, 'Arquivo original:', src);
 
   return (
     <>
@@ -36,7 +29,7 @@ export function EventImage({ src, alt }: EventImageProps) {
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            console.error('Erro ao carregar imagem (EventImage):', e.currentTarget.src);
+            console.error('Erro ao carregar imagem:', src);
             e.currentTarget.src = placeholderUrl;
           }}
         />
@@ -53,7 +46,7 @@ export function EventImage({ src, alt }: EventImageProps) {
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={(e) => {
-              console.error('Erro ao carregar imagem no modal:', e.currentTarget.src);
+              console.error('Erro ao carregar imagem no modal:', src);
               e.currentTarget.src = placeholderUrl;
             }}
           />
