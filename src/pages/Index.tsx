@@ -72,10 +72,12 @@ export default function Index() {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto p-8">
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Próximo Evento</h1>
-          <p className="text-xl text-muted-foreground">
-            Não perca esta experiência única
-          </p>
+          <img 
+            src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
+            alt="Logo Santinha" 
+            className="h-32 mx-auto mb-6"
+          />
+          <h1 className="text-4xl font-bold mb-4">Vem pro Santinha, Vem!</h1>
         </header>
 
         <div className="max-w-5xl mx-auto">
