@@ -16,9 +16,14 @@ export function EventImage({ src, alt }: EventImageProps) {
 
   useEffect(() => {
     if (src) {
+      // Limpar o path da mesma forma que o EventCard
+      const cleanPath = src.replace(/^public\//, '');
+      console.log('Path original:', src);
+      console.log('Path limpo:', cleanPath);
+      
       const url = supabase.storage
         .from('event-images')
-        .getPublicUrl(src).data.publicUrl;
+        .getPublicUrl(cleanPath).data.publicUrl;
       
       console.log('URL pública gerada:', url);
       setImageUrl(url);
