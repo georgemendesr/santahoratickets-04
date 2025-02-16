@@ -53,19 +53,11 @@ export default function Auth() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
-    const cpf = formData.get("cpf") as string;
 
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            name,
-            cpf: cpf.replace(/\D/g, ''), // Remove caracteres não numéricos
-          },
-        },
       });
 
       if (error) throw error;
@@ -121,24 +113,6 @@ export default function Auth() {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div>
-                  <Input
-                    type="text"
-                    name="name"
-                    placeholder="Digite seu nome completo"
-                    required
-                  />
-                </div>
-                <div>
-                  <Input
-                    type="text"
-                    name="cpf"
-                    placeholder="Digite seu CPF"
-                    required
-                    pattern="\d{3}\.?\d{3}\.?\d{3}-?\d{2}"
-                    title="Digite um CPF válido: 000.000.000-00"
-                  />
-                </div>
                 <div>
                   <Input
                     type="email"

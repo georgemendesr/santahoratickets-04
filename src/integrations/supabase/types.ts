@@ -331,7 +331,7 @@ export type Database = {
       user_profiles: {
         Row: {
           birth_date: string | null
-          cpf: string
+          cpf: string | null
           created_at: string
           id: string
           loyalty_points: number
@@ -339,7 +339,7 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
-          cpf: string
+          cpf?: string | null
           created_at?: string
           id: string
           loyalty_points?: number
@@ -347,7 +347,7 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
-          cpf?: string
+          cpf?: string | null
           created_at?: string
           id?: string
           loyalty_points?: number
