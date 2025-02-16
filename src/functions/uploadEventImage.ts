@@ -5,7 +5,7 @@ export async function uploadEventImage(file: File) {
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
-
+    
     const { data, error } = await supabase.storage
       .from('event-images')
       .upload(fileName, file);
