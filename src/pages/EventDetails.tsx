@@ -1,37 +1,21 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Edit, Share2, Ticket, ArrowLeft, Gift } from "lucide-react";
+import { ArrowLeft, Gift } from "lucide-react";
 import { Event } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Alert,
-  AlertDescription,
-} from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { EventHeader } from "@/components/event-details/EventHeader";
+import { EventInfo } from "@/components/event-details/EventInfo";
+import { EventActions } from "@/components/event-details/EventActions";
+import { ProfileDialog } from "@/components/event-details/ProfileDialog";
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -255,12 +239,7 @@ const EventDetails = () => {
           </div>
 
           <div className="space-y-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">{event.title}</h1>
-              <p className="text-lg text-muted-foreground">
-                {event.description}
-              </p>
-            </div>
+            <EventHeader event={event} />
 
             {referrer && (
               <Alert>
@@ -272,27 +251,7 @@ const EventDetails = () => {
 
             <Card>
               <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Data</p>
-                    <p className="font-medium">
-                      {format(new Date(event.date), "PPP", { locale: ptBR })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Horário</p>
-                    <p className="font-medium">{event.time}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Preço</p>
-                    <p className="font-medium">
-                      {new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(event.price)}
-                    </p>
-                  </div>
-                </div>
+                <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
 
                 <div>
                   <p className="text-sm text-muted-foreground">Local</p>
@@ -301,29 +260,13 @@ const EventDetails = () => {
 
                 {getLowStockAlert(event.available_tickets)}
 
-                <div className="flex gap-4">
-                  <Button 
-                    className="flex-1 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-semibold shadow-lg" 
-                    onClick={handlePurchase}
-                    disabled={event.available_tickets === 0}
-                  >
-                    <Ticket className="mr-2 h-4 w-4" />
-                    Comprar Pulseira
-                  </Button>
-                  <Button variant="outline" onClick={handleShare}>
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Indicar
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/edit/${event.id}`)}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </Button>
-                  )}
-                </div>
+                <EventActions
+                  event={event}
+                  isAdmin={isAdmin}
+                  onPurchase={handlePurchase}
+                  onShare={handleShare}
+                  onEdit={() => navigate(`/edit/${event.id}`)}
+                />
               </CardContent>
             </Card>
 
@@ -371,47 +314,16 @@ const EventDetails = () => {
           </div>
         </div>
 
-        <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Complete seu perfil</DialogTitle>
-              <DialogDescription>
-                Para continuar, precisamos de algumas informações adicionais.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="cpf">CPF</Label>
-                <Input
-                  id="cpf"
-                  value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
-                  placeholder="000.000.000-00"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="birthDate">Data de Nascimento</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={createProfileMutation.isPending}
-                className="w-full"
-              >
-                {createProfileMutation.isPending
-                  ? "Salvando..."
-                  : "Salvar Perfil"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <ProfileDialog
+          open={showProfileDialog}
+          onOpenChange={setShowProfileDialog}
+          cpf={cpf}
+          birthDate={birthDate}
+          onCpfChange={setCpf}
+          onBirthDateChange={setBirthDate}
+          onSubmit={handleProfileSubmit}
+          isPending={createProfileMutation.isPending}
+        />
       </div>
     </div>
   );
