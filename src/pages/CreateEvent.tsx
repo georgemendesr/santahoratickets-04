@@ -1,53 +1,17 @@
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import * as z from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { ArrowLeft, Upload } from "lucide-react";
-
-const schema = z.object({
-  title: z.string().min(1, "O título é obrigatório"),
-  description: z.string().min(1, "A descrição é obrigatória"),
-  date: z.string().min(1, "A data é obrigatória"),
-  time: z.string().min(1, "O horário é obrigatório"),
-  location: z.string().min(1, "O local é obrigatório"),
-  price: z.string().min(1, "O preço é obrigatório"),
-  available_tickets: z.string().min(1, "A quantidade de ingressos é obrigatória"),
-});
-
-type FormData = z.infer<typeof schema>;
+import { ArrowLeft } from "lucide-react";
+import { EventForm, type EventFormData } from "@/components/EventForm";
 
 const CreateEvent = () => {
   const navigate = useNavigate();
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      title: "",
-      description: "",
-      date: "",
-      time: "",
-      location: "",
-      price: "",
-      available_tickets: "",
-    },
-  });
 
   const createEventMutation = useMutation({
-    mutationFn: async (data: FormData & { image: string }) => {
+    mutationFn: async (data: EventFormData & { image: string }) => {
       const { error } = await supabase.from("events").insert([
         {
           ...data,
@@ -69,7 +33,7 @@ const CreateEvent = () => {
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: EventFormData) => {
     const imageInput = document.getElementById("image") as HTMLInputElement;
     const imageFile = imageInput.files?.[0];
 
@@ -118,149 +82,11 @@ const CreateEvent = () => {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título do evento</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Digite o título do evento" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Digite a descrição do evento"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horário</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Local</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Digite o local do evento" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço do ingresso</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="available_tickets"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quantidade de ingressos</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="100"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <FormLabel>Imagem do evento</FormLabel>
-                <div className="flex items-center gap-4">
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    className="cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={createEventMutation.isPending}
-              >
-                {createEventMutation.isPending ? (
-                  "Criando evento..."
-                ) : (
-                  "Criar Evento"
-                )}
-              </Button>
-            </form>
-          </Form>
+          <EventForm
+            onSubmit={onSubmit}
+            isSubmitting={createEventMutation.isPending}
+            submitText={createEventMutation.isPending ? "Criando evento..." : "Criar Evento"}
+          />
         </div>
       </div>
     </div>
