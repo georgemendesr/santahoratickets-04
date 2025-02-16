@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -20,8 +20,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
@@ -30,6 +33,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref');
   const navigate = useNavigate();
   const { session } = useAuth();
   const { profile, createProfile, createReferral } = useProfile(session?.user.id);
@@ -37,6 +42,7 @@ const EventDetails = () => {
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referrer, setReferrer] = useState<{ name: string } | null>(null);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ["event", id],
@@ -52,6 +58,35 @@ const EventDetails = () => {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    const fetchReferrer = async () => {
+      if (!referralCode) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("referrals")
+          .select(`
+            *,
+            user_profiles (
+              id,
+              cpf
+            )
+          `)
+          .eq("code", referralCode)
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setReferrer({ name: `CPF: ${data.user_profiles.cpf.slice(-4)}` });
+        }
+      } catch (error) {
+        console.error("Erro ao buscar informações do indicador:", error);
+      }
+    };
+
+    fetchReferrer();
+  }, [referralCode]);
 
   const createProfileMutation = useMutation({
     mutationFn: async () => {
@@ -172,6 +207,14 @@ const EventDetails = () => {
               </p>
             </div>
 
+            {referrer && (
+              <Alert>
+                <AlertDescription className="text-sm">
+                  Você está comprando através da indicação de usuário final {referrer.name}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Card>
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
@@ -204,7 +247,11 @@ const EventDetails = () => {
                 {getLowStockAlert(event.available_tickets)}
 
                 <div className="flex gap-4">
-                  <Button className="flex-1" onClick={() => navigate(`/buy/${event.id}`)} disabled={event.available_tickets === 0}>
+                  <Button 
+                    className="flex-1" 
+                    onClick={() => navigate(`/buy/${event.id}${referralCode ? `?ref=${referralCode}` : ''}`)} 
+                    disabled={event.available_tickets === 0}
+                  >
                     <Ticket className="mr-2 h-4 w-4" />
                     Comprar Ingresso
                   </Button>
