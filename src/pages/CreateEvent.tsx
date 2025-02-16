@@ -12,14 +12,22 @@ const CreateEvent = () => {
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData & { image: string }) => {
-      const { error } = await supabase.from("events").insert([
-        {
-          ...data,
-          price: parseFloat(data.price),
-          available_tickets: parseInt(data.available_tickets),
-          status: "published",
-        },
-      ]);
+      // Garantir que todos os campos obrigatórios estejam presentes
+      const eventData = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+        time: data.time,
+        location: data.location,
+        price: parseFloat(data.price),
+        available_tickets: parseInt(data.available_tickets),
+        image: data.image,
+        status: "published" as const
+      };
+
+      const { error } = await supabase
+        .from("events")
+        .insert([eventData]);
 
       if (error) throw error;
     },
@@ -43,6 +51,7 @@ const CreateEvent = () => {
     }
 
     try {
+      // Upload da imagem
       const fileName = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
       console.log('Fazendo upload da imagem:', fileName);
 
@@ -60,14 +69,14 @@ const CreateEvent = () => {
 
       console.log('Upload realizado com sucesso:', uploadData.path);
 
-      // Criar evento com o path da imagem
+      // Criar evento com todos os campos obrigatórios
       await createEventMutation.mutateAsync({
         ...data,
         image: `event-images/${uploadData.path}`,
       });
     } catch (error) {
       console.error('Erro completo:', error);
-      toast.error("Erro ao fazer upload da imagem");
+      toast.error("Erro ao criar evento");
     }
   };
 
