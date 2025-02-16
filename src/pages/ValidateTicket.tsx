@@ -1,86 +1,142 @@
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { QrReader } from 'react-qr-reader';
-import { toast } from 'sonner';
-import type { Ticket, Event } from '@/types';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { QrScanner } from "@yudiel/react-qr-scanner";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { type Ticket } from "@/types";
 
 const ValidateTicket = () => {
-  const [scanning, setScanning] = useState(false);
+  const navigate = useNavigate();
+  const [scannedTicketId, setScannedTicketId] = useState<string | null>(null);
 
-  const validateTicket = async (qrCode: string) => {
-    try {
-      // Buscar o ticket pelo QR code
-      const { data: ticket, error: ticketError } = await supabase
-        .from('tickets')
-        .select('*, events(*)')
-        .eq('qr_code', qrCode)
-        .single();
-
-      if (ticketError) throw ticketError;
+  const { data: ticket, isLoading } = useQuery({
+    queryKey: ['ticket', scannedTicketId],
+    queryFn: async () => {
+      if (!scannedTicketId) return null;
       
-      if (!ticket) {
-        toast.error('Ingresso não encontrado');
-        return;
-      }
+      const { data, error } = await supabase
+        .from('tickets')
+        .select(`
+          *,
+          events (
+            title,
+            date,
+            time,
+            location
+          )
+        `)
+        .eq('id', scannedTicketId)
+        .single();
+      
+      if (error) throw error;
+      return data as Ticket & { events: any };
+    },
+    enabled: !!scannedTicketId,
+  });
 
-      if (ticket.used) {
-        toast.error('Ingresso já utilizado');
-        return;
-      }
+  const handleValidateTicket = async () => {
+    if (!ticket || !scannedTicketId) return;
 
-      // Marcar o ticket como usado
-      const { error: updateError } = await supabase
+    try {
+      const { error } = await supabase
         .from('tickets')
         .update({ used: true })
-        .eq('id', ticket.id);
+        .eq('id', scannedTicketId);
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
-      toast.success('Ingresso validado com sucesso!');
-      setScanning(false);
+      toast.success("Ingresso validado com sucesso!");
     } catch (error) {
-      console.error('Erro ao validar ingresso:', error);
-      toast.error('Erro ao validar ingresso');
+      toast.error("Erro ao validar ingresso");
+      console.error('Erro:', error);
     }
+  };
+
+  const handleScan = (result: string | null) => {
+    if (result) {
+      setScannedTicketId(result);
+    }
+  };
+
+  const handleError = (error: any) => {
+    console.error("Erro no scanner:", error);
+    toast.error("Erro ao ler QR Code. Tente novamente.");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto space-y-6">
-          <h1 className="text-3xl font-bold text-center">Validação de Ingressos</h1>
+        <div className="mb-8">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          <h1 className="text-3xl font-bold">Validar Ingresso</h1>
+        </div>
 
-          {!scanning ? (
-            <Button 
-              className="w-full"
-              onClick={() => setScanning(true)}
-            >
-              Iniciar Scanner
-            </Button>
-          ) : (
-            <div className="space-y-4">
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <QrReader
-                  onResult={(result) => {
-                    if (result) {
-                      validateTicket(result.getText());
-                    }
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div className="bg-card rounded-lg p-4 border">
+              <h2 className="text-xl font-semibold mb-4">Scanner QR Code</h2>
+              <div className="aspect-square relative rounded-lg overflow-hidden">
+                <QrScanner
+                  onDecode={handleScan}
+                  onError={handleError}
+                  containerStyle={{
+                    width: "100%",
+                    height: "100%",
                   }}
-                  constraints={{ facingMode: 'environment' }}
                 />
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setScanning(false)}
-              >
-                Cancelar
-              </Button>
             </div>
-          )}
+          </div>
+
+          <div className="space-y-6">
+            {isLoading ? (
+              <div className="bg-card rounded-lg p-6 border">
+                <p className="text-center">Carregando informações do ingresso...</p>
+              </div>
+            ) : ticket ? (
+              <div className="bg-card rounded-lg p-6 border">
+                <div className="flex items-start justify-between">
+                  <h2 className="text-xl font-semibold">{ticket.events.title}</h2>
+                  {ticket.used ? (
+                    <XCircle className="h-6 w-6 text-destructive" />
+                  ) : (
+                    <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  )}
+                </div>
+
+                <div className="mt-4 space-y-2 text-muted-foreground">
+                  <p>Data: {ticket.events.date} às {ticket.events.time}</p>
+                  <p>Local: {ticket.events.location}</p>
+                  <p>Status: {ticket.used ? "Já utilizado" : "Válido"}</p>
+                </div>
+
+                <Button
+                  className="w-full mt-6"
+                  onClick={handleValidateTicket}
+                  disabled={ticket.used}
+                >
+                  {ticket.used ? "Ingresso já utilizado" : "Validar Ingresso"}
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-card rounded-lg p-6 border">
+                <p className="text-center text-muted-foreground">
+                  Aproxime um QR Code para validar o ingresso
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
