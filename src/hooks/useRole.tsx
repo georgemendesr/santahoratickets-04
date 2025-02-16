@@ -18,10 +18,10 @@ export function useRole(session: Session | null) {
 
       if (error) {
         console.error("Error fetching user role:", error);
-        return null;
+        return "user" as UserRole; // Fallback to user role
       }
 
-      return data?.role as UserRole;
+      return (data?.role ?? "user") as UserRole; // Return user role if no data
     },
     enabled: !!session?.user.id,
   });
