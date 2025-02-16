@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventCardProps {
   event: Event;
@@ -19,15 +20,22 @@ export function EventCard({
   isPending 
 }: EventCardProps) {
   const navigate = useNavigate();
+  const imageUrl = event.image.startsWith('event-images/') 
+    ? supabase.storage.from('event-images').getPublicUrl(event.image.replace('event-images/', '')).data?.publicUrl
+    : event.image;
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-purple-100 hover:shadow-xl transition-all duration-300">
       <div className="grid md:grid-cols-2 gap-6">
         <div className="h-[400px] relative overflow-hidden group">
           <img
-            src={event.image}
+            src={imageUrl || '/placeholder.svg'}
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              console.error('Erro ao carregar imagem:', e.currentTarget.src);
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
           <div className="absolute top-4 right-4">
             <span className={`px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm font-bold shadow-lg ${batchInfo.class}`}>
