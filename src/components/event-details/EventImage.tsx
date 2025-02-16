@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventImageProps {
   src: string;
