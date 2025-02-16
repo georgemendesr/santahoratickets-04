@@ -14,7 +14,7 @@ export function EventInfo({ event, getLowStockAlert }: EventInfoProps) {
       <div>
         <p className="text-sm text-muted-foreground">Data</p>
         <p className="font-medium">
-          {format(new Date(event.date), "PPP", { locale: ptBR })}
+          {format(new Date(event.date), "dd/MM/yyyy")}
         </p>
       </div>
       <div>
