@@ -34,6 +34,40 @@ export interface PaymentPreference {
   created_at?: string;
 }
 
+export interface UserProfile {
+  id: string;
+  cpf: string;
+  birth_date: string;
+  loyalty_points: number;
+  created_at?: string;
+}
+
+export interface LoyaltyPointsHistory {
+  id: string;
+  user_id: string;
+  points: number;
+  reason: string;
+  event_id?: string;
+  created_at?: string;
+}
+
+export interface Referral {
+  id: string;
+  referrer_id: string;
+  code: string;
+  event_id: string;
+  used_count: number;
+  created_at?: string;
+}
+
+export interface ReferralUse {
+  id: string;
+  referral_id: string;
+  user_id: string;
+  event_id: string;
+  created_at?: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -51,6 +85,26 @@ export interface Database {
         Row: PaymentPreference;
         Insert: Omit<PaymentPreference, 'id' | 'created_at'>;
         Update: Partial<Omit<PaymentPreference, 'id' | 'created_at'>>;
+      };
+      user_profiles: {
+        Row: UserProfile;
+        Insert: Omit<UserProfile, 'created_at'>;
+        Update: Partial<Omit<UserProfile, 'created_at'>>;
+      };
+      loyalty_points_history: {
+        Row: LoyaltyPointsHistory;
+        Insert: Omit<LoyaltyPointsHistory, 'id' | 'created_at'>;
+        Update: Partial<Omit<LoyaltyPointsHistory, 'id' | 'created_at'>>;
+      };
+      referrals: {
+        Row: Referral;
+        Insert: Omit<Referral, 'id' | 'created_at'>;
+        Update: Partial<Omit<Referral, 'id' | 'created_at'>>;
+      };
+      referral_uses: {
+        Row: ReferralUse;
+        Insert: Omit<ReferralUse, 'id' | 'created_at'>;
+        Update: Partial<Omit<ReferralUse, 'id' | 'created_at'>>;
       };
     };
   };
