@@ -12,6 +12,7 @@ import ValidateTicket from "@/pages/ValidateTicket";
 import Rewards from "@/pages/Rewards";
 import NotFound from "@/pages/NotFound";
 import Checkout from "@/pages/Checkout";
+import CheckoutFinish from "@/pages/CheckoutFinish";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ function App() {
           <Route path="/edit/:id" element={<EditEvent />} />
           <Route path="/event/:id" element={<EventDetails />} />
           <Route path="/checkout/:id" element={<Checkout />} />
+          <Route path="/checkout/:id/finish" element={<CheckoutFinish />} />
           <Route path="/validate" element={<ValidateTicket />} />
           <Route path="/rewards" element={<Rewards />} />
           <Route path="*" element={<NotFound />} />
