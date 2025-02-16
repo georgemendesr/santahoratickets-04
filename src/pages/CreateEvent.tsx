@@ -12,15 +12,12 @@ const CreateEvent = () => {
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      // Se houver um arquivo de imagem, fazer o upload
       const imageInput = document.getElementById("image") as HTMLInputElement;
       const imageFile = imageInput?.files?.[0];
-      let imagePath = "";
+      let imagePath = "default-event.jpg"; // Imagem padrão se nenhuma for enviada
 
       if (imageFile) {
-        console.log("Arquivo selecionado:", imageFile.name);
         const fileName = `${crypto.randomUUID()}.${imageFile.name.split('.').pop()}`;
-        console.log("Nome do arquivo para upload:", fileName);
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("event-images")
@@ -31,11 +28,7 @@ const CreateEvent = () => {
           throw new Error("Erro ao fazer upload da imagem");
         }
 
-        console.log("Upload bem sucedido:", uploadData);
-        // Não incluir 'event-images/' no início do caminho
         imagePath = fileName;
-      } else {
-        console.log("Nenhum arquivo selecionado");
       }
 
       const eventData = {
@@ -46,11 +39,9 @@ const CreateEvent = () => {
         location: data.location,
         price: parseFloat(data.price),
         available_tickets: parseInt(data.available_tickets),
-        image: imagePath || "default-event.jpg", // Removi o prefixo event-images/
+        image: imagePath,
         status: "published" as const
       };
-
-      console.log("Dados do evento a serem salvos:", eventData);
 
       const { error } = await supabase
         .from("events")
