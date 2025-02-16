@@ -30,19 +30,20 @@ import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { isAdmin } = useRole(session);
   const { profile, createProfile, createReferral } = useProfile(session?.user.id);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
-  const isAdmin = session?.user.email === "admin@example.com";
 
   const { data: event, isLoading } = useQuery({
     queryKey: ["event", id],

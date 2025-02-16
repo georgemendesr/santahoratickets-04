@@ -87,6 +87,15 @@ export interface RewardRedemption {
   updated_at?: string;
 }
 
+export type UserRole = 'admin' | 'user';
+
+export interface UserRoleData {
+  id: string;
+  user_id: string;
+  role: UserRole;
+  created_at?: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -134,6 +143,11 @@ export interface Database {
         Row: RewardRedemption;
         Insert: Omit<RewardRedemption, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<RewardRedemption, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      user_roles: {
+        Row: UserRoleData;
+        Insert: Omit<UserRoleData, 'id' | 'created_at'>;
+        Update: Partial<Omit<UserRoleData, 'id' | 'created_at'>>;
       };
     };
   };
