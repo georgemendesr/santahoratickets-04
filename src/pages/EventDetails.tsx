@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -34,14 +35,13 @@ import { useAuth } from "@/hooks/useAuth";
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const referralCode = searchParams.get('ref');
   const navigate = useNavigate();
   const { session } = useAuth();
   const { profile, createProfile, createReferral } = useProfile(session?.user.id);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
 
   const { data: event, isLoading } = useQuery({
