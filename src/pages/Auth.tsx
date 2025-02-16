@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,6 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
 
-  // Redirecionar se já estiver logado
   if (session) {
     navigate("/");
     return null;
@@ -64,7 +62,6 @@ export default function Auth() {
       if (error) throw error;
 
       setSignUpSuccess(true);
-      // Limpa o formulário
       e.currentTarget.reset();
       
     } catch (error: any) {

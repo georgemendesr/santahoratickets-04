@@ -1,7 +1,8 @@
-
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
 import { Event, Batch } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -9,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
 const CheckoutFinish = () => {
@@ -68,7 +68,6 @@ const CheckoutFinish = () => {
     }
 
     try {
-      // Atualizar o perfil do usuário
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
@@ -80,7 +79,6 @@ const CheckoutFinish = () => {
 
       if (profileError) throw profileError;
 
-      // Criar preferência de pagamento
       if (batch) {
         const { error: paymentError } = await supabase
           .from("payment_preferences")
@@ -89,16 +87,14 @@ const CheckoutFinish = () => {
             user_id: session.user.id,
             ticket_quantity: quantity,
             total_amount: batch.price * quantity,
-            init_point: "mercadopago_url_placeholder", // Será implementado posteriormente
+            init_point: "mercadopago_url_placeholder",
             status: "pending",
           });
 
         if (paymentError) throw paymentError;
       }
 
-      // Aqui posteriormente será implementada a integração com o MercadoPago
       toast.success("Perfil atualizado com sucesso!");
-      // Por enquanto, apenas voltamos para a página do evento
       navigate(`/event/${id}`);
     } catch (error) {
       console.error("Erro ao processar checkout:", error);
