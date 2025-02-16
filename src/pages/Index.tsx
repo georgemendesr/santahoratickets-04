@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, Search, MapPin, Eye } from "lucide-react";
+import { Calendar, Search, MapPin, Eye, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -54,6 +54,10 @@ const Index = () => {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Button onClick={() => navigate("/validate")}>
+                <Ticket className="mr-2" />
+                Validar Ingressos
+              </Button>
               <Button onClick={() => navigate("/create-event")}>
                 Criar Evento
               </Button>
