@@ -13,20 +13,13 @@ export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
 
-  // Limpa o caminho da imagem removendo prefixos e barras duplicadas
-  const imagePath = src
-    .replace(/^\/+/, '')
-    .replace(/^public\//, '')
-    .replace(/^lovable-uploads\//, '')
-    .replace(/\/+/g, '/');  // Remove barras duplicadas
-
+  // Usa o caminho exatamente como está no src
   const { data } = supabase.storage
     .from('event-images')
-    .getPublicUrl(imagePath.trim());  // Remove espaços em branco extras
+    .getPublicUrl(src);
 
   const imageUrl = data?.publicUrl;
-  console.log('EventImage - src original:', src);
-  console.log('EventImage - src limpo:', imagePath);
+  console.log('EventImage - src:', src);
   console.log('EventImage - URL gerada:', imageUrl);
 
   return (
@@ -40,7 +33,7 @@ export function EventImage({ src, alt }: EventImageProps) {
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            console.error('Erro ao carregar imagem:', imagePath);
+            console.error('Erro ao carregar imagem:', src);
             console.error('URL tentada:', imageUrl);
             e.currentTarget.src = placeholderUrl;
           }}
@@ -58,7 +51,7 @@ export function EventImage({ src, alt }: EventImageProps) {
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={(e) => {
-              console.error('Erro ao carregar imagem no modal:', imagePath);
+              console.error('Erro ao carregar imagem no modal:', src);
               console.error('URL tentada:', imageUrl);
               e.currentTarget.src = placeholderUrl;
             }}
