@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -29,7 +30,7 @@ const Index = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: events, isLoading, error } = useQuery({
+  const { data: events, isLoading, error, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
       console.log('Iniciando consulta ao Supabase...');
@@ -51,8 +52,28 @@ const Index = () => {
         throw err;
       }
     },
-    retry: 1, // Reduz o número de tentativas para facilitar o diagnóstico
+    retry: 1,
   });
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) {
+        toast.error("Erro ao deletar evento: " + error.message);
+        return;
+      }
+
+      toast.success("Evento deletado com sucesso!");
+      refetch(); // Recarrega a lista de eventos
+    } catch (err) {
+      console.error('Erro ao deletar:', err);
+      toast.error("Erro ao deletar evento");
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -270,3 +291,4 @@ const Index = () => {
 };
 
 export default Index;
+
