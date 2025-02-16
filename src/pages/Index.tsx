@@ -158,10 +158,12 @@ export default function Index() {
   const batchInfo = getBatchInfo(currentEvent);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-      <div className="container mx-auto p-8">
+    <div className="min-h-screen bg-gradient-to-b from-white via-purple-50/30 to-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Hero Section */}
         <EventHeader />
 
+        {/* Main Content */}
         <div className="max-w-5xl mx-auto space-y-12">
           <EventCard 
             event={currentEvent}
