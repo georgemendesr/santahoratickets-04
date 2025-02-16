@@ -42,6 +42,7 @@ const EventDetails = () => {
   const [birthDate, setBirthDate] = useState("");
   const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
+  const isAdmin = session?.user.email === "admin@example.com";
 
   const { data: event, isLoading } = useQuery({
     queryKey: ["event", id],
@@ -311,7 +312,7 @@ const EventDetails = () => {
                     <Share2 className="mr-2 h-4 w-4" />
                     Indicar
                   </Button>
-                  {session && (
+                  {isAdmin && (
                     <Button
                       variant="outline"
                       onClick={() => navigate(`/edit/${event.id}`)}
