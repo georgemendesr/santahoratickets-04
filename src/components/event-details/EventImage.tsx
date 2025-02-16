@@ -16,14 +16,12 @@ export function EventImage({ src, alt }: EventImageProps) {
 
   useEffect(() => {
     if (src) {
-      const { data } = supabase.storage
+      const url = supabase.storage
         .from('event-images')
-        .getPublicUrl(src);
+        .getPublicUrl(src).data.publicUrl;
       
-      if (data) {
-        console.log('URL pública gerada:', data.publicUrl);
-        setImageUrl(data.publicUrl);
-      }
+      console.log('URL pública gerada:', url);
+      setImageUrl(url);
     }
   }, [src]);
 
