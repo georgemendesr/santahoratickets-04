@@ -13,15 +13,16 @@ export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
 
-  // Remove o prefixo 'lovable-uploads/' e 'public/' se existirem
+  // Limpa o caminho da imagem removendo prefixos e barras duplicadas
   const imagePath = src
     .replace(/^\/+/, '')
     .replace(/^public\//, '')
-    .replace(/^lovable-uploads\//, '');
+    .replace(/^lovable-uploads\//, '')
+    .replace(/\/+/g, '/');  // Remove barras duplicadas
 
   const { data } = supabase.storage
     .from('event-images')
-    .getPublicUrl(imagePath);
+    .getPublicUrl(imagePath.trim());  // Remove espaços em branco extras
 
   const imageUrl = data?.publicUrl;
   console.log('EventImage - src original:', src);
