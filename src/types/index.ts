@@ -22,6 +22,17 @@ export interface Ticket {
   created_at?: string;
 }
 
+export interface PaymentPreference {
+  id: string;
+  init_point: string;
+  ticket_quantity: number;
+  total_amount: number;
+  event_id: string;
+  user_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  created_at?: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -35,6 +46,12 @@ export interface Database {
         Insert: Omit<Ticket, 'id' | 'created_at'>;
         Update: Partial<Omit<Ticket, 'id' | 'created_at'>>;
       };
+      payment_preferences: {
+        Row: PaymentPreference;
+        Insert: Omit<PaymentPreference, 'id' | 'created_at'>;
+        Update: Partial<Omit<PaymentPreference, 'id' | 'created_at'>>;
+      };
     };
   };
 }
+
