@@ -37,14 +37,6 @@ const Index = () => {
       try {
         console.log('Iniciando busca de eventos...');
         
-        // Primeiro, vamos verificar se o Supabase está acessível
-        const healthCheck = await fetch(supabaseUrl);
-        if (!healthCheck.ok) {
-          throw new Error('Não foi possível conectar ao Supabase');
-        }
-        
-        console.log('Conexão com Supabase OK');
-
         // Agora fazemos a query principal diretamente
         const { data, error } = await supabase
           .from('events')
