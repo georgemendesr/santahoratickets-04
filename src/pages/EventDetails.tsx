@@ -70,7 +70,15 @@ const EventDetails = () => {
           </div>
           
           <div className="space-y-6">
-            <h1 className="text-4xl font-bold">{event.title}</h1>
+            <div className="flex items-start justify-between">
+              <h1 className="text-4xl font-bold">{event.title}</h1>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/edit-event/${event.id}`)}
+              >
+                Editar Evento
+              </Button>
+            </div>
             
             <div className="space-y-4">
               <div className="flex items-center text-muted-foreground">
@@ -133,7 +141,6 @@ const EventDetails = () => {
                   Comprar Ingressos
                 </Button>
 
-                {/* Botão de compartilhar por WhatsApp */}
                 <Button
                   variant="outline"
                   className="w-full"

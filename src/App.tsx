@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import EventDetails from "./pages/EventDetails";
 import ValidateTicket from "./pages/ValidateTicket";
 import CreateEvent from "./pages/CreateEvent";
+import EditEvent from "./pages/EditEvent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/event/:id" element={<EventDetails />} />
             <Route path="/validate" element={<ValidateTicket />} />
             <Route path="/create-event" element={<CreateEvent />} />
+            <Route path="/edit-event/:id" element={<EditEvent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
