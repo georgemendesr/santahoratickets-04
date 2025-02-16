@@ -11,39 +11,52 @@ interface EventImageProps {
 
 export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState(src);
+  const [imageUrl, setImageUrl] = useState<string>('/placeholder.svg');
 
   useEffect(() => {
     const getPublicUrl = async () => {
       try {
-        // Se a URL já é completa, não precisa processar
+        // Verificar se é uma URL completa
         if (src.startsWith('http')) {
-          console.log('URL completa recebida:', src);
+          console.log('Usando URL completa:', src);
           setImageUrl(src);
           return;
         }
 
-        // Se não começa com http, assume que é um path do storage
-        console.log('Obtendo URL pública para:', src);
-        const { data } = supabase.storage
-          .from('event-images')
-          .getPublicUrl(src);
+        // Verificar se é um path do Supabase Storage
+        if (src.includes('event-images/')) {
+          console.log('Obtendo URL pública do Supabase para:', src);
+          const { data } = supabase.storage
+            .from('event-images')
+            .getPublicUrl(src.replace('event-images/', ''));
 
-        if (data?.publicUrl) {
-          console.log('URL pública obtida:', data.publicUrl);
-          setImageUrl(data.publicUrl);
-        } else {
-          console.error('Não foi possível obter URL pública, usando placeholder');
-          setImageUrl('/placeholder.svg');
+          if (data?.publicUrl) {
+            console.log('URL pública obtida:', data.publicUrl);
+            setImageUrl(data.publicUrl);
+            return;
+          }
         }
+
+        // Se chegou aqui, usa a URL como está (pode ser um path relativo local)
+        console.log('Usando URL como está:', src);
+        setImageUrl(src);
       } catch (error) {
         console.error('Erro ao processar URL da imagem:', error);
         setImageUrl('/placeholder.svg');
       }
     };
 
-    getPublicUrl();
+    if (src) {
+      getPublicUrl();
+    }
   }, [src]);
+
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Erro ao carregar imagem:', e.currentTarget.src);
+    if (e.currentTarget.src !== '/placeholder.svg') {
+      e.currentTarget.src = '/placeholder.svg';
+    }
+  };
 
   return (
     <>
@@ -55,10 +68,7 @@ export function EventImage({ src, alt }: EventImageProps) {
           src={imageUrl}
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={(e) => {
-            console.error('Erro ao carregar imagem:', imageUrl);
-            e.currentTarget.src = '/placeholder.svg';
-          }}
+          onError={handleError}
         />
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <ImageIcon className="w-8 h-8 text-white animate-pulse" />
@@ -72,10 +82,7 @@ export function EventImage({ src, alt }: EventImageProps) {
             alt={alt}
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
-            onError={(e) => {
-              console.error('Erro ao carregar imagem no modal:', imageUrl);
-              e.currentTarget.src = '/placeholder.svg';
-            }}
+            onError={handleError}
           />
         </DialogContent>
       </Dialog>

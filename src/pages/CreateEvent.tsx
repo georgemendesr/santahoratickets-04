@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -43,26 +43,31 @@ const CreateEvent = () => {
     }
 
     try {
-      // Upload da imagem
+      const fileName = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+      console.log('Fazendo upload da imagem:', fileName);
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("event-images")
-        .upload(`${Date.now()}-${imageFile.name}`, imageFile);
+        .upload(fileName, imageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw uploadError;
+      }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("event-images")
-        .getPublicUrl(uploadData.path);
+      console.log('Upload realizado com sucesso:', uploadData.path);
 
-      // Create event with image URL
+      // Criar evento com o path da imagem
       await createEventMutation.mutateAsync({
         ...data,
-        image: publicUrl,
+        image: `event-images/${uploadData.path}`,
       });
     } catch (error) {
+      console.error('Erro completo:', error);
       toast.error("Erro ao fazer upload da imagem");
-      console.error("Erro:", error);
     }
   };
 
