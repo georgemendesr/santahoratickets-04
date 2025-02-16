@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Gift, Ticket } from "lucide-react";
 import { Event, Batch } from "@/types";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +14,10 @@ import { EventInfo } from "@/components/event-details/EventInfo";
 import { EventActions } from "@/components/event-details/EventActions";
 import { ProfileDialog } from "@/components/event-details/ProfileDialog";
 import { BatchesTable } from "@/components/event-details/BatchesTable";
+import { EventLayout } from "@/components/event-details/EventLayout";
+import { EventImage } from "@/components/event-details/EventImage";
+import { LoyaltyCard } from "@/components/event-details/LoyaltyCard";
+import { ReferralCard } from "@/components/event-details/ReferralCard";
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -218,156 +219,78 @@ const EventDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto px-4 py-8">
-          <p>Carregando...</p>
-        </div>
-      </div>
+      <EventLayout onBack={() => navigate(-1)}>
+        <p>Carregando...</p>
+      </EventLayout>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto px-4 py-8">
-          <p>Evento não encontrado</p>
-        </div>
-      </div>
+      <EventLayout onBack={() => navigate(-1)}>
+        <p>Evento não encontrado</p>
+      </EventLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-      <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
+    <EventLayout onBack={() => navigate(-1)}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <EventImage src={event.image} alt={event.title} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <img
-              src={event.image}
-              alt={event.title}
-              className="w-full h-[400px] object-cover rounded-lg shadow-lg"
-            />
-          </div>
+        <div className="space-y-6">
+          <EventHeader event={event} />
 
-          <div className="space-y-6">
-            <EventHeader event={event} />
+          {referrer && (
+            <Alert>
+              <AlertDescription className="text-sm">
+                Você está comprando através da indicação de usuário final {referrer.name}
+              </AlertDescription>
+            </Alert>
+          )}
 
-            {referrer && (
-              <Alert>
-                <AlertDescription className="text-sm">
-                  Você está comprando através da indicação de usuário final {referrer.name}
-                </AlertDescription>
-              </Alert>
-            )}
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
 
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
+              <div>
+                <p className="text-sm text-muted-foreground">Local</p>
+                <p className="font-medium">{event.location}</p>
+              </div>
 
-                <div>
-                  <p className="text-sm text-muted-foreground">Local</p>
-                  <p className="font-medium">{event.location}</p>
-                </div>
+              {getLowStockAlert(event.available_tickets)}
 
-                {getLowStockAlert(event.available_tickets)}
+              <EventActions
+                event={event}
+                isAdmin={isAdmin}
+                onPurchase={handlePurchase}
+                onShare={handleShare}
+                onEdit={() => navigate(`/edit/${event.id}`)}
+              />
+            </CardContent>
+          </Card>
 
-                <EventActions
-                  event={event}
-                  isAdmin={isAdmin}
-                  onPurchase={handlePurchase}
-                  onShare={handleShare}
-                  onEdit={() => navigate(`/edit/${event.id}`)}
-                />
-              </CardContent>
-            </Card>
+          <BatchesTable batches={batches || []} />
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Ticket className="h-5 w-5" />
-                  Lotes Disponíveis
-                </CardTitle>
-                <CardDescription>
-                  Confira os lotes e preços disponíveis para este evento
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {batches && batches.length > 0 ? (
-                  <BatchesTable batches={batches} />
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Nenhum lote disponível no momento
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+          {profile && <LoyaltyCard points={profile.loyalty_points} />}
 
-            {profile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Gift className="h-5 w-5" />
-                    Programa de Fidelidade
-                  </CardTitle>
-                  <CardDescription>
-                    Você tem {profile.loyalty_points} pontos acumulados
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            )}
-
-            {referralCode && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Link de Indicação</CardTitle>
-                  <CardDescription>
-                    Compartilhe este código com seus amigos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Input
-                      value={referralCode}
-                      readOnly
-                      className="font-mono"
-                    />
-                    <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(referralCode);
-                        toast.success("Código copiado!");
-                      }}
-                    >
-                      Copiar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {referralCode && <ReferralCard code={referralCode} />}
         </div>
-
-        <ProfileDialog
-          open={showProfileDialog}
-          onOpenChange={setShowProfileDialog}
-          cpf={cpf}
-          birthDate={birthDate}
-          phone={phone}
-          onCpfChange={setCpf}
-          onBirthDateChange={setBirthDate}
-          onPhoneChange={setPhone}
-          onSubmit={handleProfileSubmit}
-          isPending={createProfileMutation.isPending}
-        />
       </div>
-    </div>
+
+      <ProfileDialog
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        cpf={cpf}
+        birthDate={birthDate}
+        phone={phone}
+        onCpfChange={setCpf}
+        onBirthDateChange={setBirthDate}
+        onPhoneChange={setPhone}
+        onSubmit={handleProfileSubmit}
+        isPending={createProfileMutation.isPending}
+      />
+    </EventLayout>
   );
 };
 
