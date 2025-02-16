@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -134,6 +133,18 @@ const Index = () => {
     return matchesSearch && event.status === statusFilter;
   });
 
+  const handleSeedTestData = async () => {
+    try {
+      const { seedTestEvents } = await import('@/seed/testEvents');
+      await seedTestEvents();
+      toast.success("Dados de teste inseridos com sucesso!");
+      refetch();
+    } catch (error) {
+      toast.error("Erro ao inserir dados de teste");
+      console.error("Erro:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto px-4 py-8">
@@ -143,6 +154,16 @@ const Index = () => {
             alt="Santa Hora" 
             className="h-24 object-contain"
           />
+        </div>
+
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            onClick={handleSeedTestData}
+            className="w-full md:w-auto"
+          >
+            Inserir Dados de Teste
+          </Button>
         </div>
 
         {recentPurchase && (
