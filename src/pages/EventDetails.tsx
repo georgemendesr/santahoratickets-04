@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Ticket, Share2 } from 'lucide-react';
 import { type Event } from '@/types';
 import { toast } from 'sonner';
 
@@ -26,6 +26,12 @@ const EventDetails = () => {
       return data as Event;
     },
   });
+
+  const shareViaWhatsApp = (ticketUrl: string) => {
+    const message = `Aqui está seu ingresso para ${event?.title}! 🎫\n\nApresente este QR Code na entrada do evento:\n${ticketUrl}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const handleBuyTickets = async () => {
     try {
@@ -125,6 +131,16 @@ const EventDetails = () => {
                   disabled={quantity > event.available_tickets}
                 >
                   Comprar Ingressos
+                </Button>
+
+                {/* Botão de compartilhar por WhatsApp */}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => shareViaWhatsApp(window.location.href)}
+                >
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Compartilhar por WhatsApp
                 </Button>
               </div>
             </div>
