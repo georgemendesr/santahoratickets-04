@@ -13,8 +13,11 @@ export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
 
-  // Remove qualquer '/' extra do início do caminho
-  const imagePath = src.replace(/^\/+/, '').replace(/^public\//, '');
+  // Remove o prefixo 'lovable-uploads/' e 'public/' se existirem
+  const imagePath = src
+    .replace(/^\/+/, '')
+    .replace(/^public\//, '')
+    .replace(/^lovable-uploads\//, '');
 
   const { data } = supabase.storage
     .from('event-images')
