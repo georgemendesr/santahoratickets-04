@@ -175,7 +175,17 @@ const EventDetails = () => {
 
   const handlePurchase = () => {
     if (!session) {
-      toast.error("Faça login para continuar com a compra");
+      toast.error(
+        "É necessário fazer login para comprar pulseiras",
+        {
+          description: "Você será redirecionado para a página de login",
+          action: {
+            label: "Fazer Login",
+            onClick: () => navigate("/auth")
+          },
+          duration: 5000
+        }
+      );
       return;
     }
 
