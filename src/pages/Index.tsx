@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -35,33 +34,42 @@ const Index = () => {
   const { data: events, isLoading, error, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      console.log('Iniciando busca de eventos...');
-      
-      // Primeiro, vamos testar a conexão
-      const { data: testData, error: testError } = await supabase
-        .from('events')
-        .select('count');
-      
-      if (testError) {
-        console.error('Erro no teste de conexão:', testError);
-        throw testError;
-      }
-      
-      console.log('Teste de conexão bem sucedido:', testData);
+      try {
+        console.log('Iniciando busca de eventos...');
+        
+        // Primeiro, vamos verificar se o Supabase está acessível
+        const healthCheck = await fetch(supabaseUrl);
+        if (!healthCheck.ok) {
+          throw new Error('Não foi possível conectar ao Supabase');
+        }
+        
+        console.log('Conexão com Supabase OK');
 
-      // Agora fazemos a query principal
-      const { data, error } = await supabase
-        .from('events')
-        .select('*');
-      
-      if (error) {
-        console.error('Erro na query principal:', error);
+        // Agora fazemos a query principal diretamente
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .throwOnError();
+        
+        if (error) {
+          console.error('Erro na query:', error);
+          throw error;
+        }
+
+        if (!data) {
+          console.log('Nenhum dado encontrado');
+          return [];
+        }
+
+        console.log('Eventos carregados com sucesso:', data);
+        return data as Event[];
+      } catch (error) {
+        console.error('Erro detalhado:', error);
         throw error;
       }
-
-      console.log('Eventos carregados com sucesso:', data);
-      return data as Event[];
     },
+    retry: 1,
+    retryDelay: 1000,
   });
 
   useEffect(() => {
