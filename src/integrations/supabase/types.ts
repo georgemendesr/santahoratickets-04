@@ -330,7 +330,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
-          birth_date: string
+          birth_date: string | null
           cpf: string
           created_at: string
           id: string
@@ -338,7 +338,7 @@ export type Database = {
           name: string | null
         }
         Insert: {
-          birth_date: string
+          birth_date?: string | null
           cpf: string
           created_at?: string
           id: string
@@ -346,7 +346,7 @@ export type Database = {
           name?: string | null
         }
         Update: {
-          birth_date?: string
+          birth_date?: string | null
           cpf?: string
           created_at?: string
           id?: string
