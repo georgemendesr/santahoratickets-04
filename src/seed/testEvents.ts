@@ -60,29 +60,32 @@ const testEvents = [
 ];
 
 export const seedTestEvents = async () => {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('events')
-    .insert(testEvents);
+    .insert(testEvents)
+    .select();
 
   if (error) {
     console.error('Erro ao inserir eventos de teste:', error);
     throw error;
   }
 
-  // Simular uma compra após 10 segundos
-  setTimeout(() => {
-    const channel = supabase.channel('events-channel');
-    channel.subscribe();
-    
-    channel.send({
-      type: 'broadcast',
-      event: 'ticket-purchase',
-      payload: {
-        eventId: testEvents[0].id,
-        quantity: 3
-      }
-    });
-  }, 10000);
+  // Simular uma compra após 10 segundos usando o ID do primeiro evento inserido
+  if (data && data[0]) {
+    setTimeout(() => {
+      const channel = supabase.channel('events-channel');
+      channel.subscribe();
+      
+      channel.send({
+        type: 'broadcast',
+        event: 'ticket-purchase',
+        payload: {
+          eventId: data[0].id,
+          quantity: 3
+        }
+      });
+    }, 10000);
+  }
 
   console.log('Eventos de teste inseridos com sucesso!');
 };
