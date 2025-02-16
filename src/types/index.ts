@@ -1,4 +1,3 @@
-
 export interface Event {
   id: string;
   title: string;
@@ -68,6 +67,26 @@ export interface ReferralUse {
   created_at?: string;
 }
 
+export interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  points_required: number;
+  active: boolean;
+  image?: string;
+  created_at?: string;
+}
+
+export interface RewardRedemption {
+  id: string;
+  user_id: string;
+  reward_id: string;
+  points_spent: number;
+  status: 'pending' | 'approved' | 'rejected' | 'delivered';
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -105,6 +124,16 @@ export interface Database {
         Row: ReferralUse;
         Insert: Omit<ReferralUse, 'id' | 'created_at'>;
         Update: Partial<Omit<ReferralUse, 'id' | 'created_at'>>;
+      };
+      rewards: {
+        Row: Reward;
+        Insert: Omit<Reward, 'id' | 'created_at'>;
+        Update: Partial<Omit<Reward, 'id' | 'created_at'>>;
+      };
+      reward_redemptions: {
+        Row: RewardRedemption;
+        Insert: Omit<RewardRedemption, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<RewardRedemption, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };

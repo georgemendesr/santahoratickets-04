@@ -222,6 +222,74 @@ export type Database = {
           },
         ]
       }
+      reward_redemptions: {
+        Row: {
+          created_at: string
+          id: string
+          points_spent: number
+          reward_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points_spent: number
+          reward_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points_spent?: number
+          reward_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string
+          id: string
+          image: string | null
+          points_required: number
+          title: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description: string
+          id?: string
+          image?: string | null
+          points_required: number
+          title: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string
+          id?: string
+          image?: string | null
+          points_required?: number
+          title?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           created_at: string
