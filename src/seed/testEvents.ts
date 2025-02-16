@@ -61,37 +61,49 @@ const testEvents = [
 
 export const seedTestEvents = async () => {
   try {
-    const { data, error } = await supabase
+    // Primeiro, vamos verificar se já existem eventos
+    const { data: existingEvents } = await supabase
       .from('events')
-      .insert(testEvents)
-      .select();
+      .select('*');
 
-    if (error) {
-      console.error('Erro ao inserir eventos de teste:', error);
-      throw error;
-    }
+    console.log('Eventos existentes:', existingEvents);
 
-    // Simular uma compra após 10 segundos usando o ID do primeiro evento inserido
-    if (data && data[0]) {
-      setTimeout(() => {
+    // Se não houver eventos, inserimos os dados de teste
+    if (!existingEvents || existingEvents.length === 0) {
+      const { data, error } = await supabase
+        .from('events')
+        .insert(testEvents)
+        .select();
+
+      if (error) {
+        console.error('Erro ao inserir eventos de teste:', error);
+        throw error;
+      }
+
+      if (data && data[0]) {
         const channel = supabase.channel('events-channel');
-        channel.subscribe();
+        await channel.subscribe();
         
-        channel.send({
-          type: 'broadcast',
-          event: 'ticket-purchase',
-          payload: {
-            eventId: data[0].id,
-            quantity: 3
-          }
-        });
-      }, 10000);
-    }
+        setTimeout(() => {
+          channel.send({
+            type: 'broadcast',
+            event: 'ticket-purchase',
+            payload: {
+              eventId: data[0].id,
+              quantity: 3
+            }
+          });
+        }, 10000);
+      }
 
-    console.log('Eventos de teste inseridos com sucesso!');
-    console.log('Dados inseridos:', data); // Log adicional para debug
-    
-    return data;
+      console.log('Eventos de teste inseridos com sucesso!');
+      console.log('Dados inseridos:', data);
+      
+      return data;
+    } else {
+      console.log('Já existem eventos no banco de dados.');
+      return existingEvents;
+    }
 
   } catch (error) {
     console.error('Erro:', error);
