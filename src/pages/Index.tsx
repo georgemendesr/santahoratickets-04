@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -8,10 +9,18 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { ProfileDialog } from "@/components/event-details/ProfileDialog";
+import { useState } from "react";
 
 export default function Index() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { profile, createProfile } = useProfile(session?.user.id);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
@@ -43,8 +52,23 @@ export default function Index() {
       return;
     }
 
+    if (!profile?.cpf) {
+      setShowProfileDialog(true);
+      return;
+    }
+
     // Criar preferência de pagamento
     createPaymentPreference.mutate();
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const profile = await createProfile(cpf, birthDate);
+    if (profile) {
+      setShowProfileDialog(false);
+      // Após completar o perfil, prosseguir com a compra
+      createPaymentPreference.mutate();
+    }
   };
 
   const createPaymentPreference = useMutation({
@@ -71,8 +95,11 @@ export default function Index() {
     },
     onSuccess: (data) => {
       if (data) {
-        toast.success("Pedido criado com sucesso!");
-        navigate("/");
+        toast.success("Pedido criado com sucesso!", {
+          description: "Você será redirecionado para o checkout",
+        });
+        // Aqui você pode redirecionar para a página de checkout ou para uma página de confirmação
+        navigate(`/checkout/${data.id}`);
       }
     },
     onError: (error) => {
@@ -80,6 +107,19 @@ export default function Index() {
       toast.error("Erro ao processar pedido. Por favor, tente novamente.");
     }
   });
+
+  const getBatchInfo = (event: Event) => {
+    const today = new Date();
+    const eventDate = new Date(event.date);
+    const daysUntilEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+
+    if (daysUntilEvent > 30) {
+      return { name: "1º Lote", class: "text-green-600" };
+    } else if (daysUntilEvent > 15) {
+      return { name: "2º Lote", class: "text-yellow-600" };
+    }
+    return { name: "3º Lote", class: "text-red-600" };
+  };
 
   const getLowStockAlert = (availableTickets: number) => {
     if (availableTickets <= 5 && availableTickets > 0) {
@@ -125,6 +165,8 @@ export default function Index() {
     );
   }
 
+  const batchInfo = getBatchInfo(currentEvent);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto p-8">
@@ -146,6 +188,11 @@ export default function Index() {
                   alt={currentEvent.title}
                   className="w-full h-full object-cover"
                 />
+                <div className="absolute top-4 right-4">
+                  <span className={`px-4 py-2 rounded-full bg-white font-bold ${batchInfo.class}`}>
+                    {batchInfo.name}
+                  </span>
+                </div>
               </div>
               <div className="p-8 space-y-6 flex flex-col justify-between">
                 <div className="space-y-4">
@@ -256,6 +303,17 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      <ProfileDialog
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        cpf={cpf}
+        birthDate={birthDate}
+        onCpfChange={setCpf}
+        onBirthDateChange={setBirthDate}
+        onSubmit={handleProfileSubmit}
+        isPending={createPaymentPreference.isPending}
+      />
     </div>
   );
 }
