@@ -89,6 +89,7 @@ export type Database = {
       events: {
         Row: {
           available_tickets: number
+          category_id: string | null
           created_at: string
           date: string
           description: string
@@ -102,6 +103,7 @@ export type Database = {
         }
         Insert: {
           available_tickets: number
+          category_id?: string | null
           created_at?: string
           date: string
           description: string
@@ -115,6 +117,7 @@ export type Database = {
         }
         Update: {
           available_tickets?: number
+          category_id?: string | null
           created_at?: string
           date?: string
           description?: string
@@ -126,7 +129,15 @@ export type Database = {
           time?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "event_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       loyalty_points_history: {
         Row: {
@@ -475,6 +486,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      event_status: "draft" | "published" | "ended" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
