@@ -50,20 +50,23 @@ const EditEvent = () => {
         .single();
       
       if (error) throw error;
-      return data as Event;
-    },
-    onSuccess: (data) => {
+      
+      const event = data as Event;
+      
       // Preencher o formulário com os dados do evento
       form.reset({
-        title: data.title,
-        description: data.description,
-        date: data.date,
-        time: data.time,
-        location: data.location,
-        price: data.price.toString(),
-        available_tickets: data.available_tickets.toString(),
+        title: event.title,
+        description: event.description,
+        date: event.date,
+        time: event.time,
+        location: event.location,
+        price: event.price.toString(),
+        available_tickets: event.available_tickets.toString(),
       });
+      
+      return event;
     },
+    enabled: !!id,
   });
 
   const updateEventMutation = useMutation({
