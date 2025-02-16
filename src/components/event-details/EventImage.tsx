@@ -28,11 +28,12 @@ export function EventImage({ src, alt }: EventImageProps) {
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-screen-xl p-0">
+        <DialogContent className="!max-w-[90vw] !w-auto !p-0 !m-0">
           <img
             src={src}
             alt={alt}
-            className="w-full h-auto object-contain max-h-[80vh] rounded-lg"
+            className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+            onClick={() => setIsOpen(false)}
           />
         </DialogContent>
       </Dialog>
