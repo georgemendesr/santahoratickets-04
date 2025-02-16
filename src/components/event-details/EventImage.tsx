@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,19 +11,9 @@ interface EventImageProps {
 
 export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>("");
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
-
-  useEffect(() => {
-    if (src) {
-      console.log('EventImage - Origem da imagem:', src);
-      const url = supabase.storage
-        .from('event-images')
-        .getPublicUrl(src).data.publicUrl;
-      console.log('EventImage - URL pública gerada:', url);
-      setImageUrl(url);
-    }
-  }, [src]);
+  
+  const imageUrl = src ? supabase.storage.from('event-images').getPublicUrl(src).data.publicUrl : placeholderUrl;
 
   return (
     <>
@@ -32,11 +22,11 @@ export function EventImage({ src, alt }: EventImageProps) {
         className="relative group cursor-zoom-in overflow-hidden rounded-xl shadow-lg"
       >
         <img
-          src={imageUrl || placeholderUrl}
+          src={imageUrl}
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            console.error('EventImage - Erro ao carregar imagem. URL tentada:', imageUrl);
+            console.error('Erro ao carregar imagem:', imageUrl);
             e.currentTarget.src = placeholderUrl;
           }}
         />
@@ -48,12 +38,11 @@ export function EventImage({ src, alt }: EventImageProps) {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
           <img
-            src={imageUrl || placeholderUrl}
+            src={imageUrl}
             alt={alt}
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={(e) => {
-              console.error('EventImage (Dialog) - Erro ao carregar imagem. URL tentada:', imageUrl);
               e.currentTarget.src = placeholderUrl;
             }}
           />
