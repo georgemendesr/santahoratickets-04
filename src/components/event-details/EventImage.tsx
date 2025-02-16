@@ -15,15 +15,16 @@ export function EventImage({ src, alt }: EventImageProps) {
 
   useEffect(() => {
     const getPublicUrl = async () => {
-      // Se a URL já é completa, não precisa processar
-      if (src.startsWith('http')) {
-        console.log('URL completa:', src);
-        setImageUrl(src);
-        return;
-      }
-
       try {
-        console.log('Tentando obter URL pública para:', src);
+        // Se a URL já é completa, não precisa processar
+        if (src.startsWith('http')) {
+          console.log('URL completa recebida:', src);
+          setImageUrl(src);
+          return;
+        }
+
+        // Se não começa com http, assume que é um path do storage
+        console.log('Obtendo URL pública para:', src);
         const { data } = supabase.storage
           .from('event-images')
           .getPublicUrl(src);
@@ -32,11 +33,11 @@ export function EventImage({ src, alt }: EventImageProps) {
           console.log('URL pública obtida:', data.publicUrl);
           setImageUrl(data.publicUrl);
         } else {
-          console.error('Não foi possível obter URL pública para:', src);
+          console.error('Não foi possível obter URL pública, usando placeholder');
           setImageUrl('/placeholder.svg');
         }
       } catch (error) {
-        console.error('Erro ao obter URL pública:', error);
+        console.error('Erro ao processar URL da imagem:', error);
         setImageUrl('/placeholder.svg');
       }
     };
@@ -72,7 +73,7 @@ export function EventImage({ src, alt }: EventImageProps) {
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={(e) => {
-              console.error('Erro ao carregar imagem:', imageUrl);
+              console.error('Erro ao carregar imagem no modal:', imageUrl);
               e.currentTarget.src = '/placeholder.svg';
             }}
           />
