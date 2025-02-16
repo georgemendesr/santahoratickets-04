@@ -12,9 +12,6 @@ const CreateEvent = () => {
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      // Usar uma imagem placeholder do Unsplash
-      const placeholderImage = "photo-1514525253161-7a46d19cd819";
-      
       const eventData = {
         title: data.title,
         description: data.description,
@@ -23,7 +20,7 @@ const CreateEvent = () => {
         location: data.location,
         price: parseFloat(data.price),
         available_tickets: parseInt(data.available_tickets),
-        image: placeholderImage,
+        image: "photo-1514525253161-7a46d19cd819", // Imagem de teste do Unsplash
         status: "published" as const
       };
 
