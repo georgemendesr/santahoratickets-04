@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +18,7 @@ export default function Index() {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
@@ -61,7 +61,7 @@ export default function Index() {
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const profile = await createProfile(cpf, birthDate);
+    const profile = await createProfile(cpf, birthDate, phone);
     if (profile) {
       setShowProfileDialog(false);
       createPaymentPreference.mutate();
@@ -186,8 +186,10 @@ export default function Index() {
         onOpenChange={setShowProfileDialog}
         cpf={cpf}
         birthDate={birthDate}
+        phone={phone}
         onCpfChange={setCpf}
         onBirthDateChange={setBirthDate}
+        onPhoneChange={setPhone}
         onSubmit={handleProfileSubmit}
         isPending={createPaymentPreference.isPending}
       />

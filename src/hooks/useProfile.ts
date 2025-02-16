@@ -35,7 +35,7 @@ export const useProfile = (userId?: string) => {
     fetchProfile();
   }, [userId]);
 
-  const createProfile = async (cpf: string, birthDate: string) => {
+  const createProfile = async (cpf: string, birthDate: string, phone: string) => {
     if (!userId) {
       toast.error('Usuário não autenticado');
       return null;
@@ -49,6 +49,7 @@ export const useProfile = (userId?: string) => {
             id: userId,
             cpf,
             birth_date: birthDate,
+            phone,
             loyalty_points: 0,
           },
         ])

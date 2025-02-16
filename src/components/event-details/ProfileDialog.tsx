@@ -9,8 +9,10 @@ interface ProfileDialogProps {
   onOpenChange: (open: boolean) => void;
   cpf: string;
   birthDate: string;
+  phone: string;
   onCpfChange: (value: string) => void;
   onBirthDateChange: (value: string) => void;
+  onPhoneChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isPending: boolean;
 }
@@ -20,8 +22,10 @@ export function ProfileDialog({
   onOpenChange,
   cpf,
   birthDate,
+  phone,
   onCpfChange,
   onBirthDateChange,
+  onPhoneChange,
   onSubmit,
   isPending
 }: ProfileDialogProps) {
@@ -42,6 +46,17 @@ export function ProfileDialog({
               value={cpf}
               onChange={(e) => onCpfChange(e.target.value)}
               placeholder="000.000.000-00"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="phone">Telefone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => onPhoneChange(e.target.value)}
+              placeholder="(00) 00000-0000"
               required
             />
           </div>
