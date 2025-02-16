@@ -36,7 +36,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
           <div className="flex items-center text-muted-foreground">
             <Ticket className="mr-2 h-4 w-4" />
-            <span className="text-sm">{event.availableTickets} tickets available</span>
+            <span className="text-sm">{event.available_tickets} tickets available</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
@@ -49,4 +49,3 @@ export function EventCard({ event }: EventCardProps) {
     </Card>
   );
 }
-
