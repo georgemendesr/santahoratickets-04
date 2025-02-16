@@ -12,6 +12,24 @@ interface EventCardProps {
 export function EventCard({ event }: EventCardProps) {
   const navigate = useNavigate();
 
+  const getLowStockAlert = (availableTickets: number) => {
+    if (availableTickets <= 5 && availableTickets > 0) {
+      return (
+        <p className="text-sm text-yellow-600 font-medium">
+          Últimas unidades disponíveis!
+        </p>
+      );
+    }
+    if (availableTickets === 0) {
+      return (
+        <p className="text-sm text-red-600 font-medium">
+          Ingressos esgotados
+        </p>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card className="card-hover overflow-hidden">
       <div className="relative h-48 overflow-hidden">
@@ -34,15 +52,21 @@ export function EventCard({ event }: EventCardProps) {
             <MapPin className="mr-2 h-4 w-4" />
             <span className="text-sm line-clamp-1">{event.location}</span>
           </div>
-          <div className="flex items-center text-muted-foreground">
-            <Ticket className="mr-2 h-4 w-4" />
-            <span className="text-sm">{event.available_tickets} tickets available</span>
-          </div>
+          {getLowStockAlert(event.available_tickets)}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-semibold">R$ {event.price.toFixed(2)}</span>
-          <Button onClick={() => navigate(`/event/${event.id}`)}>
-            Buy Ticket
+          <span className="text-lg font-semibold">
+            {new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(event.price)}
+          </span>
+          <Button 
+            onClick={() => navigate(`/event/${event.id}`)}
+            disabled={event.available_tickets === 0}
+          >
+            <Ticket className="mr-2 h-4 w-4" />
+            Ver Detalhes
           </Button>
         </div>
       </CardContent>
