@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -302,7 +303,7 @@ const EventDetails = () => {
 
                 <div className="flex gap-4">
                   <Button 
-                    className="flex-1" 
+                    className="flex-1 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-semibold shadow-lg" 
                     onClick={handlePurchase}
                     disabled={event.available_tickets === 0}
                   >
