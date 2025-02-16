@@ -61,7 +61,7 @@ export default function Index() {
     if (availableTickets === 0) {
       return (
         <p className="text-sm text-red-600 font-medium">
-          Ingressos esgotados
+          Pulseiras esgotadas
         </p>
       );
     }
@@ -124,7 +124,7 @@ export default function Index() {
                     disabled={currentEvent.available_tickets === 0}
                   >
                     <Ticket className="mr-2 h-5 w-5" />
-                    Ver Detalhes
+                    Comprar Pulseira
                   </Button>
                 </div>
               </div>
