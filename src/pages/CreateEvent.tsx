@@ -51,7 +51,7 @@ const CreateEvent = () => {
     }
 
     try {
-      // Upload da imagem
+      // Upload da imagem com nome sanitizado
       const fileName = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
       console.log('Fazendo upload da imagem:', fileName);
 
@@ -69,10 +69,10 @@ const CreateEvent = () => {
 
       console.log('Upload realizado com sucesso:', uploadData.path);
 
-      // Criar evento com todos os campos obrigatórios
+      // Criar evento com o caminho da imagem
       await createEventMutation.mutateAsync({
         ...data,
-        image: `event-images/${uploadData.path}`,
+        image: fileName, // Agora armazenamos apenas o nome do arquivo
       });
     } catch (error) {
       console.error('Erro completo:', error);
