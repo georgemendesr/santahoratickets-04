@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -106,6 +105,24 @@ const EventDetails = () => {
     createProfileMutation.mutate();
   };
 
+  const getLowStockAlert = (availableTickets: number) => {
+    if (availableTickets <= 5 && availableTickets > 0) {
+      return (
+        <p className="text-sm text-yellow-600 font-medium">
+          Últimas unidades disponíveis!
+        </p>
+      );
+    }
+    if (availableTickets === 0) {
+      return (
+        <p className="text-sm text-red-600 font-medium">
+          Ingressos esgotados
+        </p>
+      );
+    }
+    return null;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
@@ -184,15 +201,10 @@ const EventDetails = () => {
                   <p className="font-medium">{event.location}</p>
                 </div>
 
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Ingressos disponíveis
-                  </p>
-                  <p className="font-medium">{event.available_tickets}</p>
-                </div>
+                {getLowStockAlert(event.available_tickets)}
 
                 <div className="flex gap-4">
-                  <Button className="flex-1" onClick={() => navigate(`/buy/${event.id}`)}>
+                  <Button className="flex-1" onClick={() => navigate(`/buy/${event.id}`)} disabled={event.available_tickets === 0}>
                     <Ticket className="mr-2 h-4 w-4" />
                     Comprar Ingresso
                   </Button>
