@@ -12,6 +12,20 @@ export interface Event {
   created_at?: string;
 }
 
+export interface Batch {
+  id: string;
+  event_id: string;
+  title: string;
+  price: number;
+  available_tickets: number;
+  total_tickets: number;
+  start_date: string;
+  end_date?: string;
+  status: 'active' | 'ended' | 'sold_out';
+  created_at?: string;
+  order_number: number;
+}
+
 export interface Ticket {
   id: string;
   event_id: string;

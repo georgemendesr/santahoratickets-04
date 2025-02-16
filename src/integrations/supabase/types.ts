@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      batches: {
+        Row: {
+          available_tickets: number
+          created_at: string
+          end_date: string | null
+          event_id: string
+          id: string
+          order_number: number
+          price: number
+          start_date: string
+          status: string | null
+          title: string
+          total_tickets: number
+        }
+        Insert: {
+          available_tickets: number
+          created_at?: string
+          end_date?: string | null
+          event_id: string
+          id?: string
+          order_number: number
+          price: number
+          start_date: string
+          status?: string | null
+          title: string
+          total_tickets: number
+        }
+        Update: {
+          available_tickets?: number
+          created_at?: string
+          end_date?: string | null
+          event_id?: string
+          id?: string
+          order_number?: number
+          price?: number
+          start_date?: string
+          status?: string | null
+          title?: string
+          total_tickets?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batches_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           available_tickets: number

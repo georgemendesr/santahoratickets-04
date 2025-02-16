@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Gift } from "lucide-react";
-import { Event } from "@/types";
+import { ArrowLeft, Gift, Ticket } from "lucide-react";
+import { Event, Batch } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import { EventHeader } from "@/components/event-details/EventHeader";
 import { EventInfo } from "@/components/event-details/EventInfo";
 import { EventActions } from "@/components/event-details/EventActions";
 import { ProfileDialog } from "@/components/event-details/ProfileDialog";
+import { BatchesTable } from "@/components/event-details/BatchesTable";
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +32,7 @@ const EventDetails = () => {
   const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
 
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading: isLoadingEvent } = useQuery({
     queryKey: ["event", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,6 +43,21 @@ const EventDetails = () => {
 
       if (error) throw error;
       return data as Event;
+    },
+    enabled: !!id,
+  });
+
+  const { data: batches, isLoading: isLoadingBatches } = useQuery({
+    queryKey: ["batches", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("batches")
+        .select("*")
+        .eq("event_id", id)
+        .order("order_number", { ascending: true });
+
+      if (error) throw error;
+      return data as Batch[];
     },
     enabled: !!id,
   });
@@ -199,6 +214,8 @@ const EventDetails = () => {
     return null;
   };
 
+  const isLoading = isLoadingEvent || isLoadingBatches;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
@@ -269,6 +286,27 @@ const EventDetails = () => {
                   onShare={handleShare}
                   onEdit={() => navigate(`/edit/${event.id}`)}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ticket className="h-5 w-5" />
+                  Lotes Disponíveis
+                </CardTitle>
+                <CardDescription>
+                  Confira os lotes e preços disponíveis para este evento
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {batches && batches.length > 0 ? (
+                  <BatchesTable batches={batches} />
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Nenhum lote disponível no momento
+                  </p>
+                )}
               </CardContent>
             </Card>
 
