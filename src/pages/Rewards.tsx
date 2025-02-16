@@ -25,7 +25,12 @@ export default function Rewards() {
         getMyRedemptions()
       ]);
       setRewards(rewardsData);
-      setRedemptions(redemptionsData);
+      // Garantir que o status está no formato correto
+      const typedRedemptions = redemptionsData.map(redemption => ({
+        ...redemption,
+        status: redemption.status as RewardRedemption['status']
+      }));
+      setRedemptions(typedRedemptions);
       setLoading(false);
     };
 
@@ -42,7 +47,12 @@ export default function Rewards() {
       getMyRedemptions()
     ]);
     setRewards(rewardsData);
-    setRedemptions(redemptionsData);
+    // Garantir que o status está no formato correto
+    const typedRedemptions = redemptionsData.map(redemption => ({
+      ...redemption,
+      status: redemption.status as RewardRedemption['status']
+    }));
+    setRedemptions(typedRedemptions);
   };
 
   if (loading) {
