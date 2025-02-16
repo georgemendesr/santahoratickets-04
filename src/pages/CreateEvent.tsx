@@ -20,7 +20,7 @@ const CreateEvent = () => {
         location: data.location,
         price: parseFloat(data.price),
         available_tickets: parseInt(data.available_tickets),
-        image: "/lovable-uploads/a5a97e40-4b68-46da-83c8-7d95c4b280c8.png",
+        image: "/lovable-uploads/a5a97e40-4b68-46da-83c8-7d95c4b280c8.jpg",
         status: "published" as const
       };
 
