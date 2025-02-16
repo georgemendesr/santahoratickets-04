@@ -26,12 +26,14 @@ export function EventCard({
 
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
 
+  console.log('URL da imagem:', imageUrl); // Adicionando log para debug
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-purple-100 hover:shadow-xl transition-all duration-300">
       <div className="grid md:grid-cols-2 gap-6">
         <div className="h-[400px] relative overflow-hidden group">
           <img
-            src={imageUrl || placeholderUrl}
+            src={imageUrl}
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
