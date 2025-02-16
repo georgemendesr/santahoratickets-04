@@ -1,5 +1,4 @@
-
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { EventCard } from "@/components/ui/event-card";
