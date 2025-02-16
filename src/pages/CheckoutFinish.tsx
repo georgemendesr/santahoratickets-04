@@ -16,7 +16,7 @@ const CheckoutFinish = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { session } = useAuth();
   const batchId = searchParams.get("batch");
   const quantity = Number(searchParams.get("quantity")) || 1;
 
@@ -57,7 +57,7 @@ const CheckoutFinish = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
+    if (!session?.user) {
       toast.error("Você precisa estar logado para continuar");
       return;
     }
@@ -76,7 +76,7 @@ const CheckoutFinish = () => {
           cpf,
           phone,
         })
-        .eq("id", user.id);
+        .eq("id", session.user.id);
 
       if (profileError) throw profileError;
 
@@ -86,7 +86,7 @@ const CheckoutFinish = () => {
           .from("payment_preferences")
           .insert({
             event_id: id,
-            user_id: user.id,
+            user_id: session.user.id,
             ticket_quantity: quantity,
             total_amount: batch.price * quantity,
             init_point: "mercadopago_url_placeholder", // Será implementado posteriormente
