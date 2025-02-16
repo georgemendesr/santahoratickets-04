@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus, Mail, CheckCircle2 } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
 
   // Redirecionar se já estiver logado
   if (session) {
@@ -62,7 +63,10 @@ export default function Auth() {
 
       if (error) throw error;
 
-      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
+      setSignUpSuccess(true);
+      // Limpa o formulário
+      e.currentTarget.reset();
+      
     } catch (error: any) {
       toast.error("Erro ao criar conta: " + error.message);
     } finally {
@@ -112,28 +116,53 @@ export default function Auth() {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div>
-                  <Input
-                    type="email"
-                    name="email"
-                    placeholder="Digite seu email"
-                    required
-                  />
+              {signUpSuccess ? (
+                <div className="text-center space-y-4 py-8">
+                  <div className="flex justify-center">
+                    <CheckCircle2 className="h-16 w-16 text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-green-600">Conta criada com sucesso!</h3>
+                  <div className="space-y-2">
+                    <p className="text-gray-600">
+                      Enviamos um email de confirmação para você.
+                    </p>
+                    <div className="flex justify-center items-center text-gray-500">
+                      <Mail className="h-4 w-4 mr-2" />
+                      <span>Verifique sua caixa de entrada</span>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setSignUpSuccess(false)}
+                  >
+                    Criar outra conta
+                  </Button>
                 </div>
-                <div>
-                  <Input
-                    type="password"
-                    name="password"
-                    placeholder="Digite sua senha"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  {isLoading ? "Criando conta..." : "Criar conta"}
-                </Button>
-              </form>
+              ) : (
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div>
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="Digite seu email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="password"
+                      name="password"
+                      placeholder="Digite sua senha"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    {isLoading ? "Criando conta..." : "Criar conta"}
+                  </Button>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
