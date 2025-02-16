@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -29,42 +28,31 @@ const Index = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  
-  // Simplificando a consulta
+
   const { data: events, isLoading, error } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*');
-      
-      if (error) {
-        console.error('Erro na consulta:', error);
-        throw error;
-      }
-
-      return data || [];
-    }
-  });
-
-  const handleDeleteEvent = async (eventId: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este evento?")) {
+      console.log('Iniciando consulta ao Supabase...');
       try {
-        const { error } = await supabase
-          .from("events")
-          .delete()
-          .eq("id", eventId);
+        const { data, error } = await supabase
+          .from('events')
+          .select('*');
 
-        if (error) throw error;
+        console.log('Resposta do Supabase:', { data, error });
         
-        toast.success("Evento excluído com sucesso!");
-        window.location.reload();
-      } catch (error) {
-        toast.error("Erro ao excluir evento");
-        console.error("Erro:", error);
+        if (error) {
+          console.error('Erro do Supabase:', error);
+          throw error;
+        }
+
+        return data || [];
+      } catch (err) {
+        console.error('Erro na consulta:', err);
+        throw err;
       }
-    }
-  };
+    },
+    retry: 1, // Reduz o número de tentativas para facilitar o diagnóstico
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -102,6 +90,7 @@ const Index = () => {
 
   const handleSeedTestData = async () => {
     try {
+      console.log('Tentando inserir dados de teste...');
       const { error } = await supabase
         .from('events')
         .insert([
@@ -118,13 +107,16 @@ const Index = () => {
           }
         ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao inserir:', error);
+        throw error;
+      }
       
       toast.success("Dados de teste inseridos com sucesso!");
       window.location.reload();
     } catch (error) {
+      console.error('Erro completo:', error);
       toast.error("Erro ao inserir dados de teste");
-      console.error("Erro:", error);
     }
   };
 
