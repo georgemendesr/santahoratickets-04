@@ -292,7 +292,7 @@ const EventDetails = () => {
                   <Button 
                     className="flex-1" 
                     onClick={handlePurchase}
-                    disabled={event.available_tickets === 0 || !session}
+                    disabled={event.available_tickets === 0}
                   >
                     <Ticket className="mr-2 h-4 w-4" />
                     Comprar Pulseira
