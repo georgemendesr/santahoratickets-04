@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, Reward, RewardRedemption } from '@/types';
@@ -42,6 +41,30 @@ export const useProfile = (userId?: string) => {
     }
 
     try {
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .update({
+            cpf,
+            birth_date: birthDate,
+            phone
+          })
+          .eq('id', userId)
+          .select()
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+        toast.success('Perfil atualizado com sucesso!');
+        return data;
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
         .insert([
@@ -62,8 +85,8 @@ export const useProfile = (userId?: string) => {
       toast.success('Perfil criado com sucesso!');
       return data;
     } catch (error) {
-      console.error('Error creating profile:', error);
-      toast.error('Erro ao criar perfil');
+      console.error('Error creating/updating profile:', error);
+      toast.error('Erro ao criar/atualizar perfil');
       return null;
     }
   };
@@ -150,7 +173,6 @@ export const useProfile = (userId?: string) => {
 
       if (error) throw error;
 
-      // Atualizar o perfil local com os novos pontos
       setProfile(prev => prev ? {
         ...prev,
         loyalty_points: prev.loyalty_points - pointsRequired
