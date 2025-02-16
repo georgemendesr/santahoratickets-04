@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -121,6 +120,40 @@ const EventDetails = () => {
     },
   });
 
+  const createPaymentPreference = useMutation({
+    mutationFn: async () => {
+      if (!session?.user.id || !event) return null;
+
+      const { data, error } = await supabase
+        .from("payment_preferences")
+        .insert([
+          {
+            user_id: session.user.id,
+            event_id: event.id,
+            ticket_quantity: 1,
+            total_amount: event.price,
+            init_point: "URL_DO_CHECKOUT",
+            status: "pending"
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data) {
+        toast.success("Pedido criado com sucesso!");
+        navigate("/");
+      }
+    },
+    onError: (error) => {
+      console.error("Erro ao criar preferência de pagamento:", error);
+      toast.error("Erro ao processar pedido. Por favor, tente novamente.");
+    }
+  });
+
   const handleShare = async () => {
     if (!session) {
       toast.error("Faça login para compartilhar o evento");
@@ -138,6 +171,15 @@ const EventDetails = () => {
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createProfileMutation.mutate();
+  };
+
+  const handlePurchase = () => {
+    if (!session) {
+      toast.error("Faça login para continuar com a compra");
+      return;
+    }
+
+    createPaymentPreference.mutate();
   };
 
   const getLowStockAlert = (availableTickets: number) => {
@@ -249,11 +291,11 @@ const EventDetails = () => {
                 <div className="flex gap-4">
                   <Button 
                     className="flex-1" 
-                    onClick={() => navigate(`/buy/${event.id}${referralCode ? `?ref=${referralCode}` : ''}`)} 
-                    disabled={event.available_tickets === 0}
+                    onClick={handlePurchase}
+                    disabled={event.available_tickets === 0 || !session}
                   >
                     <Ticket className="mr-2 h-4 w-4" />
-                    Comprar Ingresso
+                    Comprar Pulseira
                   </Button>
                   <Button variant="outline" onClick={handleShare}>
                     <Share2 className="mr-2 h-4 w-4" />
