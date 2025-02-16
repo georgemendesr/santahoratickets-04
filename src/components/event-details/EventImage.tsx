@@ -11,6 +11,11 @@ interface EventImageProps {
 export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Remove o domínio da URL se estiver presente
+  const imageUrl = src.includes('http') 
+    ? src.split('/public/')[1] 
+    : src;
+
   return (
     <>
       <div 
@@ -18,7 +23,7 @@ export function EventImage({ src, alt }: EventImageProps) {
         className="relative group cursor-zoom-in overflow-hidden rounded-xl shadow-lg"
       >
         <img
-          src={src}
+          src={`/public/${imageUrl}`}
           alt={alt}
           className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -30,7 +35,7 @@ export function EventImage({ src, alt }: EventImageProps) {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
           <img
-            src={src}
+            src={`/public/${imageUrl}`}
             alt={alt}
             className="w-full h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
