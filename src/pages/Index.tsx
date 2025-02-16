@@ -31,20 +31,38 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [recentPurchase, setRecentPurchase] = useState<{eventId: string, quantity: number} | null>(null);
   
-  const { data: events, isLoading, refetch } = useQuery({
+  const { data: events, isLoading, error } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
+      console.log('Iniciando busca de eventos...');
+      
+      // Primeiro, vamos testar a conexão
+      const { data: testData, error: testError } = await supabase
+        .from('events')
+        .select('count');
+      
+      if (testError) {
+        console.error('Erro no teste de conexão:', testError);
+        throw testError;
+      }
+      
+      console.log('Teste de conexão bem sucedido:', testData);
+
+      // Agora fazemos a query principal
       const { data, error } = await supabase
         .from('events')
-        .select('*')
-        .order('date', { ascending: true });
+        .select('*');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query principal:', error);
+        throw error;
+      }
+
+      console.log('Eventos carregados com sucesso:', data);
       return data as Event[];
     },
   });
 
-  // Simulação de compras em tempo real
   useEffect(() => {
     const channel = supabase.channel('events-channel')
       .on('broadcast', { event: 'ticket-purchase' }, ({ payload }) => {
@@ -155,6 +173,12 @@ const Index = () => {
             className="h-24 object-contain"
           />
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-500">Erro ao carregar eventos: {error.message}</p>
+          </div>
+        )}
 
         <div className="mb-4">
           <Button
