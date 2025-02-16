@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { type Event } from "@/types";
@@ -21,14 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Search, MapPin, Eye, Edit, Trash2 } from "lucide-react";
+import { Calendar, Search, MapPin, Eye, Edit, Trash2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [recentPurchase, setRecentPurchase] = useState<{eventId: string, quantity: number} | null>(null);
   
   const { data: events, isLoading, refetch } = useQuery({
     queryKey: ['events'],
@@ -42,6 +44,20 @@ const Index = () => {
       return data as Event[];
     },
   });
+
+  // Simulação de compras em tempo real
+  useEffect(() => {
+    const channel = supabase.channel('events-channel')
+      .on('broadcast', { event: 'ticket-purchase' }, ({ payload }) => {
+        setRecentPurchase(payload);
+        setTimeout(() => setRecentPurchase(null), 5000); // Remove após 5 segundos
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
@@ -93,6 +109,22 @@ const Index = () => {
     }).format(price);
   };
 
+  const renderTicketAvailability = (event: Event) => {
+    if (event.available_tickets <= 20) {
+      return (
+        <div className="flex items-center gap-2 text-amber-500 animate-pulse">
+          <AlertCircle className="h-4 w-4" />
+          <span className="font-medium">Poucas unidades</span>
+        </div>
+      );
+    }
+    return (
+      <span className="text-muted-foreground">
+        Em estoque
+      </span>
+    );
+  };
+
   const filteredEvents = events?.filter(event => {
     const matchesSearch = 
       event.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -112,6 +144,21 @@ const Index = () => {
             className="h-24 object-contain"
           />
         </div>
+
+        {recentPurchase && (
+          <div className="mb-6 p-4 bg-green-500/10 rounded-lg border border-green-500/20 animate-fade-in">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-green-500 font-medium">
+                Alguém acabou de comprar ingressos!
+              </span>
+              <Progress value={100} className="w-24 bg-green-500/20" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {recentPurchase.quantity} {recentPurchase.quantity === 1 ? 'ingresso foi comprado' : 'ingressos foram comprados'}. Não perca a sua chance!
+            </p>
+          </div>
+        )}
+
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 className="text-3xl font-bold">Meus Eventos</h1>
@@ -157,7 +204,7 @@ const Index = () => {
                   <TableHead>Data</TableHead>
                   <TableHead>Local</TableHead>
                   <TableHead>Preço</TableHead>
-                  <TableHead>Ingressos</TableHead>
+                  <TableHead>Disponibilidade</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -176,7 +223,10 @@ const Index = () => {
                   </TableRow>
                 ) : (
                   filteredEvents?.map((event) => (
-                    <TableRow key={event.id}>
+                    <TableRow 
+                      key={event.id}
+                      className={recentPurchase?.eventId === event.id ? "bg-green-500/5" : ""}
+                    >
                       <TableCell>
                         {getStatusBadge(event.status || 'published')}
                       </TableCell>
@@ -199,7 +249,7 @@ const Index = () => {
                         {formatPrice(event.price)}
                       </TableCell>
                       <TableCell>
-                        {event.available_tickets} disponíveis
+                        {renderTicketAvailability(event)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
