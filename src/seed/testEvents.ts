@@ -60,32 +60,41 @@ const testEvents = [
 ];
 
 export const seedTestEvents = async () => {
-  const { data, error } = await supabase
-    .from('events')
-    .insert(testEvents)
-    .select();
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .insert(testEvents)
+      .select();
 
-  if (error) {
-    console.error('Erro ao inserir eventos de teste:', error);
+    if (error) {
+      console.error('Erro ao inserir eventos de teste:', error);
+      throw error;
+    }
+
+    // Simular uma compra após 10 segundos usando o ID do primeiro evento inserido
+    if (data && data[0]) {
+      setTimeout(() => {
+        const channel = supabase.channel('events-channel');
+        channel.subscribe();
+        
+        channel.send({
+          type: 'broadcast',
+          event: 'ticket-purchase',
+          payload: {
+            eventId: data[0].id,
+            quantity: 3
+          }
+        });
+      }, 10000);
+    }
+
+    console.log('Eventos de teste inseridos com sucesso!');
+    console.log('Dados inseridos:', data); // Log adicional para debug
+    
+    return data;
+
+  } catch (error) {
+    console.error('Erro:', error);
     throw error;
   }
-
-  // Simular uma compra após 10 segundos usando o ID do primeiro evento inserido
-  if (data && data[0]) {
-    setTimeout(() => {
-      const channel = supabase.channel('events-channel');
-      channel.subscribe();
-      
-      channel.send({
-        type: 'broadcast',
-        event: 'ticket-purchase',
-        payload: {
-          eventId: data[0].id,
-          quantity: 3
-        }
-      });
-    }, 10000);
-  }
-
-  console.log('Eventos de teste inseridos com sucesso!');
 };
