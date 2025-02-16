@@ -28,7 +28,7 @@ const EventDetails = () => {
   });
 
   const shareViaWhatsApp = (ticketUrl: string) => {
-    const message = `Aqui está seu ingresso para ${event?.title}! 🎫\n\nApresente este QR Code na entrada do evento:\n${ticketUrl}`;
+    const message = `Ôpa! Pronto(a) e preparado(a)? Seu QR Code chegou para ${event?.title}! 🎫\n\nApresente este QR Code na entrada do evento:\n${ticketUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
