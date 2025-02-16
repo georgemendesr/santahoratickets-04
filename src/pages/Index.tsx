@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { type Event } from "@/types";
 import { 
@@ -20,85 +21,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Search, MapPin, Eye, Edit, Trash2, AlertCircle } from "lucide-react";
+import { Calendar, Search, MapPin, Eye, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [recentPurchase, setRecentPurchase] = useState<{eventId: string, quantity: number} | null>(null);
   
-  const { data: events, isLoading, error, refetch } = useQuery({
+  // Simplificando a consulta
+  const { data: events, isLoading, error } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      try {
-        console.log('Iniciando busca de eventos...');
-        
-        // Agora fazemos a query principal diretamente
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .throwOnError();
-        
-        if (error) {
-          console.error('Erro na query:', error);
-          throw error;
-        }
-
-        if (!data) {
-          console.log('Nenhum dado encontrado');
-          return [];
-        }
-
-        console.log('Eventos carregados com sucesso:', data);
-        return data as Event[];
-      } catch (error) {
-        console.error('Erro detalhado:', error);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*');
+      
+      if (error) {
+        console.error('Erro na consulta:', error);
         throw error;
       }
-    },
-    retry: 1,
-    retryDelay: 1000,
-  });
 
-  useEffect(() => {
-    const channel = supabase.channel('events-channel')
-      .on('broadcast', { event: 'ticket-purchase' }, ({ payload }) => {
-        setRecentPurchase(payload);
-        setTimeout(() => setRecentPurchase(null), 5000); // Remove após 5 segundos
-      })
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, []);
-
-  const deleteEventMutation = useMutation({
-    mutationFn: async (eventId: string) => {
-      const { error } = await supabase
-        .from("events")
-        .delete()
-        .eq("id", eventId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Evento excluído com sucesso!");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error("Erro ao excluir evento");
-      console.error("Erro:", error);
-    },
+      return data || [];
+    }
   });
 
   const handleDeleteEvent = async (eventId: string) => {
     if (window.confirm("Tem certeza que deseja excluir este evento?")) {
-      await deleteEventMutation.mutateAsync(eventId);
+      try {
+        const { error } = await supabase
+          .from("events")
+          .delete()
+          .eq("id", eventId);
+
+        if (error) throw error;
+        
+        toast.success("Evento excluído com sucesso!");
+        window.location.reload();
+      } catch (error) {
+        toast.error("Erro ao excluir evento");
+        console.error("Erro:", error);
+      }
     }
   };
 
@@ -127,22 +91,6 @@ const Index = () => {
     }).format(price);
   };
 
-  const renderTicketAvailability = (event: Event) => {
-    if (event.available_tickets <= 20) {
-      return (
-        <div className="flex items-center gap-2 text-amber-500 animate-pulse">
-          <AlertCircle className="h-4 w-4" />
-          <span className="font-medium">Poucas unidades</span>
-        </div>
-      );
-    }
-    return (
-      <span className="text-muted-foreground">
-        Em estoque
-      </span>
-    );
-  };
-
   const filteredEvents = events?.filter(event => {
     const matchesSearch = 
       event.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -154,10 +102,26 @@ const Index = () => {
 
   const handleSeedTestData = async () => {
     try {
-      const { seedTestEvents } = await import('@/seed/testEvents');
-      await seedTestEvents();
+      const { error } = await supabase
+        .from('events')
+        .insert([
+          {
+            title: "Show do Metallica",
+            description: "O maior show de metal de todos os tempos está de volta!",
+            date: "2024-05-15",
+            time: "20:00",
+            location: "Allianz Parque, São Paulo",
+            price: 850.00,
+            available_tickets: 15,
+            image: "/placeholder.svg",
+            status: "published"
+          }
+        ]);
+
+      if (error) throw error;
+      
       toast.success("Dados de teste inseridos com sucesso!");
-      refetch();
+      window.location.reload();
     } catch (error) {
       toast.error("Erro ao inserir dados de teste");
       console.error("Erro:", error);
@@ -190,20 +154,6 @@ const Index = () => {
             Inserir Dados de Teste
           </Button>
         </div>
-
-        {recentPurchase && (
-          <div className="mb-6 p-4 bg-green-500/10 rounded-lg border border-green-500/20 animate-fade-in">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-green-500 font-medium">
-                Alguém acabou de comprar ingressos!
-              </span>
-              <Progress value={100} className="w-24 bg-green-500/20" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {recentPurchase.quantity} {recentPurchase.quantity === 1 ? 'ingresso foi comprado' : 'ingressos foram comprados'}. Não perca a sua chance!
-            </p>
-          </div>
-        )}
 
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -250,29 +200,25 @@ const Index = () => {
                   <TableHead>Data</TableHead>
                   <TableHead>Local</TableHead>
                   <TableHead>Preço</TableHead>
-                  <TableHead>Disponibilidade</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                       Carregando eventos...
                     </TableCell>
                   </TableRow>
                 ) : filteredEvents?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                       Nenhum evento encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredEvents?.map((event) => (
-                    <TableRow 
-                      key={event.id}
-                      className={recentPurchase?.eventId === event.id ? "bg-green-500/5" : ""}
-                    >
+                    <TableRow key={event.id}>
                       <TableCell>
                         {getStatusBadge(event.status || 'published')}
                       </TableCell>
@@ -293,9 +239,6 @@ const Index = () => {
                       </TableCell>
                       <TableCell>
                         {formatPrice(event.price)}
-                      </TableCell>
-                      <TableCell>
-                        {renderTicketAvailability(event)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
