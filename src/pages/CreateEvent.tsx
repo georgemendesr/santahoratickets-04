@@ -20,7 +20,7 @@ const CreateEvent = () => {
         location: data.location,
         price: parseFloat(data.price),
         available_tickets: parseInt(data.available_tickets),
-        image: "photo-1514525253161-7a46d19cd819", // Imagem de teste do Unsplash
+        image: "1435babf-b231-494c-a8fb-9dd1239cd347.png",
         status: "published" as const
       };
 
