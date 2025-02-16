@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -25,10 +24,10 @@ const Checkout = () => {
         .from("events")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as Event;
+      return data as Event | null;
     },
     enabled: !!id,
   });
@@ -46,7 +45,7 @@ const Checkout = () => {
       if (error) throw error;
       return data as Batch[];
     },
-    enabled: !!id,
+    enabled: !!id && !!event,
   });
 
   const isLoading = isLoadingEvent || isLoadingBatches;
@@ -75,7 +74,6 @@ const Checkout = () => {
       return;
     }
 
-    // Navegar para a página de finalização com os parâmetros
     navigate(`/checkout/${id}/finish?batch=${selectedBatch}&quantity=${quantity}`);
   };
 
@@ -89,11 +87,19 @@ const Checkout = () => {
     );
   }
 
-  if (!event || !batches) {
+  if (!event) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
         <div className="container mx-auto px-4 py-8">
-          <p>Evento não encontrado</p>
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para Home
+          </Button>
+          <p className="text-center text-lg">Evento não encontrado</p>
         </div>
       </div>
     );
@@ -114,22 +120,22 @@ const Checkout = () => {
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle>Comprar Ingressos - {event.title}</CardTitle>
+              <CardTitle>Comprar Ingressos - {event?.title}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Evento</p>
-                    <p className="font-medium">{event.title}</p>
+                    <p className="font-medium">{event?.title}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Data</p>
-                    <p className="font-medium">{event.date} às {event.time}</p>
+                    <p className="font-medium">{event?.date} às {event?.time}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Local</p>
-                    <p className="font-medium">{event.location}</p>
+                    <p className="font-medium">{event?.location}</p>
                   </div>
                 </div>
 
