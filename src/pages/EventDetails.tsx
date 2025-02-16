@@ -1,17 +1,23 @@
 
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Ticket, Share2 } from 'lucide-react';
-import { type Event } from '@/types';
-import { toast } from 'sonner';
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { type Event } from "@/types";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, MapPin, Ticket } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [quantity, setQuantity] = useState(1);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', id],
@@ -25,132 +31,129 @@ const EventDetails = () => {
       if (error) throw error;
       return data as Event;
     },
+    enabled: !!id,
   });
 
-  const shareViaWhatsApp = (ticketUrl: string) => {
-    const message = `Ôpa! Pronto(a) e preparado(a)? Seu QR Code chegou para ${event?.title}! 🎫\n\nApresente este QR Code na entrada do evento:\n${ticketUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+  const formatDate = (date: string, time: string) => {
+    const [year, month, day] = date.split("-");
+    return `${day}/${month}/${year} às ${time}`;
   };
 
-  const handleBuyTickets = async () => {
-    try {
-      // Criar preferência de pagamento
-      const { data: preference, error } = await supabase.functions.invoke('create-payment-preference', {
-        body: {
-          eventId: event?.id,
-          quantity,
-          unitPrice: event?.price
-        }
-      });
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
 
-      if (error) throw error;
-
-      // Redirecionar para o checkout do Mercado Pago
-      window.location.href = preference.init_point;
-    } catch (error) {
-      toast.error('Erro ao processar pagamento. Tente novamente.');
-      console.error('Erro:', error);
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "published":
+        return <Badge className="bg-green-500">Publicado</Badge>;
+      case "draft":
+        return <Badge variant="secondary">Rascunho</Badge>;
+      case "ended":
+        return <Badge variant="destructive">Encerrado</Badge>;
+      default:
+        return <Badge variant="outline">Status desconhecido</Badge>;
     }
   };
 
-  if (isLoading) return <div>Carregando...</div>;
-  if (!event) return <div>Evento não encontrado</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+        <div className="container mx-auto px-4 py-8">
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+        <div className="container mx-auto px-4 py-8">
+          <p>Evento não encontrado</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="relative h-[400px] overflow-hidden rounded-lg">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-8"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <Card className="mb-6">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  {getStatusBadge(event.status || 'published')}
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/edit-event/${event.id}`)}
+                  >
+                    Editar Evento
+                  </Button>
+                </div>
+                <CardTitle className="text-3xl">{event.title}</CardTitle>
+                <CardDescription>
+                  <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{formatDate(event.date, event.time)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{event.location}</span>
+                  </div>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none">
+                  <p className="whitespace-pre-line">{event.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações dos Ingressos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Preço por ingresso</span>
+                  <span className="text-xl font-bold">{formatPrice(event.price)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Ingressos disponíveis</span>
+                  <div className="flex items-center gap-2">
+                    <Ticket className="h-4 w-4" />
+                    <span className="text-xl font-bold">{event.available_tickets}</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" size="lg">
+                  Comprar Ingresso
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+
+          <div className="relative aspect-square rounded-lg overflow-hidden">
             <img
               src={event.image}
               alt={event.title}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
             />
-          </div>
-          
-          <div className="space-y-6">
-            <div className="flex items-start justify-between">
-              <h1 className="text-4xl font-bold">{event.title}</h1>
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/edit-event/${event.id}`)}
-              >
-                Editar Evento
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center text-muted-foreground">
-                <Calendar className="mr-2 h-5 w-5" />
-                <span>{event.date} - {event.time}</span>
-              </div>
-              
-              <div className="flex items-center text-muted-foreground">
-                <MapPin className="mr-2 h-5 w-5" />
-                <span>{event.location}</span>
-              </div>
-              
-              <div className="flex items-center text-muted-foreground">
-                <Ticket className="mr-2 h-5 w-5" />
-                <span>{event.available_tickets} ingressos disponíveis</span>
-              </div>
-            </div>
-
-            <p className="text-lg">{event.description}</p>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">
-                  R$ {event.price.toFixed(2)}
-                </span>
-                
-                <div className="flex items-center space-x-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                  >
-                    -
-                  </Button>
-                  <span className="text-xl">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    onClick={() => setQuantity(Math.min(event.available_tickets, quantity + 1))}
-                    disabled={quantity >= event.available_tickets}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-lg">
-                  <span>Total:</span>
-                  <span className="font-bold">
-                    R$ {(event.price * quantity).toFixed(2)}
-                  </span>
-                </div>
-
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleBuyTickets}
-                  disabled={quantity > event.available_tickets}
-                >
-                  Comprar Ingressos
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => shareViaWhatsApp(window.location.href)}
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Compartilhar por WhatsApp
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
