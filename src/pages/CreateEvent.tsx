@@ -69,10 +69,10 @@ const CreateEvent = () => {
 
       console.log('Upload realizado com sucesso:', uploadData.path);
 
-      // Criar evento com o caminho da imagem
+      // Criar evento com o caminho completo da imagem incluindo o bucket
       await createEventMutation.mutateAsync({
         ...data,
-        image: fileName, // Agora armazenamos apenas o nome do arquivo
+        image: `event-images/${uploadData.path}`, // Usando o caminho completo com o bucket
       });
     } catch (error) {
       console.error('Erro completo:', error);
