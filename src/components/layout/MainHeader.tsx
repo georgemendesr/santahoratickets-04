@@ -1,63 +1,38 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useRole } from "@/hooks/useRole";
 
 export function MainHeader() {
   const { session } = useAuth();
+  const { isAdmin } = useRole(session);
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logout realizado com sucesso!");
-    navigate("/");
-  };
-
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
-      <div className="container flex h-16 items-center">
-        <Link to="/" className="mr-6 flex items-center">
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center justify-between">
+        <Link to="/" className="flex items-center">
           <img 
             src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
             alt="Logo Santinha"
-            className="h-8"
+            className="h-7"
           />
         </Link>
 
-        <div className="ml-auto flex items-center space-x-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/perfil')}
+          className="flex items-center gap-2"
+        >
+          <User className="h-4 w-4" />
           {session ? (
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/perfil')}
-                className="flex items-center gap-2"
-              >
-                <User className="h-4 w-4" />
-                Minha Conta
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleLogout}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </Button>
-            </div>
+            <span className="text-sm">{session.user.email}</span>
           ) : (
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/auth')}
-              className="flex items-center gap-2"
-            >
-              <User className="h-4 w-4" />
-              Entrar
-            </Button>
+            'Entrar'
           )}
-        </div>
+        </Button>
       </div>
     </header>
   );
