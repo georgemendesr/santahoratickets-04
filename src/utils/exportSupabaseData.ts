@@ -66,6 +66,7 @@ export const exportSupabaseData = async () => {
   sqlContent += 'SET CONSTRAINTS ALL DEFERRED;\n\n';
 
   try {
+    let totalRegistros = 0;
     // Exportar dados de cada tabela
     for (const table of tables) {
       console.log(`Exportando dados da tabela ${table}...`);
@@ -80,6 +81,8 @@ export const exportSupabaseData = async () => {
       }
 
       if (data && data.length > 0) {
+        console.log(`Tabela ${table}: ${data.length} registros`);
+        totalRegistros += data.length;
         sqlContent += `-- Dados da tabela ${table}\n`;
         sqlContent += generateInsertStatements(table, data);
         sqlContent += '\n';
@@ -88,6 +91,9 @@ export const exportSupabaseData = async () => {
 
     // Reabilitar constraints
     sqlContent += 'COMMIT;\n';
+
+    console.log(`Total de registros exportados: ${totalRegistros}`);
+    console.log(`Tamanho do arquivo SQL: ${new Blob([sqlContent]).size / 1024} KB`);
 
     // Criar e baixar o arquivo SQL
     const blob = new Blob([sqlContent], { type: 'text/plain;charset=utf-8' });
