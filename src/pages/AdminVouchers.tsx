@@ -29,7 +29,7 @@ const AdminVouchers = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link to="/admin/batches">
               <Button variant="outline" className="w-full h-24 text-lg">
                 Tipos de Ingressos
@@ -38,6 +38,11 @@ const AdminVouchers = () => {
             <Link to="/admin/vouchers/design">
               <Button variant="outline" className="w-full h-24 text-lg">
                 Layout de Vouchers
+              </Button>
+            </Link>
+            <Link to="/admin/vouchers/manual-order">
+              <Button variant="outline" className="w-full h-24 text-lg">
+                Adicionar pedido manual
               </Button>
             </Link>
           </div>
