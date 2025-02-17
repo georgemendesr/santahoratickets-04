@@ -59,37 +59,9 @@ export type Database = {
           },
         ]
       }
-      event_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       events: {
         Row: {
           available_tickets: number
-          category_id: string | null
           created_at: string
           date: string
           description: string
@@ -103,7 +75,6 @@ export type Database = {
         }
         Insert: {
           available_tickets: number
-          category_id?: string | null
           created_at?: string
           date: string
           description: string
@@ -117,7 +88,6 @@ export type Database = {
         }
         Update: {
           available_tickets?: number
-          category_id?: string | null
           created_at?: string
           date?: string
           description?: string
@@ -129,15 +99,7 @@ export type Database = {
           time?: string
           title?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "event_categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       loyalty_points_history: {
         Row: {
