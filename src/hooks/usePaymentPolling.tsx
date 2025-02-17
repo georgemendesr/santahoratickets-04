@@ -34,10 +34,10 @@ export const usePaymentPolling = ({
     
     if (newStatus === "approved") {
       toast.success("Pagamento aprovado!");
-      window.location.href = `/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`;
+      window.location.href = `/payment-status?status=approved&payment_id=${payment_id}&external_reference=${reference}`;
     } else if (newStatus === "rejected") {
       toast.error("Pagamento rejeitado");
-      window.location.href = `/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`;
+      window.location.href = `/payment-status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`;
     }
   }, [payment_id, reference, currentStatus]);
 
@@ -109,11 +109,18 @@ export const usePaymentPolling = ({
     fetchPixData();
     setupRealtimeSubscription();
 
+    // Configurar polling manual como backup
+    const pollingInterval = setInterval(() => {
+      console.log("Executando polling manual...");
+      fetchPixData();
+    }, 5000); // A cada 5 segundos
+
     return () => {
       if (channel) {
         console.log("Limpando inscrição de tempo real");
         supabase.removeChannel(channel);
       }
+      clearInterval(pollingInterval);
     };
   }, [preferenceId, handleStatusChange, currentStatus]);
 

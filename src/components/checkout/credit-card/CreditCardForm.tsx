@@ -9,8 +9,6 @@ import { CardholderInput } from "./CardholderInput";
 import { ExpirationInputs } from "./ExpirationInputs";
 import { InstallmentsSelect } from "./InstallmentsSelect";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard } from "lucide-react";
 
 declare global {
   interface Window {
@@ -29,7 +27,6 @@ interface CreditCardFormProps {
 }
 
 export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFormProps) {
-  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
   const [cardNumber, setCardNumber] = useState("");
   const [cardholderName, setCardholderName] = useState("");
   const [expirationMonth, setExpirationMonth] = useState("");
@@ -67,7 +64,7 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
 
       onSubmit({
         token: cardToken.id,
-        installments: cardType === "debit" ? 1 : Number(installments),
+        installments: Number(installments),
         paymentMethodId,
       });
     } catch (error) {
@@ -82,26 +79,11 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        <Tabs value={cardType} onValueChange={(value) => setCardType(value as "credit" | "debit")}>
-          <TabsList className="w-full">
-            <TabsTrigger value="credit" className="flex-1">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Cartão de Crédito
-            </TabsTrigger>
-            <TabsTrigger value="debit" className="flex-1">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Cartão de Débito
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <div className="flex justify-center space-x-4 py-4">
-          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/visa.gif" alt="Visa" className="h-8" />
-          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/master.gif" alt="Mastercard" className="h-8" />
-          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/amex.gif" alt="American Express" className="h-8" />
-          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/elo.gif" alt="Elo" className="h-8" />
-        </div>
+      <div className="flex flex-wrap justify-center gap-4 py-4">
+        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/visa.gif" alt="Visa" className="h-8" />
+        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/master.gif" alt="Mastercard" className="h-8" />
+        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/amex.gif" alt="American Express" className="h-8" />
+        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/elo.gif" alt="Elo" className="h-8" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,13 +118,11 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
           />
         </div>
 
-        {cardType === "credit" && (
-          <InstallmentsSelect
-            value={installments}
-            options={availableInstallments}
-            onChange={setInstallments}
-          />
-        )}
+        <InstallmentsSelect
+          value={installments}
+          options={availableInstallments}
+          onChange={setInstallments}
+        />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Processando..." : "Pagar"}
