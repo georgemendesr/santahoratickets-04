@@ -37,10 +37,10 @@ export function EventHeader() {
       {/* Background com overlay */}
       <div className="absolute inset-0">
         <div className="relative h-full w-full">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#FF4B5C]/90 via-[#A020F0]/70 to-background z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-10" />
           <img 
-            src="/lovable-uploads/735c2365-f113-4cae-926c-1f72f6ecbcb3.png"
-            alt="Bora Pago Dear - Kolla Kommigo"
+            src="/lovable-uploads/3932db3c-50e4-470f-b6df-55c45faf431c.png"
+            alt="Ambiente do evento"
             className="w-full h-full object-cover animate-fade-in"
           />
         </div>
@@ -49,25 +49,21 @@ export function EventHeader() {
       {/* Conteúdo centralizado */}
       <div className="relative z-20 container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Logo e Título */}
-          <div className="space-y-4">
-            <div className="relative group animate-fade-in mb-12">
-              <img 
-                src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
-                alt="Logo Santinha" 
-                className="h-32 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
-              />
+          {/* Banner do Evento */}
+          <div className="relative animate-fade-in">
+            <img 
+              src="/lovable-uploads/2c1fd3fb-c442-4d54-8965-81264ae037ec.png"
+              alt="Bora Pagodear"
+              className="w-full max-w-2xl mx-auto rounded-lg shadow-2xl"
+            />
+            <div className="absolute -top-4 -right-4 bg-red-500 text-white px-4 py-1 rounded-full font-bold transform rotate-12">
+              3º Lote
             </div>
-            {event && (
-              <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight drop-shadow-lg">
-                BORA PAGO DEAR
-              </h1>
-            )}
           </div>
 
           {/* Informações do Evento */}
           {event && (
-            <div className="space-y-6 text-white">
+            <div className="space-y-6 text-white mt-8">
               <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <img 
                   src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png"
@@ -110,12 +106,6 @@ export function EventHeader() {
         <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
           <div className="w-1 h-3 bg-white/70 rounded-full" />
         </div>
-      </div>
-
-      {/* Elementos decorativos */}
-      <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl" />
       </div>
     </div>
   );
