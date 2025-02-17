@@ -29,7 +29,18 @@ const CheckoutFinish = () => {
     handlePayment,
   } = useCheckoutState(session, eventId, batch);
 
-  useEffect(() => {
+  if (!event || !batch) {
+    return (
+      <CheckoutLayout onBackClick={() => navigate("/")}>
+        <p className="text-center text-lg">Informações não encontradas</p>
+      </CheckoutLayout>
+    );
+  }
+
+  // Só mostra o aviso de login quando o usuário tentar prosseguir com a compra
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!session) {
       toast.error(
         "É necessário fazer login para finalizar a compra",
@@ -51,20 +62,11 @@ const CheckoutFinish = () => {
           redirect: `/checkout/finish?event=${eventId}&quantity=${quantity}` 
         } 
       });
+      return;
     }
-  }, [session, navigate, eventId, quantity]);
 
-  if (!event || !batch) {
-    return (
-      <CheckoutLayout onBackClick={() => navigate("/")}>
-        <p className="text-center text-lg">Informações não encontradas</p>
-      </CheckoutLayout>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
+    handleSubmitProfile(e);
+  };
 
   return (
     <CheckoutLayout>
@@ -80,7 +82,7 @@ const CheckoutFinish = () => {
         onNameChange={setName}
         onCpfChange={setCpf}
         onPhoneChange={setPhone}
-        onSubmitProfile={handleSubmitProfile}
+        onSubmitProfile={handleProfileSubmit}
         onSubmitPayment={handlePayment}
       />
     </CheckoutLayout>

@@ -1,25 +1,15 @@
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Event } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
-import { ProfileDialog } from "@/components/event-details/ProfileDialog";
-import { useState } from "react";
 import { EventHeader } from "@/components/home/EventHeader";
 import { EventCard } from "@/components/home/EventCard";
 import { BenefitsSection } from "@/components/home/BenefitsSection";
 
 export default function Index() {
   const navigate = useNavigate();
-  const { session } = useAuth();
-  const { profile, createProfile } = useProfile(session?.user.id);
-  const [showProfileDialog, setShowProfileDialog] = useState(false);
-  const [cpf, setCpf] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [phone, setPhone] = useState("");
 
   const { data: events, isLoading, error } = useQuery({
     queryKey: ["events"],
@@ -42,7 +32,6 @@ export default function Index() {
   const currentEvent = events?.[0];
 
   const handlePurchase = () => {
-    // Redirecionar para a página de checkout diretamente
     if (currentEvent) {
       navigate(`/checkout/finish?event=${currentEvent.id}`);
     } else {
