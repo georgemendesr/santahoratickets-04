@@ -3,10 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Event } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { MapPin, Calendar, Clock, Ticket } from "lucide-react";
 
 export function EventHeader() {
   const navigate = useNavigate();
@@ -39,71 +35,23 @@ export function EventHeader() {
         <div className="relative h-full w-full">
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-10" />
           <img 
-            src="/lovable-uploads/3932db3c-50e4-470f-b6df-55c45faf431c.png"
+            src="/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png"
             alt="Ambiente do evento"
-            className="w-full h-full object-cover animate-fade-in"
+            className="w-full h-full object-cover"
           />
         </div>
       </div>
 
-      {/* Conteúdo centralizado */}
+      {/* Logo centralizada */}
       <div className="relative z-20 container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Logo */}
-          <div className="relative group animate-fade-in mb-12">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="relative group animate-fade-in">
             <img 
               src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
               alt="Logo Santinha" 
               className="h-32 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
             />
           </div>
-
-          {/* Título do Evento */}
-          <div className="relative mb-8">
-            <img 
-              src="/lovable-uploads/0791f14f-3770-44d6-8ff3-1e714a1d1243.png"
-              alt="Bora Pagodear"
-              className="h-24 mx-auto"
-            />
-          </div>
-
-          {/* Informações do Evento */}
-          {event && (
-            <div className="space-y-6 text-white">
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                <img 
-                  src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png"
-                  alt="Kolla Kommigo"
-                  className="h-8 w-8 object-contain"
-                />
-                <span className="text-xl font-medium">Kolla Kommigo</span>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-lg">
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <Calendar className="h-5 w-5" />
-                  <span>{format(new Date(event.date), "PPPP", { locale: ptBR })}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <Clock className="h-5 w-5" />
-                  <span>{event.time}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <MapPin className="h-5 w-5" />
-                  <span>{event.location}</span>
-                </div>
-              </div>
-
-              <Button 
-                size="lg"
-                onClick={handlePurchase}
-                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Ticket className="mr-2 h-5 w-5" />
-                Comprar Pulseira
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
