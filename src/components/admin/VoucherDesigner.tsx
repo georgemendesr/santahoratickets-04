@@ -5,13 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { VoucherCard } from "@/components/voucher/VoucherCard";
+import { Ticket } from "@/types";
 
 export function VoucherDesigner() {
   const [qrCodeForeground, setQrCodeForeground] = useState("#8B5CF6");
   const [qrCodeBackground, setQrCodeBackground] = useState("#FFFFFF");
 
-  const previewTicket = {
+  const previewTicket: Ticket = {
     id: "preview-ticket",
+    event_id: "preview-event",
+    user_id: "preview-user",
+    purchase_date: new Date().toISOString(),
     qr_code: "https://example.com/ticket/preview",
     qr_code_foreground: qrCodeForeground,
     qr_code_background: qrCodeBackground,
