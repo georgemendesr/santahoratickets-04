@@ -14,6 +14,9 @@ export function VoucherDesigner() {
   const [orderNumber, setOrderNumber] = useState("123456");
   const [batchTitle, setBatchTitle] = useState("1º Lote");
   const [ticketPrice, setTicketPrice] = useState(50);
+  const [eventTitle, setEventTitle] = useState("Festa de Exemplo");
+  const [eventDate, setEventDate] = useState("01/01/2024");
+  const [eventTime, setEventTime] = useState("20:00");
   const [isSharing, setIsSharing] = useState(false);
   const voucherRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +84,39 @@ export function VoucherDesigner() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1 block">
+                Título do Evento
+              </label>
+              <Input
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                placeholder="Nome do evento"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                Data
+              </label>
+              <Input
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                placeholder="DD/MM/YYYY"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                Horário
+              </label>
+              <Input
+                value={eventTime}
+                onChange={(e) => setEventTime(e.target.value)}
+                placeholder="HH:MM"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">
                 Nome do Cliente
               </label>
               <Input
@@ -138,12 +174,11 @@ export function VoucherDesigner() {
 
       <div className="flex justify-center">
         <div ref={voucherRef}>
-          <h2 className="text-xl font-semibold mb-4">Preview do Voucher</h2>
           <VoucherCard
             ticket={previewTicket}
-            eventTitle="Festa de Exemplo"
-            eventDate="01/01/2024"
-            eventTime="20:00"
+            eventTitle={eventTitle}
+            eventDate={eventDate}
+            eventTime={eventTime}
             customerName={customerName}
             orderNumber={orderNumber}
             batchTitle={batchTitle}
