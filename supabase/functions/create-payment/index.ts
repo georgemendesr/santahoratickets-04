@@ -108,6 +108,8 @@ serve(async (req) => {
         transaction_amount: totalAmount,
         description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
         payment_method_id: 'pix',
+        payment_type_id: 'pix',
+        notification_url: 'https://seu-dominio.com/webhook',
         payer: {
           email: user.email,
           first_name: user.user_metadata?.name || user.email,
