@@ -58,6 +58,15 @@ export function EventHeader() {
             />
           </div>
 
+          {/* Título do Evento */}
+          <div className="relative mb-8">
+            <img 
+              src="/lovable-uploads/0791f14f-3770-44d6-8ff3-1e714a1d1243.png"
+              alt="Bora Pagodear"
+              className="h-24 mx-auto"
+            />
+          </div>
+
           {/* Informações do Evento */}
           {event && (
             <div className="space-y-6 text-white">
