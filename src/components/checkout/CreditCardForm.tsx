@@ -1,16 +1,14 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
+import { CardNumberInput } from "./credit-card/CardNumberInput";
+import { CardholderInput } from "./credit-card/CardholderInput";
+import { ExpirationInputs } from "./credit-card/ExpirationInputs";
+import { InstallmentsSelect } from "./credit-card/InstallmentsSelect";
+import { useMercadoPago } from "@/hooks/useMercadoPago";
 
 declare global {
   interface Window {
@@ -34,44 +32,11 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
   const [expirationMonth, setExpirationMonth] = useState("");
   const [expirationYear, setExpirationYear] = useState("");
   const [securityCode, setSecurityCode] = useState("");
-  const [identificationType, setIdentificationType] = useState("CPF");
+  const [identificationType] = useState("CPF");
   const [identificationNumber, setIdentificationNumber] = useState("");
   const [installments, setInstallments] = useState("1");
-  const [isLoading, setIsLoading] = useState(true);
-  const [availableInstallments, setAvailableInstallments] = useState<any[]>([]);
-  const [paymentMethodId, setPaymentMethodId] = useState("");
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://sdk.mercadopago.com/js/v2";
-    script.async = true;
-    script.onload = () => {
-      const mp = new window.MercadoPago(import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY);
-      setIsLoading(false);
-
-      // Buscar opções de parcelamento
-      mp.getInstallments({
-        amount: String(amount),
-        locale: "pt-BR",
-      }).then((installments: any) => {
-        if (installments[0]) {
-          setAvailableInstallments(installments[0].payer_costs);
-        }
-      });
-
-      // Identificar bandeira do cartão
-      mp.getPaymentMethods({ bin: cardNumber.substring(0, 6) }).then((paymentMethods: any) => {
-        if (paymentMethods.results[0]) {
-          setPaymentMethodId(paymentMethods.results[0].id);
-        }
-      });
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, [amount, cardNumber]);
+  const { isLoading, availableInstallments, paymentMethodId } = useMercadoPago(amount, cardNumber);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,49 +79,14 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="cardNumber">Número do Cartão</Label>
-        <Input
-          id="cardNumber"
-          value={cardNumber}
-          onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ""))}
-          maxLength={16}
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="cardholderName">Nome no Cartão</Label>
-        <Input
-          id="cardholderName"
-          value={cardholderName}
-          onChange={(e) => setCardholderName(e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="expirationMonth">Mês</Label>
-          <Input
-            id="expirationMonth"
-            value={expirationMonth}
-            onChange={(e) => setExpirationMonth(e.target.value.replace(/\D/g, ""))}
-            maxLength={2}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="expirationYear">Ano</Label>
-          <Input
-            id="expirationYear"
-            value={expirationYear}
-            onChange={(e) => setExpirationYear(e.target.value.replace(/\D/g, ""))}
-            maxLength={2}
-            required
-          />
-        </div>
-      </div>
+      <CardNumberInput value={cardNumber} onChange={setCardNumber} />
+      <CardholderInput value={cardholderName} onChange={setCardholderName} />
+      <ExpirationInputs
+        month={expirationMonth}
+        year={expirationYear}
+        onMonthChange={setExpirationMonth}
+        onYearChange={setExpirationYear}
+      />
 
       <div>
         <Label htmlFor="securityCode">Código de Segurança</Label>
@@ -180,26 +110,11 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
         />
       </div>
 
-      <div>
-        <Label htmlFor="installments">Parcelas</Label>
-        <Select value={installments} onValueChange={setInstallments}>
-          <SelectTrigger id="installments">
-            <SelectValue placeholder="Selecione o número de parcelas" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableInstallments.map((option) => (
-              <SelectItem key={option.installments} value={String(option.installments)}>
-                {option.installments}x de {" "}
-                {new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(option.installment_amount)}
-                {option.installments > 1 && option.installment_rate === 0 && " sem juros"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <InstallmentsSelect
+        value={installments}
+        options={availableInstallments}
+        onChange={setInstallments}
+      />
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? "Processando..." : "Pagar"}
