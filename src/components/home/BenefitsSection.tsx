@@ -32,7 +32,7 @@ export function BenefitsSection() {
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Ganhe 1 ponto para cada ingresso comprado</p>
+                <p>Ganhe 1 ponto para cada pulseira comprada</p>
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
@@ -60,7 +60,7 @@ export function BenefitsSection() {
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Acesso antecipado à venda de ingressos</p>
+                <p>Acesso antecipado à venda de pulseiras</p>
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
