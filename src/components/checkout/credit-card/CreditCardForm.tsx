@@ -80,10 +80,10 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-center gap-4 py-4">
-        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/visa.gif" alt="Visa" className="h-8" />
-        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/master.gif" alt="Mastercard" className="h-8" />
-        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/amex.gif" alt="American Express" className="h-8" />
-        <img src="https://www.mercadopago.com/org-img/MP3/API/logos/elo.gif" alt="Elo" className="h-8" />
+        <img src="https://imgmp.mlstatic.com/org-img/MLB/MP3/API/logos/visa.gif" alt="Visa" className="h-8" />
+        <img src="https://imgmp.mlstatic.com/org-img/MLB/MP3/API/logos/mastercard.gif" alt="Mastercard" className="h-8" />
+        <img src="https://imgmp.mlstatic.com/org-img/MLB/MP3/API/logos/amex.gif" alt="American Express" className="h-8" />
+        <img src="https://imgmp.mlstatic.com/org-img/MLB/MP3/API/logos/elo.gif" alt="Elo" className="h-8" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -130,7 +130,7 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
 
         <div className="flex justify-center mt-4">
           <img 
-            src="https://www.mercadopago.com/org-img/MP3/API/logos/powered_by_mercadopago.gif" 
+            src="https://imgmp.mlstatic.com/org-img/MLB/MP3/API/logos/mp-logo-horizontal.gif" 
             alt="Powered by MercadoPago" 
             className="h-8"
           />
