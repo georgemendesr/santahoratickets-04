@@ -7,6 +7,7 @@ interface StatusInfo {
   description: string;
   icon: JSX.Element;
   buttonText: string;
+  buttonAction: () => void;
   alert: {
     description: string;
     className: string;

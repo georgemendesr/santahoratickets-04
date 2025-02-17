@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PixQRCode } from "@/components/payment/PixQRCode";
-import { PaymentStatusInfo } from "@/components/payment/PaymentStatusInfo";
+import { PaymentStatusInfo, getStatusInfo } from "@/components/payment/PaymentStatusInfo";
 import { usePaymentPolling } from "@/hooks/usePaymentPolling";
 
 const PaymentStatus = () => {
@@ -30,6 +30,8 @@ const PaymentStatus = () => {
     navigate("/");
     return null;
   }
+
+  const statusInfo = getStatusInfo({ status, eventId, navigate });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
@@ -68,12 +70,9 @@ const PaymentStatus = () => {
 
               <Button 
                 className="w-full" 
-                onClick={() => {
-                  const statusInfo = getStatusInfo({ status, eventId, navigate });
-                  statusInfo.buttonAction();
-                }}
+                onClick={statusInfo.buttonAction}
               >
-                {getStatusInfo({ status, eventId, navigate }).buttonText}
+                {statusInfo.buttonText}
               </Button>
             </CardContent>
           </Card>
