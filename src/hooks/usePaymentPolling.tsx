@@ -15,23 +15,31 @@ export const usePaymentPolling = ({
   preferenceId,
   payment_id,
   reference,
-  status,
+  status: initialStatus,
   navigate
 }: UsePaymentPollingProps) => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
+  const [currentStatus, setCurrentStatus] = useState(initialStatus);
 
   const handleStatusChange = useCallback((newStatus: string) => {
-    console.log("Mudança de status detectada:", newStatus);
+    console.log("Mudança de status detectada:", newStatus, "Status atual:", currentStatus);
+    
+    if (newStatus === currentStatus) {
+      console.log("Status já está atualizado, ignorando");
+      return;
+    }
+
+    setCurrentStatus(newStatus);
     
     if (newStatus === "approved") {
       toast.success("Pagamento aprovado!");
-      navigate(`/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`);
+      window.location.href = `/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`;
     } else if (newStatus === "rejected") {
       toast.error("Pagamento rejeitado");
-      navigate(`/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`);
+      window.location.href = `/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`;
     }
-  }, [payment_id, reference, navigate]);
+  }, [payment_id, reference, currentStatus]);
 
   useEffect(() => {
     let channel: any;
@@ -65,7 +73,7 @@ export const usePaymentPolling = ({
         setQrCode(preference.qr_code || null);
         setQrCodeBase64(preference.qr_code_base64 || null);
 
-        if (preference.status !== "pending") {
+        if (preference.status !== "pending" && preference.status !== currentStatus) {
           handleStatusChange(preference.status);
         }
       }
@@ -107,7 +115,7 @@ export const usePaymentPolling = ({
         supabase.removeChannel(channel);
       }
     };
-  }, [preferenceId, handleStatusChange]);
+  }, [preferenceId, handleStatusChange, currentStatus]);
 
   return {
     qrCode,
