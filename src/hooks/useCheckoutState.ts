@@ -92,20 +92,24 @@ export function useCheckoutState(
     setIsLoading(true);
 
     try {
-      console.log('Enviando dados de pagamento:', {
+      const paymentBody = {
         eventId,
         batchId: batch.id,
         quantity: 1,
-        ...paymentData
-      });
+        paymentType: paymentData.paymentType,
+        ...(paymentData.paymentType === "credit_card" ? {
+          cardToken: paymentData.token,
+          installments: paymentData.installments,
+          paymentMethodId: paymentData.paymentMethodId,
+        } : {
+          paymentMethodId: "pix"
+        }),
+      };
+
+      console.log('Enviando dados de pagamento:', paymentBody);
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify({
-          eventId,
-          batchId: batch.id,
-          quantity: 1,
-          ...paymentData
-        })
+        body: JSON.stringify(paymentBody)
       });
 
       console.log('Resposta do pagamento:', data, error);
