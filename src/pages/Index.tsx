@@ -33,7 +33,8 @@ export default function Index() {
 
   const handlePurchase = () => {
     if (currentEvent) {
-      navigate(`/checkout/finish?event=${currentEvent.id}`);
+      // Redirecionar para a página de detalhes do evento
+      navigate(`/event/${currentEvent.id}`);
     } else {
       toast.error("Evento não encontrado");
     }
