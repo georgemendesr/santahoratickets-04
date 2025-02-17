@@ -20,11 +20,10 @@ export const usePaymentPolling = ({
 }: UsePaymentPollingProps) => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
 
   useEffect(() => {
     const fetchPixData = async () => {
-      if (status === "pending" && preferenceId) {
+      if (preferenceId) {
         console.log("Buscando dados do PIX para preferenceId:", preferenceId);
         
         const { data: preference, error } = await supabase
@@ -44,17 +43,14 @@ export const usePaymentPolling = ({
         if (preference?.payment_type === "pix") {
           console.log("QR Code encontrado:", {
             qr_code: preference.qr_code,
-            qr_code_base64: preference.qr_code_base64
+            qr_code_base64: preference.qr_code_base64,
+            status: preference.status
           });
           
           setQrCode(preference.qr_code || null);
           setQrCodeBase64(preference.qr_code_base64 || null);
 
-          if (preference.status === "pending" && !isPolling) {
-            setIsPolling(true);
-            startPolling(preferenceId);
-          } else if (preference.status !== "pending") {
-            console.log("Status atual não é pending:", preference.status);
+          if (preference.status !== "pending") {
             handleStatusChange(preference.status);
           }
         }
@@ -62,7 +58,35 @@ export const usePaymentPolling = ({
     };
 
     fetchPixData();
-  }, [status, preferenceId, isPolling]);
+
+    // Inscrever para atualizações em tempo real
+    const channel = supabase
+      .channel('payment_status_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'payment_preferences',
+          filter: `id=eq.${preferenceId}`
+        },
+        (payload) => {
+          console.log("Atualização em tempo real recebida:", payload);
+          const newStatus = payload.new.status;
+          
+          if (newStatus !== "pending") {
+            handleStatusChange(newStatus);
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup
+    return () => {
+      console.log("Limpando inscrição de tempo real");
+      supabase.removeChannel(channel);
+    };
+  }, [preferenceId]);
 
   const handleStatusChange = (newStatus: string) => {
     console.log("Mudança de status detectada:", newStatus);
@@ -74,48 +98,6 @@ export const usePaymentPolling = ({
       toast.error("Pagamento rejeitado");
       navigate(`/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`);
     }
-  };
-
-  const startPolling = async (prefId: string) => {
-    console.log("Iniciando polling para preferenceId:", prefId);
-    
-    // Polling mais frequente: a cada 2 segundos
-    const pollInterval = setInterval(async () => {
-      console.log("Verificando status do pagamento...");
-      
-      const { data: preference, error } = await supabase
-        .from("payment_preferences")
-        .select("status")
-        .eq("id", prefId)
-        .single();
-
-      if (error) {
-        console.error("Erro ao verificar status:", error);
-        clearInterval(pollInterval);
-        return;
-      }
-
-      console.log("Status atual:", preference?.status);
-
-      if (preference?.status !== "pending") {
-        clearInterval(pollInterval);
-        setIsPolling(false);
-        handleStatusChange(preference.status);
-      }
-    }, 2000); // Reduzido para 2 segundos
-
-    // Limitar o tempo total de polling para 5 minutos
-    setTimeout(() => {
-      console.log("Tempo de polling expirado");
-      clearInterval(pollInterval);
-      setIsPolling(false);
-    }, 300000);
-
-    return () => {
-      console.log("Limpando intervalo de polling");
-      clearInterval(pollInterval);
-      setIsPolling(false);
-    };
   };
 
   return {
