@@ -25,7 +25,7 @@ export function EventCard({
       <div className="grid md:grid-cols-2 gap-6">
         <div className="h-[400px] relative overflow-hidden group">
           <img
-            src={event.image_url}
+            src={event.image}
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
