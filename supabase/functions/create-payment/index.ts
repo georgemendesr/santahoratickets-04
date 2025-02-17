@@ -33,7 +33,8 @@ serve(async (req) => {
       quantity, 
       cardToken, 
       installments, 
-      paymentMethodId 
+      paymentMethodId,
+      paymentType 
     } = await req.json()
 
     if (!eventId || !quantity || !batchId) {
@@ -64,19 +65,38 @@ serve(async (req) => {
 
     const totalAmount = batch.price * quantity
 
-    // Criar pagamento
-    const payment = {
-      transaction_amount: totalAmount,
-      token: cardToken,
-      description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
-      installments: installments,
-      payment_method_id: paymentMethodId,
-      payer: {
-        email: user.email,
+    let paymentData;
+    if (paymentType === 'credit_card') {
+      paymentData = {
+        transaction_amount: totalAmount,
+        token: cardToken,
+        description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
+        installments: installments,
+        payment_method_id: paymentMethodId,
+        payer: {
+          email: user.email,
+        }
       }
+    } else if (paymentType === 'pix') {
+      paymentData = {
+        transaction_amount: totalAmount,
+        description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
+        payment_method_id: 'pix',
+        payer: {
+          email: user.email,
+        }
+      }
+    } else {
+      throw new Error('Método de pagamento inválido')
     }
 
-    const paymentResponse = await mercadopago.payment.save(payment)
+    console.log('Criando pagamento:', paymentData);
+    const paymentResponse = await mercadopago.payment.save(paymentData)
+    console.log('Resposta do pagamento:', paymentResponse);
+
+    if (paymentResponse.response.status === 'rejected') {
+      throw new Error('Pagamento rejeitado: ' + paymentResponse.response.status_detail)
+    }
 
     // Criar registro de pagamento
     const { data: paymentPreference, error: paymentError } = await supabaseClient
@@ -86,11 +106,10 @@ serve(async (req) => {
         user_id: user.id,
         ticket_quantity: quantity,
         total_amount: totalAmount,
-        card_token: cardToken,
-        installments: installments,
         payment_method_id: paymentMethodId,
-        status: paymentResponse.status,
-        init_point: '' // Não é necessário para checkout transparente
+        status: paymentResponse.response.status,
+        init_point: paymentType === 'pix' ? paymentResponse.response.point_of_interaction?.transaction_data?.qr_code : '',
+        payment_type: paymentType
       })
       .select()
       .single()
@@ -99,17 +118,25 @@ serve(async (req) => {
       throw paymentError
     }
 
+    const responseData = {
+      status: paymentResponse.response.status,
+      payment_id: paymentResponse.response.id
+    }
+
+    if (paymentType === 'pix') {
+      responseData.qr_code = paymentResponse.response.point_of_interaction?.transaction_data?.qr_code
+      responseData.qr_code_base64 = paymentResponse.response.point_of_interaction?.transaction_data?.qr_code_base64
+    }
+
     return new Response(
-      JSON.stringify({
-        status: paymentResponse.status,
-        payment_id: paymentResponse.id
-      }),
+      JSON.stringify(responseData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       },
     )
   } catch (error) {
+    console.error('Erro ao processar pagamento:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -119,4 +146,3 @@ serve(async (req) => {
     )
   }
 })
-

@@ -10,6 +10,7 @@ import { ExpirationInputs } from "./ExpirationInputs";
 import { InstallmentsSelect } from "./InstallmentsSelect";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreditCard } from "lucide-react";
 
 declare global {
   interface Window {
@@ -81,12 +82,27 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
 
   return (
     <div className="space-y-6">
-      <Tabs value={cardType} onValueChange={(value) => setCardType(value as "credit" | "debit")}>
-        <TabsList className="w-full">
-          <TabsTrigger value="credit" className="flex-1">Cartão de Crédito</TabsTrigger>
-          <TabsTrigger value="debit" className="flex-1">Cartão de Débito</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-col space-y-4">
+        <Tabs value={cardType} onValueChange={(value) => setCardType(value as "credit" | "debit")}>
+          <TabsList className="w-full">
+            <TabsTrigger value="credit" className="flex-1">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Cartão de Crédito
+            </TabsTrigger>
+            <TabsTrigger value="debit" className="flex-1">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Cartão de Débito
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex justify-center space-x-4 py-4">
+          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/visa.gif" alt="Visa" className="h-8" />
+          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/master.gif" alt="Mastercard" className="h-8" />
+          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/amex.gif" alt="American Express" className="h-8" />
+          <img src="https://www.mercadopago.com/org-img/MP3/API/logos/elo.gif" alt="Elo" className="h-8" />
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <CardNumberInput value={cardNumber} onChange={setCardNumber} />
@@ -131,6 +147,14 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Processando..." : "Pagar"}
         </Button>
+
+        <div className="flex justify-center mt-4">
+          <img 
+            src="https://www.mercadopago.com/org-img/MP3/API/logos/powered_by_mercadopago.gif" 
+            alt="Powered by MercadoPago" 
+            className="h-8"
+          />
+        </div>
       </form>
     </div>
   );
