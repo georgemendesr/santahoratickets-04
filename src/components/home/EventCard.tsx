@@ -22,7 +22,7 @@ export function EventCard({ event, batchInfo, onPurchase, isPending }: EventCard
     <Card className="overflow-hidden">
       <div className="relative aspect-[16/9]">
         <img
-          src={event.image}
+          src="/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png"
           alt={event.title}
           className="object-cover w-full h-full"
         />
