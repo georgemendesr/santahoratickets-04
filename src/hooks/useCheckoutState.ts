@@ -6,9 +6,6 @@ import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { validateCPF, validatePhone } from "@/utils/validation";
 
-// Get the Supabase URL from the environment
-const SUPABASE_URL = "https://swlqrejfgvmjajhtoall.supabase.co";
-
 export function useCheckoutState(
   session: Session | null,
   eventId: string | null,
@@ -95,54 +92,30 @@ export function useCheckoutState(
     setIsLoading(true);
 
     try {
-      console.log('Iniciando requisição de pagamento:', {
-        url: `${SUPABASE_URL}/functions/v1/create-payment`,
-        data: {
-          eventId,
-          batchId: batch.id,
-          quantity: 1,
-          paymentType: paymentData.paymentType,
-          ...(paymentData.paymentType === "credit_card" ? {
-            cardToken: paymentData.token,
-            installments: paymentData.installments,
-            paymentMethodId: paymentData.paymentMethodId,
-          } : {
-            paymentMethodId: "pix"
-          }),
-        }
+      const paymentBody = {
+        eventId,
+        batchId: batch.id,
+        quantity: 1,
+        paymentType: paymentData.paymentType,
+        ...(paymentData.paymentType === "credit_card" ? {
+          cardToken: paymentData.token,
+          installments: paymentData.installments,
+          paymentMethodId: paymentData.paymentMethodId,
+        } : {
+          paymentMethodId: "pix"
+        }),
+      };
+
+      console.log('Iniciando requisição de pagamento:', paymentBody);
+
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: paymentBody
       });
 
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/create-payment`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            eventId,
-            batchId: batch.id,
-            quantity: 1,
-            paymentType: paymentData.paymentType,
-            ...(paymentData.paymentType === "credit_card" ? {
-              cardToken: paymentData.token,
-              installments: paymentData.installments,
-              paymentMethodId: paymentData.paymentMethodId,
-            } : {
-              paymentMethodId: "pix"
-            }),
-          }),
-        }
-      );
-
-      const data = await response.json();
       console.log('Resposta do pagamento:', data);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Erro ao processar pagamento");
-      }
-
+      if (error) throw new Error(error.message || "Erro ao processar pagamento");
+      
       const { status, payment_id, qr_code, qr_code_base64 } = data;
       
       if (paymentData.paymentType === "pix" && (!qr_code || !qr_code_base64)) {
