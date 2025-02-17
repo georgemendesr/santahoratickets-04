@@ -491,6 +491,7 @@ export type Database = {
           birth_date: string | null
           cpf: string | null
           created_at: string
+          email: string | null
           id: string
           loyalty_points: number
           name: string | null
@@ -500,6 +501,7 @@ export type Database = {
           birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          email?: string | null
           id: string
           loyalty_points?: number
           name?: string | null
@@ -509,6 +511,7 @@ export type Database = {
           birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           loyalty_points?: number
           name?: string | null
