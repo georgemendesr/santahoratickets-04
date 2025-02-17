@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import mercadopago from 'https://esm.sh/mercadopago@1.5.14'
@@ -7,19 +6,20 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
-  console.log('1. Iniciando função create-payment');
-  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('2. Requisição OPTIONS - CORS preflight');
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    })
   }
 
   try {
-    console.log('3. Verificando configurações básicas');
+    console.log('1. Iniciando função create-payment');
     
     const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
     if (!accessToken) {
@@ -64,7 +64,6 @@ serve(async (req) => {
     }
     console.log('8. Usuário autenticado:', user.id);
 
-    console.log('9. Lendo body da requisição');
     const rawBody = await req.text();
     console.log('Body raw recebido:', rawBody);
     
@@ -226,7 +225,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(responseData),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
         status: 200,
       }
     )
@@ -238,7 +240,10 @@ serve(async (req) => {
         details: error.stack
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
         status: 400,
       }
     )
