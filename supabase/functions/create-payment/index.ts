@@ -1,207 +1,134 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import mercadopago from 'https://esm.sh/mercadopago@1.5.14'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
+};
+
+interface MercadoPagoPayment {
+  id: number;
+  status: string;
+  status_detail: string;
+  transaction_amount: number;
+  payment_method_id: string;
+  external_reference: string;
 }
 
-serve(async (req: Request) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders
-    })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('1. Iniciando função create-payment');
-    
-    // Configurar MercadoPago primeiro
-    const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
-    if (!accessToken) {
-      throw new Error('Token do MercadoPago não configurado')
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    mercadopago.configure({
-      access_token: accessToken
-    })
+    const { preferenceId, eventId, batchId, quantity, paymentType, cardToken, installments, paymentMethodId } = await req.json();
 
-    // Configurar Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Configuração do Supabase ausente')
-    }
-
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
-
-    // Verificar autenticação
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('Header de autorização ausente')
-    }
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
-
-    if (authError || !user) {
-      throw new Error('Erro de autenticação')
-    }
-
-    // Processar body da requisição
-    let body;
-    try {
-      body = await req.json()
-    } catch (error) {
-      throw new Error('Body inválido: ' + error.message)
-    }
-
-    const { 
-      eventId, 
-      batchId, 
-      quantity, 
-      cardToken, 
-      installments, 
-      paymentMethodId,
-      paymentType 
-    } = body
-
-    if (!eventId || !quantity || !batchId) {
-      throw new Error('Dados obrigatórios ausentes')
-    }
-
-    // Buscar informações do evento e do lote
-    const { data: event, error: eventError } = await supabaseClient
-      .from('events')
-      .select('*')
-      .eq('id', eventId)
-      .single()
-
-    if (eventError || !event) {
-      throw new Error('Evento não encontrado')
-    }
-
-    const { data: batch, error: batchError } = await supabaseClient
-      .from('batches')
-      .select('*')
-      .eq('id', batchId)
-      .single()
-
-    if (batchError || !batch) {
-      throw new Error('Lote não encontrado')
-    }
-
-    const totalAmount = batch.price * quantity
-
-    let paymentData;
-    if (paymentType === 'credit_card') {
-      paymentData = {
-        transaction_amount: totalAmount,
-        token: cardToken,
-        description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
-        installments: installments || 1,
-        payment_method_id: paymentMethodId,
-        payer: {
-          email: user.email,
-          identification: {
-            type: "CPF",
-            number: user.user_metadata?.cpf || ""
-          }
-        }
-      }
-    } else if (paymentType === 'pix') {
-      paymentData = {
-        transaction_amount: totalAmount,
-        description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
-        payment_method_id: 'pix',
-        payment_type_id: 'pix',
-        payer: {
-          email: user.email,
-          first_name: user.user_metadata?.name || user.email,
-          identification: {
-            type: "CPF",
-            number: user.user_metadata?.cpf || ""
-          }
-        }
-      }
-    } else {
-      throw new Error('Método de pagamento inválido')
-    }
-
-    console.log('Dados do pagamento:', JSON.stringify(paymentData, null, 2))
-    
-    const paymentResponse = await mercadopago.payment.create(paymentData)
-    console.log('Resposta do MercadoPago:', JSON.stringify(paymentResponse.body, null, 2))
-
-    if (!paymentResponse.body) {
-      throw new Error('Resposta inválida do MercadoPago')
-    }
-
-    if (paymentResponse.body.status === 'rejected') {
-      throw new Error('Pagamento rejeitado: ' + paymentResponse.body.status_detail)
-    }
-
-    // Criar registro de pagamento
-    const { error: paymentError } = await supabaseClient
+    // Buscar a preferência de pagamento
+    const { data: preference, error: prefError } = await supabase
       .from('payment_preferences')
-      .insert({
-        event_id: eventId,
-        user_id: user.id,
-        ticket_quantity: quantity,
-        total_amount: totalAmount,
-        payment_method_id: paymentMethodId,
-        status: paymentResponse.body.status,
-        init_point: paymentType === 'pix' ? 
-          paymentResponse.body.point_of_interaction?.transaction_data?.qr_code : '',
-        payment_type: paymentType
+      .select('*')
+      .eq('id', preferenceId)
+      .single();
+
+    if (prefError || !preference) {
+      throw new Error('Preferência de pagamento não encontrada');
+    }
+
+    // Atualizar tentativa
+    await supabase
+      .from('payment_preferences')
+      .update({
+        attempts: preference.attempts + 1,
+        last_attempt_at: new Date().toISOString()
       })
+      .eq('id', preferenceId);
 
-    if (paymentError) {
-      throw paymentError
+    const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
+    if (!accessToken) {
+      throw new Error('Token do MercadoPago não configurado');
     }
 
-    const responseData = {
-      status: paymentResponse.body.status,
-      payment_id: paymentResponse.body.id
+    // Preparar dados para o MercadoPago
+    const paymentData = {
+      transaction_amount: preference.total_amount,
+      payment_method_id: paymentMethodId,
+      ...(paymentType === 'credit_card' ? {
+        token: cardToken,
+        installments: installments || 1,
+      } : {}),
+      description: `Ingresso para evento ${eventId}`,
+      external_reference: `${eventId}|${preferenceId}`,
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`,
+    };
+
+    console.log('Iniciando pagamento com dados:', {
+      ...paymentData,
+      token: cardToken ? '[REDACTED]' : undefined
+    });
+
+    // Criar pagamento no MercadoPago
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+    });
+
+    const mpData: MercadoPagoPayment = await mpResponse.json();
+    console.log('Resposta MercadoPago:', mpData);
+
+    if (!mpResponse.ok) {
+      throw new Error(`Erro MercadoPago: ${mpData.status_detail}`);
     }
 
-    if (paymentType === 'pix') {
-      const pixData = paymentResponse.body.point_of_interaction?.transaction_data
-      responseData.qr_code = pixData?.qr_code
-      responseData.qr_code_base64 = pixData?.qr_code_base64
-    }
+    // Atualizar preferência de pagamento com dados externos
+    await supabase
+      .from('payment_preferences')
+      .update({
+        external_id: String(mpData.id),
+        status: mpData.status === 'approved' ? 'approved' : 'pending',
+        error_message: mpData.status === 'rejected' ? mpData.status_detail : null
+      })
+      .eq('id', preferenceId);
 
+    // Retornar resposta com headers CORS
     return new Response(
-      JSON.stringify(responseData),
-      {
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 200,
-      }
-    )
-  } catch (error) {
-    console.error('Erro:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: error.message
+      JSON.stringify({
+        status: mpData.status,
+        payment_id: mpData.id,
+        status_detail: mpData.status_detail,
       }),
       {
-        headers: { 
+        headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        status: 400,
       }
-    )
+    );
+
+  } catch (error) {
+    console.error('Erro ao processar pagamento:', error);
+
+    return new Response(
+      JSON.stringify({
+        error: error.message || 'Erro interno ao processar pagamento'
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
-})
+});
