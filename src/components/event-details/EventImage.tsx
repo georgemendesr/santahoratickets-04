@@ -13,7 +13,9 @@ export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
   const placeholderUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80";
   
-  const imageUrl = src ? supabase.storage.from('event-images').getPublicUrl(src).data.publicUrl : placeholderUrl;
+  // Remove o prefixo 'public/' do caminho da imagem se existir
+  const cleanSrc = src?.startsWith('public/') ? src.replace('public/', '') : src;
+  const imageUrl = cleanSrc ? supabase.storage.from('event-images').getPublicUrl(cleanSrc).data.publicUrl : placeholderUrl;
 
   return (
     <>
