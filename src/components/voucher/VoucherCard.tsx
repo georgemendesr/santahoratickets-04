@@ -9,9 +9,22 @@ interface VoucherCardProps {
   eventTitle: string;
   eventDate: string;
   eventTime: string;
+  batchTitle?: string;
+  ticketPrice?: number;
+  customerName?: string;
+  orderNumber?: string;
 }
 
-export function VoucherCard({ ticket, eventTitle, eventDate, eventTime }: VoucherCardProps) {
+export function VoucherCard({ 
+  ticket, 
+  eventTitle, 
+  eventDate, 
+  eventTime,
+  batchTitle,
+  ticketPrice,
+  customerName,
+  orderNumber
+}: VoucherCardProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
   useEffect(() => {
@@ -21,8 +34,8 @@ export function VoucherCard({ ticket, eventTitle, eventDate, eventTime }: Vouche
           width: 200,
           margin: 2,
           color: {
-            dark: ticket.qr_code_foreground || "#8B5CF6", // Cor do QR code (roxo por padrão)
-            light: ticket.qr_code_background || "#FFFFFF" // Cor de fundo
+            dark: "#000000", // QR Code sempre preto
+            light: "#FFFFFF" // Fundo sempre branco
           }
         });
         setQrCodeUrl(qrCodeDataUrl);
@@ -35,42 +48,59 @@ export function VoucherCard({ ticket, eventTitle, eventDate, eventTime }: Vouche
   }, [ticket]);
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-sm">
+    <Card className="relative overflow-hidden bg-white w-[300px]">
+      {/* Borda superior laranja */}
+      <div className="h-2 bg-[#F97316]" />
+
       {/* Logo no topo */}
-      <div className="absolute top-4 right-4">
+      <div className="flex justify-center pt-4">
         <img 
           src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
           alt="Logo Santinha"
-          className="h-8 opacity-50"
+          className="h-8"
         />
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4">
         {/* Informações do evento */}
-        <div className="text-center space-y-2">
-          <h3 className="font-bold text-xl">{eventTitle}</h3>
-          <div className="text-sm text-muted-foreground">
+        <div className="text-center space-y-1">
+          <h3 className="font-bold text-lg">{eventTitle}</h3>
+          <div className="text-sm text-gray-600">
             <p>{eventDate}</p>
             <p>{eventTime}</p>
           </div>
         </div>
 
-        {/* QR Code centralizado */}
-        <div className="flex justify-center">
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            {qrCodeUrl && (
-              <img 
-                src={qrCodeUrl} 
-                alt="QR Code do ingresso" 
-                className="w-48 h-48"
-              />
-            )}
-          </div>
+        {/* Informações do ingresso */}
+        <div className="text-sm space-y-1 border-t border-b border-orange-200 py-2">
+          {customerName && (
+            <p className="font-medium">Nome: {customerName}</p>
+          )}
+          {batchTitle && (
+            <p>Lote: {batchTitle}</p>
+          )}
+          {ticketPrice && (
+            <p>Valor: R$ {ticketPrice.toFixed(2)}</p>
+          )}
+          {orderNumber && (
+            <p>Pedido: #{orderNumber}</p>
+          )}
         </div>
 
-        {/* Informações adicionais */}
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Voucher ID: {ticket.id.slice(0, 8)}</p>
+        {/* QR Code centralizado */}
+        <div className="flex justify-center">
+          {qrCodeUrl && (
+            <img 
+              src={qrCodeUrl} 
+              alt="QR Code do ingresso" 
+              className="w-40 h-40"
+            />
+          )}
+        </div>
+
+        {/* Status do ingresso */}
+        <div className="text-center text-sm text-gray-600">
+          <p>Código: {ticket.id.slice(0, 8)}</p>
           <p className="mt-1">
             {ticket.used ? 
               "Voucher já utilizado" : 
@@ -80,8 +110,8 @@ export function VoucherCard({ ticket, eventTitle, eventDate, eventTime }: Vouche
         </div>
       </div>
 
-      {/* Padrão decorativo */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-blue-500" />
+      {/* Borda inferior laranja */}
+      <div className="h-2 bg-[#F97316]" />
     </Card>
   );
 }

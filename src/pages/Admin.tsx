@@ -2,6 +2,8 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,19 +11,48 @@ import {
   Users, 
   LayoutTemplate, 
   DollarSign,
-  CalendarDays
+  CalendarDays,
+  Ticket,
+  TrendingUp
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from "recharts";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { isAdmin } = useRole(session);
 
+  const { data: dashboardData } = useQuery({
+    queryKey: ["admin-dashboard"],
+    queryFn: async () => {
+      const { data: events } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: false })
+        .limit(5);
+
+      return events;
+    },
+  });
+
   if (!isAdmin) {
     navigate("/");
     return null;
   }
+
+  const totalRevenue = dashboardData?.reduce((acc, event) => acc + (event?.gross_revenue || 0), 0) || 0;
+  const totalTickets = dashboardData?.reduce((acc, event) => acc + (event?.approved_tickets || 0), 0) || 0;
 
   return (
     <MainLayout>
@@ -37,8 +68,111 @@ const Admin = () => {
           </Button>
         </div>
 
+        {/* Métricas Principais */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Receita Total
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Ingressos Vendidos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {totalTickets}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Eventos Ativos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dashboardData?.length || 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Ticket Médio
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                R$ {totalTickets ? (totalRevenue / totalTickets).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "0,00"}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gráfico de Vendas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Receita por Evento</CardTitle>
+              <CardDescription>Últimos 5 eventos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dashboardData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="title" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="gross_revenue" name="Receita" fill="#8B5CF6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ingressos Vendidos</CardTitle>
+              <CardDescription>Últimos 5 eventos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dashboardData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="title" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="approved_tickets" 
+                      name="Ingressos" 
+                      stroke="#8B5CF6" 
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cards de Ações */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card de Eventos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -58,7 +192,6 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          {/* Card de Usuários */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -78,7 +211,6 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          {/* Card de Vouchers */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -98,7 +230,6 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          {/* Card Financeiro */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
