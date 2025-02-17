@@ -37,10 +37,10 @@ export function EventHeader() {
       {/* Background com overlay */}
       <div className="absolute inset-0">
         <div className="relative h-full w-full">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#FF4B5C]/90 via-[#A020F0]/70 to-background z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-10" />
           <img 
-            src="/lovable-uploads/735c2365-f113-4cae-926c-1f72f6ecbcb3.png"
-            alt="Bora Pago Dear - Kolla Kommigo"
+            src="/lovable-uploads/3932db3c-50e4-470f-b6df-55c45faf431c.png"
+            alt="Ambiente do evento"
             className="w-full h-full object-cover animate-fade-in"
           />
         </div>
