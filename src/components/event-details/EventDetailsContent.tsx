@@ -52,10 +52,6 @@ export function EventDetailsContent({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div>
-        <EventImage src={event?.image} alt={event?.title} />
-      </div>
-
       <div className="space-y-6">
         {referrer && (
           <Alert>
@@ -64,6 +60,12 @@ export function EventDetailsContent({
             </AlertDescription>
           </Alert>
         )}
+
+        <img 
+          src="/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png"
+          alt="Capa do evento"
+          className="w-full rounded-lg shadow-lg"
+        />
 
         <Card>
           <CardContent className="p-6 space-y-4">
