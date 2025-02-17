@@ -7,7 +7,7 @@ import Checkout from "@/pages/Checkout";
 import PaymentStatus from "@/pages/PaymentStatus";
 import CheckoutFinish from "@/pages/CheckoutFinish";
 import Admin from "@/pages/Admin";
-import AdminFinancial from "@/pages/AdminFinancial";
+import AdminFinanceiro from "@/pages/AdminFinanceiro";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminVouchers from "@/pages/AdminVouchers";
 import AdminBatches from "@/pages/AdminBatches";
@@ -53,8 +53,8 @@ const router = createBrowserRouter([
     element: <Admin />,
   },
   {
-    path: "/admin/financial",
-    element: <AdminFinancial />,
+    path: "/admin/financeiro",
+    element: <AdminFinanceiro />,
   },
   {
     path: "/admin/users",
