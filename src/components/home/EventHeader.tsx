@@ -45,7 +45,7 @@ export function EventHeader() {
   }
 
   return (
-    <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-[45vh] flex items-center justify-center overflow-hidden">
       {/* Background com overlay */}
       <div className="absolute inset-0">
         <div className="relative h-full w-full">
@@ -65,7 +65,7 @@ export function EventHeader() {
             <img 
               src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
               alt="Logo Santinha" 
-              className="h-32 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
+              className="h-48 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
             />
           </div>
         </div>
