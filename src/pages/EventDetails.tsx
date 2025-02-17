@@ -30,7 +30,6 @@ const EventDetails = () => {
     setPhone,
     createProfileMutation,
     createReferralMutation,
-    createPaymentPreference,
     isLoading
   } = useEventDetails(id);
 
@@ -54,7 +53,12 @@ const EventDetails = () => {
   };
 
   const handlePurchase = () => {
-    createPaymentPreference.mutate();
+    if (!event?.id) {
+      toast.error("Evento não encontrado");
+      return;
+    }
+    
+    navigate(`/checkout/finish?event=${event.id}&quantity=1`);
   };
 
   if (isLoading) {
