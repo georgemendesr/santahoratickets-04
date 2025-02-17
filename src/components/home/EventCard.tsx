@@ -20,13 +20,16 @@ interface EventCardProps {
 export function EventCard({ event, batchInfo, onPurchase, isPending }: EventCardProps) {
   return (
     <Card className="overflow-hidden">
-      <div className="relative aspect-[16/9]">
-        <img
-          src="/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png"
-          alt={event.title}
-          className="object-cover w-full h-full"
-        />
-      </div>
+      <Link to={`/evento/${event.id}`} className="block">
+        <div className="relative aspect-[16/9] group">
+          <img
+            src="/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png"
+            alt={event.title}
+            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+      </Link>
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>{event.title}</span>
