@@ -62,8 +62,8 @@ export function EventHeader() {
           {event && (
             <div className="relative mb-8">
               <img 
-                src="/lovable-uploads/2c1fd3fb-c442-4d54-8965-81264ae037ec.png"
-                alt="Bora Pago Dear"
+                src="/lovable-uploads/8631ac2b-89a0-46da-93a7-fb21c84f78c0.png"
+                alt="Bora Pagodear"
                 className="w-full max-w-3xl mx-auto rounded-lg shadow-2xl"
               />
             </div>
