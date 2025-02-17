@@ -60,7 +60,7 @@ const EventDetails = () => {
       return;
     }
     
-    navigate(`/checkout?event=${event.id}&quantity=1`);
+    navigate(`/checkout/finish?event=${event.id}&quantity=1`);
   };
 
   const handleProfileSubmit = (e: React.FormEvent) => {
@@ -70,7 +70,7 @@ const EventDetails = () => {
 
   const handleEdit = () => {
     if (!event?.id) return;
-    navigate(`/events/${event.id}/edit`);
+    navigate(`/edit/${event.id}`);
   };
 
   if (isLoading) {

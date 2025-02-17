@@ -33,20 +33,20 @@ const router = createBrowserRouter([
     element: <Auth />,
   },
   {
-    path: "/event/:id",
+    path: "/evento/:id",
     element: <EventDetails />,
   },
   {
-    path: "/checkout",
-    element: <Checkout />,
+    path: "/checkout/finish",
+    element: <CheckoutFinish />,
   },
   {
     path: "/payment-status",
     element: <PaymentStatus />,
   },
   {
-    path: "/checkout/finish",
-    element: <CheckoutFinish />,
+    path: "/checkout",
+    element: <Checkout />,
   },
   {
     path: "/admin",
@@ -81,12 +81,12 @@ const router = createBrowserRouter([
     element: <AdminParticipantsSales />,
   },
   {
-    path: "/events/create",
-    element: <CreateEvent />,
+    path: "/edit/:id",
+    element: <EditEvent />,
   },
   {
-    path: "/events/:id/edit",
-    element: <EditEvent />,
+    path: "/events/create",
+    element: <CreateEvent />,
   },
   {
     path: "/events/:id/duplicate",
