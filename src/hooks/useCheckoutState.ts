@@ -82,6 +82,17 @@ export function useCheckoutState(
   ) => {
     const init_point = `${eventId}-${session!.user.id}-${Date.now()}`;
     
+    console.log("Criando preferência de pagamento:", {
+      init_point,
+      eventId,
+      userId: session!.user.id,
+      amount: batch.price,
+      paymentType,
+      paymentMethodId,
+      hasCardToken: !!cardToken,
+      installments
+    });
+    
     const { data: preference, error } = await supabase
       .from("payment_preferences")
       .insert({
@@ -101,7 +112,12 @@ export function useCheckoutState(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Erro ao criar preferência:", error);
+      throw error;
+    }
+
+    console.log("Preferência criada:", preference);
     return preference;
   };
 
@@ -120,12 +136,26 @@ export function useCheckoutState(
     let toastId = toast.loading("Processando pagamento...");
 
     try {
+      console.log("Iniciando processo de pagamento:", {
+        paymentType: paymentData.paymentType,
+        hasToken: !!paymentData.token,
+        installments: paymentData.installments,
+        paymentMethodId: paymentData.paymentMethodId
+      });
+
       const preference = await createPaymentPreference(
         paymentData.paymentType,
         paymentData.paymentMethodId,
         paymentData.token,
         paymentData.installments
       );
+
+      console.log("Chamando create-payment com:", {
+        preferenceId: preference.id,
+        eventId,
+        batchId: batch.id,
+        paymentType: paymentData.paymentType
+      });
 
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
@@ -144,8 +174,17 @@ export function useCheckoutState(
         }
       });
 
-      if (error) throw error;
-      if (!data) throw new Error("Resposta vazia do servidor");
+      if (error) {
+        console.error("Erro na resposta da Edge Function:", error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error("Resposta vazia da Edge Function");
+        throw new Error("Resposta vazia do servidor");
+      }
+
+      console.log("Resposta do processamento:", data);
 
       const { status, payment_id } = data;
 
@@ -158,7 +197,12 @@ export function useCheckoutState(
 
       navigate(`/payment/status?status=${status}&payment_id=${payment_id}&external_reference=${eventId}|${preference.id}`);
     } catch (error: any) {
-      console.error("Erro ao processar pagamento:", error);
+      console.error("Erro detalhado ao processar pagamento:", {
+        error,
+        message: error.message,
+        cause: error.cause,
+        stack: error.stack
+      });
       toast.dismiss(toastId);
       toast.error(
         error.message || "Erro ao processar seu pagamento. Tente novamente.",
