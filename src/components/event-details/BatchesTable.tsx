@@ -4,7 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { differenceInDays, differenceInHours, differenceInMinutes } from "date-fns";
 
 interface BatchesTableProps {
   batches: Batch[];
@@ -12,6 +13,16 @@ interface BatchesTableProps {
 
 export function BatchesTable({ batches }: BatchesTableProps) {
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    // Atualiza o estado 'now' a cada minuto
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleIncrement = (batchId: string) => {
     setSelectedQuantities(prev => ({
@@ -40,6 +51,24 @@ export function BatchesTable({ batches }: BatchesTableProps) {
     }
   };
 
+  const getTimeRemaining = (endDate: string) => {
+    const end = new Date(endDate);
+    
+    if (now > end) return "Encerrado";
+
+    const days = differenceInDays(end, now);
+    const hours = differenceInHours(end, now) % 24;
+    const minutes = differenceInMinutes(end, now) % 60;
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+
   // Agrupar lotes por grupo
   const groupedBatches = batches.reduce((groups, batch) => {
     const group = batch.batch_group || 'default';
@@ -63,6 +92,7 @@ export function BatchesTable({ batches }: BatchesTableProps) {
               <TableRow>
                 <TableHead>Lote</TableHead>
                 <TableHead>Preço</TableHead>
+                <TableHead>Encerra em</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Quantidade</TableHead>
               </TableRow>
@@ -83,6 +113,11 @@ export function BatchesTable({ batches }: BatchesTableProps) {
                       style: "currency",
                       currency: "BRL",
                     }).format(batch.price)}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm font-medium">
+                      {batch.end_date ? getTimeRemaining(batch.end_date) : "-"}
+                    </span>
                   </TableCell>
                   <TableCell>{getBatchStatus(batch)}</TableCell>
                   <TableCell>
