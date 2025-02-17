@@ -41,30 +41,6 @@ export function BatchesTable({ batches }: BatchesTableProps) {
     }
   };
 
-  const getPurchaseLimits = (batch: Batch) => {
-    if (batch.min_purchase === 1 && !batch.max_purchase) {
-      return null;
-    }
-
-    if (batch.min_purchase === batch.max_purchase) {
-      return `Exatamente ${batch.min_purchase} ${batch.min_purchase === 1 ? 'ingresso' : 'ingressos'}`;
-    }
-
-    if (batch.min_purchase && batch.max_purchase) {
-      return `${batch.min_purchase} a ${batch.max_purchase} ingressos`;
-    }
-
-    if (batch.min_purchase > 1) {
-      return `Mínimo ${batch.min_purchase} ingressos`;
-    }
-
-    if (batch.max_purchase) {
-      return `Máximo ${batch.max_purchase} ingressos`;
-    }
-
-    return null;
-  };
-
   // Agrupar lotes por grupo
   const groupedBatches = batches.reduce((groups, batch) => {
     const group = batch.batch_group || 'default';
@@ -88,11 +64,9 @@ export function BatchesTable({ batches }: BatchesTableProps) {
               <TableRow>
                 <TableHead>Lote</TableHead>
                 <TableHead>Preço</TableHead>
-                <TableHead>Ingressos</TableHead>
                 <TableHead>Período</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Visibilidade</TableHead>
-                <TableHead>Limites</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -113,9 +87,6 @@ export function BatchesTable({ batches }: BatchesTableProps) {
                     }).format(batch.price)}
                   </TableCell>
                   <TableCell>
-                    {batch.available_tickets} / {batch.total_tickets}
-                  </TableCell>
-                  <TableCell>
                     <div className="text-sm">
                       <p>Início: {format(new Date(batch.start_date), "PPP", { locale: ptBR })}</p>
                       {batch.end_date && (
@@ -125,11 +96,6 @@ export function BatchesTable({ batches }: BatchesTableProps) {
                   </TableCell>
                   <TableCell>{getBatchStatus(batch)}</TableCell>
                   <TableCell>{getVisibilityBadge(batch)}</TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {getPurchaseLimits(batch)}
-                    </span>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
