@@ -27,13 +27,13 @@ export function LoyaltyCard({ points }: LoyaltyCardProps) {
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button asChild variant="outline">
-          <Link to="/tickets" className="flex items-center gap-2">
+          <Link to="/vouchers" className="flex items-center gap-2">
             <Ticket className="h-4 w-4" />
-            Minhas Pulseiras
+            Meus Vouchers
           </Link>
         </Button>
         <Button asChild>
-          <Link to="/rewards" className="flex items-center gap-2">
+          <Link to="/recompensas" className="flex items-center gap-2">
             <Gift className="h-4 w-4" />
             Trocar Pontos
           </Link>

@@ -10,7 +10,7 @@ export function BenefitsSection() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Área do Usuário</h2>
         <Button asChild variant="outline">
-          <Link to="/profile" className="flex items-center gap-2">
+          <Link to="/perfil" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Minha Conta
           </Link>

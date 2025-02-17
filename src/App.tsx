@@ -18,9 +18,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/checkout/finish" element={<CheckoutFinish />} />
-          <Route path="/payment/:status" element={<PaymentStatus />} />
+          <Route path="/evento/:id" element={<EventDetails />} />
+          <Route path="/checkout/finalizar" element={<CheckoutFinish />} />
+          <Route path="/pagamento/:status" element={<PaymentStatus />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
