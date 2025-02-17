@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MainLayout } from "../layout/MainLayout";
 
 interface CheckoutLayoutProps {
   children: React.ReactNode;
@@ -12,8 +13,8 @@ export function CheckoutLayout({ children, onBackClick }: CheckoutLayoutProps) {
   const navigate = useNavigate();
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-      <div className="container mx-auto px-4 py-8">
+    <MainLayout>
+      <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"
           onClick={onBackClick || (() => navigate(-1))}
@@ -23,10 +24,8 @@ export function CheckoutLayout({ children, onBackClick }: CheckoutLayoutProps) {
           Voltar
         </Button>
 
-        <div className="max-w-2xl mx-auto">
-          {children}
-        </div>
+        {children}
       </div>
-    </div>
+    </MainLayout>
   );
 }

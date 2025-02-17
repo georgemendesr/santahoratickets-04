@@ -9,6 +9,7 @@ import { CardholderInput } from "./CardholderInput";
 import { ExpirationInputs } from "./ExpirationInputs";
 import { InstallmentsSelect } from "./InstallmentsSelect";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 declare global {
   interface Window {
@@ -27,6 +28,7 @@ interface CreditCardFormProps {
 }
 
 export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFormProps) {
+  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
   const [cardNumber, setCardNumber] = useState("");
   const [cardholderName, setCardholderName] = useState("");
   const [expirationMonth, setExpirationMonth] = useState("");
@@ -64,7 +66,7 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
 
       onSubmit({
         token: cardToken.id,
-        installments: Number(installments),
+        installments: cardType === "debit" ? 1 : Number(installments),
         paymentMethodId,
       });
     } catch (error) {
@@ -78,47 +80,58 @@ export function CreditCardForm({ amount, onSubmit, isSubmitting }: CreditCardFor
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <CardNumberInput value={cardNumber} onChange={setCardNumber} />
-      <CardholderInput value={cardholderName} onChange={setCardholderName} />
-      <ExpirationInputs
-        month={expirationMonth}
-        year={expirationYear}
-        onMonthChange={setExpirationMonth}
-        onYearChange={setExpirationYear}
-      />
+    <div className="space-y-6">
+      <Tabs value={cardType} onValueChange={(value) => setCardType(value as "credit" | "debit")}>
+        <TabsList className="w-full">
+          <TabsTrigger value="credit" className="flex-1">Cartão de Crédito</TabsTrigger>
+          <TabsTrigger value="debit" className="flex-1">Cartão de Débito</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-      <div>
-        <Label htmlFor="securityCode">Código de Segurança</Label>
-        <Input
-          id="securityCode"
-          value={securityCode}
-          onChange={(e) => setSecurityCode(e.target.value.replace(/\D/g, ""))}
-          maxLength={4}
-          required
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <CardNumberInput value={cardNumber} onChange={setCardNumber} />
+        <CardholderInput value={cardholderName} onChange={setCardholderName} />
+        <ExpirationInputs
+          month={expirationMonth}
+          year={expirationYear}
+          onMonthChange={setExpirationMonth}
+          onYearChange={setExpirationYear}
         />
-      </div>
 
-      <div>
-        <Label htmlFor="identificationNumber">CPF</Label>
-        <Input
-          id="identificationNumber"
-          value={identificationNumber}
-          onChange={(e) => setIdentificationNumber(e.target.value.replace(/\D/g, ""))}
-          maxLength={11}
-          required
-        />
-      </div>
+        <div>
+          <Label htmlFor="securityCode">Código de Segurança</Label>
+          <Input
+            id="securityCode"
+            value={securityCode}
+            onChange={(e) => setSecurityCode(e.target.value.replace(/\D/g, ""))}
+            maxLength={4}
+            required
+          />
+        </div>
 
-      <InstallmentsSelect
-        value={installments}
-        options={availableInstallments}
-        onChange={setInstallments}
-      />
+        <div>
+          <Label htmlFor="identificationNumber">CPF</Label>
+          <Input
+            id="identificationNumber"
+            value={identificationNumber}
+            onChange={(e) => setIdentificationNumber(e.target.value.replace(/\D/g, ""))}
+            maxLength={11}
+            required
+          />
+        </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Processando..." : "Pagar"}
-      </Button>
-    </form>
+        {cardType === "credit" && (
+          <InstallmentsSelect
+            value={installments}
+            options={availableInstallments}
+            onChange={setInstallments}
+          />
+        )}
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Processando..." : "Pagar"}
+        </Button>
+      </form>
+    </div>
   );
 }
