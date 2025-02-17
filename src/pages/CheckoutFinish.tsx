@@ -1,57 +1,89 @@
+
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
 import { Event, Batch } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const CheckoutFinish = () => {
-  const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { session } = useAuth();
-  const batchId = searchParams.get("batch");
+  const eventId = searchParams.get("event");
   const quantity = Number(searchParams.get("quantity")) || 1;
 
   const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
 
+  // Verificar login apenas na página de checkout
+  useEffect(() => {
+    if (!session) {
+      toast.error(
+        "É necessário fazer login para finalizar a compra",
+        {
+          description: "Você será redirecionado para a página de login",
+          action: {
+            label: "Fazer Login",
+            onClick: () => navigate("/auth", { 
+              state: { 
+                redirect: `/checkout/finish?event=${eventId}&quantity=${quantity}` 
+              } 
+            })
+          },
+          duration: 5000
+        }
+      );
+      navigate("/auth", { 
+        state: { 
+          redirect: `/checkout/finish?event=${eventId}&quantity=${quantity}` 
+        } 
+      });
+    }
+  }, [session, navigate, eventId, quantity]);
+
   const { data: event } = useQuery({
-    queryKey: ["event", id],
+    queryKey: ["event", eventId],
     queryFn: async () => {
+      if (!eventId) return null;
+
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .eq("id", id)
-        .maybeSingle();
+        .eq("id", eventId)
+        .single();
 
       if (error) throw error;
-      return data as Event | null;
+      return data as Event;
     },
-    enabled: !!id,
+    enabled: !!eventId,
   });
 
   const { data: batch } = useQuery({
-    queryKey: ["batch", batchId],
+    queryKey: ["active-batch", eventId],
     queryFn: async () => {
+      if (!eventId) return null;
+
       const { data, error } = await supabase
         .from("batches")
         .select("*")
-        .eq("id", batchId)
-        .maybeSingle();
+        .eq("event_id", eventId)
+        .eq("status", "active")
+        .order("order_number", { ascending: true })
+        .limit(1)
+        .single();
 
       if (error) throw error;
-      return data as Batch | null;
+      return data as Batch;
     },
-    enabled: !!batchId,
+    enabled: !!eventId,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,11 +111,11 @@ const CheckoutFinish = () => {
 
       if (profileError) throw profileError;
 
-      if (batch) {
+      if (batch && eventId) {
         const { error: paymentError } = await supabase
           .from("payment_preferences")
           .insert({
-            event_id: id,
+            event_id: eventId,
             user_id: session.user.id,
             ticket_quantity: quantity,
             total_amount: batch.price * quantity,
@@ -95,7 +127,7 @@ const CheckoutFinish = () => {
       }
 
       toast.success("Perfil atualizado com sucesso!");
-      navigate(`/event/${id}`);
+      navigate(`/event/${eventId}`);
     } catch (error) {
       console.error("Erro ao processar checkout:", error);
       toast.error("Erro ao processar seu pedido. Tente novamente.");
@@ -118,6 +150,10 @@ const CheckoutFinish = () => {
         </div>
       </div>
     );
+  }
+
+  if (!session) {
+    return null;
   }
 
   return (

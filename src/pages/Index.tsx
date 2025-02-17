@@ -42,84 +42,13 @@ export default function Index() {
   const currentEvent = events?.[0];
 
   const handlePurchase = () => {
-    if (!session) {
-      toast.error(
-        "É necessário fazer login para comprar pulseiras",
-        {
-          description: "Você será redirecionado para a página de login",
-          action: {
-            label: "Fazer Login",
-            onClick: () => navigate("/auth")
-          },
-          duration: 5000
-        }
-      );
-      return;
-    }
-
-    if (!profile?.cpf) {
-      setShowProfileDialog(true);
-      return;
-    }
-
-    createPaymentPreference.mutate();
-  };
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const profile = await createProfile(cpf, birthDate, phone);
-    if (profile) {
-      setShowProfileDialog(false);
-      createPaymentPreference.mutate();
+    // Redirecionar para a página de checkout diretamente
+    if (currentEvent) {
+      navigate(`/checkout/finish?event=${currentEvent.id}`);
+    } else {
+      toast.error("Evento não encontrado");
     }
   };
-
-  const createPaymentPreference = useMutation({
-    mutationFn: async () => {
-      if (!session?.user.id || !currentEvent) return null;
-
-      const { data: batch, error: batchError } = await supabase
-        .from("batches")
-        .select("*")
-        .eq("event_id", currentEvent.id)
-        .eq("status", "active")
-        .order("order_number", { ascending: true })
-        .limit(1)
-        .single();
-
-      if (batchError) throw batchError;
-
-      const { data, error } = await supabase
-        .from("payment_preferences")
-        .insert([
-          {
-            user_id: session.user.id,
-            event_id: currentEvent.id,
-            ticket_quantity: 1,
-            total_amount: batch.price,
-            init_point: "URL_DO_CHECKOUT",
-            status: "pending"
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        toast.success("Pedido criado com sucesso!", {
-          description: "Você será redirecionado para o checkout",
-        });
-        navigate(`/checkout/${data.id}`);
-      }
-    },
-    onError: (error) => {
-      console.error("Erro ao criar preferência de pagamento:", error);
-      toast.error("Erro ao processar pedido. Por favor, tente novamente.");
-    }
-  });
 
   const getBatchInfo = (event: Event) => {
     const today = new Date();
@@ -184,25 +113,12 @@ export default function Index() {
             event={currentEvent}
             batchInfo={batchInfo}
             onPurchase={handlePurchase}
-            isPending={createPaymentPreference.isPending}
+            isPending={false}
           />
 
           <BenefitsSection />
         </div>
       </div>
-
-      <ProfileDialog
-        open={showProfileDialog}
-        onOpenChange={setShowProfileDialog}
-        cpf={cpf}
-        birthDate={birthDate}
-        phone={phone}
-        onCpfChange={setCpf}
-        onBirthDateChange={setBirthDate}
-        onPhoneChange={setPhone}
-        onSubmit={handleProfileSubmit}
-        isPending={createPaymentPreference.isPending}
-      />
     </div>
   );
 }
