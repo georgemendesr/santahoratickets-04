@@ -34,23 +34,6 @@ const EventDetails = () => {
   const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
 
-  useEffect(() => {
-    if (!session) {
-      toast.error(
-        "É necessário fazer login para acessar os detalhes do evento",
-        {
-          description: "Você será redirecionado para a página de login",
-          action: {
-            label: "Fazer Login",
-            onClick: () => navigate("/auth", { state: { redirect: `/event/${id}` } })
-          },
-          duration: 5000
-        }
-      );
-      navigate("/auth", { state: { redirect: `/event/${id}` } });
-    }
-  }, [session, navigate, id]);
-
   const { data: event, isLoading: isLoadingEvent } = useQuery({
     queryKey: ["event", id],
     queryFn: async () => {
@@ -201,21 +184,6 @@ const EventDetails = () => {
   };
 
   const handlePurchase = () => {
-    if (!session) {
-      toast.error(
-        "É necessário fazer login para comprar pulseiras",
-        {
-          description: "Você será redirecionado para a página de login",
-          action: {
-            label: "Fazer Login",
-            onClick: () => navigate("/auth")
-          },
-          duration: 5000
-        }
-      );
-      return;
-    }
-
     createPaymentPreference.mutate();
   };
 
@@ -238,10 +206,6 @@ const EventDetails = () => {
   };
 
   const isLoading = isLoadingEvent || isLoadingBatches;
-
-  if (!session) {
-    return null;
-  }
 
   if (isLoading) {
     return (
