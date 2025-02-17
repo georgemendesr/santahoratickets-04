@@ -31,7 +31,12 @@ export const useEventDetails = (eventId: string | undefined) => {
         .eq("id", eventId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar evento:", error);
+        throw error;
+      }
+      
+      console.log("Evento encontrado:", data);
       return data as Event;
     },
     enabled: !!eventId,
@@ -48,7 +53,12 @@ export const useEventDetails = (eventId: string | undefined) => {
         .eq("event_id", eventId)
         .order("order_number", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar lotes:", error);
+        throw error;
+      }
+
+      console.log("Lotes encontrados:", data);
       return data as Batch[];
     },
     enabled: !!eventId,
