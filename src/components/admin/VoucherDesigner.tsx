@@ -1,15 +1,65 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { VoucherCard } from "@/components/voucher/VoucherCard";
 import { Ticket } from "@/types";
+import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import { supabase } from "@/integrations/supabase/client";
+import { Send } from "lucide-react";
 
 export function VoucherDesigner() {
   const [customerName, setCustomerName] = useState("João da Silva");
   const [orderNumber, setOrderNumber] = useState("123456");
   const [batchTitle, setBatchTitle] = useState("1º Lote");
   const [ticketPrice, setTicketPrice] = useState(50);
+  const [isSharing, setIsSharing] = useState(false);
+  const voucherRef = useRef<HTMLDivElement>(null);
+
+  const shareOnWhatsApp = async () => {
+    if (!voucherRef.current) return;
+    
+    setIsSharing(true);
+    try {
+      // Captura o voucher como imagem
+      const canvas = await html2canvas(voucherRef.current);
+      const imageBlob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob!), 'image/png');
+      });
+
+      // Upload para o Supabase Storage
+      const fileName = `voucher-${Date.now()}.png`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('vouchers')
+        .upload(fileName, imageBlob);
+
+      if (uploadError) throw uploadError;
+
+      // Gera URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('vouchers')
+        .getPublicUrl(fileName);
+
+      // Cria mensagem do WhatsApp
+      const message = `🎫 Seu ingresso para ${eventTitle}\n\n` +
+        `📅 Data: ${eventDate}\n` +
+        `⏰ Horário: ${eventTime}\n` +
+        `🎯 Pedido: #${orderNumber}\n\n` +
+        `Seu voucher: ${publicUrl}`;
+
+      // Abre WhatsApp
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
+      toast.success("Voucher pronto para compartilhar!");
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      toast.error("Erro ao preparar o voucher para compartilhamento");
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   const previewTicket: Ticket = {
     id: "preview-ticket",
@@ -73,16 +123,21 @@ export function VoucherDesigner() {
                 placeholder="50.00"
               />
             </div>
-          </div>
 
-          <Button className="w-full">
-            Salvar Configurações
-          </Button>
+            <Button 
+              className="w-full"
+              onClick={shareOnWhatsApp}
+              disabled={isSharing}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Compartilhar no WhatsApp
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="flex justify-center">
-        <div>
+        <div ref={voucherRef}>
           <h2 className="text-xl font-semibold mb-4">Preview do Voucher</h2>
           <VoucherCard
             ticket={previewTicket}
