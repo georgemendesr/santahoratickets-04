@@ -8,7 +8,7 @@ import {
 import { EventInfo } from "../event-details/EventInfo";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useNavigate } from "react-router-dom";
-import { getImageUrl } from "@/integrations/supabase/utils";
+import { getImageUrl } from "../../../integrations/supabase/utils";
 import { Event } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Copy, MoreVertical } from "lucide-react";
