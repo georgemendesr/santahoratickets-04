@@ -65,12 +65,16 @@ export function EventDetailsContent({
           </Alert>
         )}
 
-        <BatchesTable batches={batches} />
-
         <Card>
           <CardContent className="p-6 space-y-4">
             <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
-            {getLowStockAlert(event.available_tickets)}
+          </CardContent>
+        </Card>
+
+        <BatchesTable batches={batches} />
+
+        <Card>
+          <CardContent className="p-6">
             <EventActions
               event={event}
               isAdmin={isAdmin}
