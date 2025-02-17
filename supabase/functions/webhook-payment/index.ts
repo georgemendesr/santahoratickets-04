@@ -22,13 +22,9 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Webhook recebido:', JSON.stringify(body, null, 2));
 
-    // Verificar se é uma notificação de pagamento
-    if (body.type !== 'payment') {
-      console.log('Tipo de notificação ignorado:', body.type);
-      return new Response(JSON.stringify({ message: 'Notification type ignored' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
+    // Validar o formato da requisição
+    if (!body.type || !body.data || !body.data.id) {
+      throw new Error('Formato de notificação inválido');
     }
 
     // Buscar detalhes do pagamento no Mercado Pago
@@ -48,12 +44,13 @@ serve(async (req) => {
       }
     );
 
+    if (!paymentResponse.ok) {
+      console.error('Erro ao buscar pagamento:', await paymentResponse.text());
+      throw new Error(`Erro ao buscar dados do pagamento: ${paymentResponse.status}`);
+    }
+
     const paymentData = await paymentResponse.json();
     console.log('Dados do pagamento:', JSON.stringify(paymentData, null, 2));
-
-    if (!paymentResponse.ok) {
-      throw new Error('Erro ao buscar dados do pagamento');
-    }
 
     // Extrair referência externa (event_id|preference_id)
     const [eventId, preferenceId] = (paymentData.external_reference || '').split('|');
@@ -100,6 +97,8 @@ serve(async (req) => {
         event_id: eventId,
         user_id: preference.user_id,
         qr_code: crypto.randomUUID(),
+        purchase_date: new Date().toISOString(),
+        used: false
       }));
 
       const { error: ticketsError } = await supabaseClient
@@ -111,14 +110,16 @@ serve(async (req) => {
         throw new Error('Erro ao gerar ingressos');
       }
 
-      // Atualizar quantidade de ingressos disponíveis no lote
-      const { error: batchError } = await supabaseClient.rpc('update_batch_tickets', {
-        p_event_id: eventId,
-        p_quantity: preference.ticket_quantity
-      });
+      // Atualizar quantidade de ingressos disponíveis
+      const { error: eventError } = await supabaseClient
+        .from('events')
+        .update({
+          available_tickets: preference.ticket_quantity
+        })
+        .eq('id', eventId);
 
-      if (batchError) {
-        console.error('Erro ao atualizar lote:', batchError);
+      if (eventError) {
+        console.error('Erro ao atualizar evento:', eventError);
       }
 
       console.log('Ingressos gerados com sucesso:', tickets.length);
@@ -138,7 +139,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200, // Importante: Retornar 200 mesmo em caso de erro para o Mercado Pago não tentar reenviar
       }
     );
   }
