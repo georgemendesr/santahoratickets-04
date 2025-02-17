@@ -25,12 +25,12 @@ export const getStatusInfo = ({ status, eventId, navigate }: PaymentStatusInfoPr
     case "approved":
       return {
         title: "Pagamento Aprovado!",
-        description: "Seus ingressos foram gerados com sucesso.",
+        description: "Seu voucher foi gerado com sucesso.",
         icon: <CheckCircle2 className="w-12 h-12 text-green-500" />,
-        buttonText: "Ver Meus Ingressos",
+        buttonText: "Ver Meus Vouchers",
         buttonAction: () => navigate("/tickets"),
         alert: {
-          description: "Você receberá um e-mail com seus ingressos em breve.",
+          description: "Você receberá um e-mail com seu QR Code em breve.",
           className: "bg-green-50 border-green-200 text-green-800"
         }
       };
@@ -42,7 +42,7 @@ export const getStatusInfo = ({ status, eventId, navigate }: PaymentStatusInfoPr
         buttonText: "Voltar para o Evento",
         buttonAction: () => navigate(`/event/${eventId}`),
         alert: {
-          description: "Assim que o pagamento for confirmado, seus ingressos serão gerados automaticamente.",
+          description: "Assim que o pagamento for confirmado, seu voucher será gerado automaticamente.",
           className: "bg-yellow-50 border-yellow-200 text-yellow-800"
         }
       };
