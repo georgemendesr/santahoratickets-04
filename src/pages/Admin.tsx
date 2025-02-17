@@ -4,7 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { 
+  PlusCircle, 
+  Users, 
+  LayoutTemplate, 
+  DollarSign,
+  CalendarDays
+} from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 const Admin = () => {
@@ -12,7 +18,6 @@ const Admin = () => {
   const { session } = useAuth();
   const { isAdmin } = useRole(session);
 
-  // Redirecionar se não for admin
   if (!isAdmin) {
     navigate("/");
     return null;
@@ -36,7 +41,10 @@ const Admin = () => {
           {/* Card de Eventos */}
           <Card>
             <CardHeader>
-              <CardTitle>Eventos</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" />
+                Eventos
+              </CardTitle>
               <CardDescription>Gerenciar eventos e ingressos</CardDescription>
             </CardHeader>
             <CardContent>
@@ -53,33 +61,59 @@ const Admin = () => {
           {/* Card de Usuários */}
           <Card>
             <CardHeader>
-              <CardTitle>Usuários</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Usuários
+              </CardTitle>
               <CardDescription>Gerenciar usuários e permissões</CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => navigate("/usuarios")}
+                onClick={() => navigate("/admin/usuarios")}
               >
                 Ver Usuários
               </Button>
             </CardContent>
           </Card>
 
-          {/* Card de Recompensas */}
+          {/* Card de Vouchers */}
           <Card>
             <CardHeader>
-              <CardTitle>Recompensas</CardTitle>
-              <CardDescription>Gerenciar programa de fidelidade</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <LayoutTemplate className="h-5 w-5" />
+                Layout de Vouchers
+              </CardTitle>
+              <CardDescription>Personalizar design dos ingressos</CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => navigate("/recompensas")}
+                onClick={() => navigate("/admin/vouchers")}
               >
-                Ver Recompensas
+                Personalizar
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Card Financeiro */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Financeiro
+              </CardTitle>
+              <CardDescription>Gestão financeira e relatórios</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/admin/financeiro")}
+              >
+                Ver Relatórios
               </Button>
             </CardContent>
           </Card>

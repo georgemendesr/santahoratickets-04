@@ -1,39 +1,106 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "@/pages/Index";
+import Admin from "@/pages/Admin";
+import AdminUsers from "@/pages/AdminUsers";
+import AdminVouchers from "@/pages/AdminVouchers";
+import AdminFinancial from "@/pages/AdminFinancial";
 import Auth from "@/pages/Auth";
+import CreateEvent from "@/pages/CreateEvent";
+import DuplicateEvent from "@/pages/DuplicateEvent";
+import EditEvent from "@/pages/EditEvent";
 import EventDetails from "@/pages/EventDetails";
+import Profile from "@/pages/Profile";
+import Rewards from "@/pages/Rewards";
+import ValidateTicket from "@/pages/ValidateTicket";
+import Vouchers from "@/pages/Vouchers";
+import NotFound from "@/pages/NotFound";
+import Checkout from "@/pages/Checkout";
 import CheckoutFinish from "@/pages/CheckoutFinish";
 import PaymentStatus from "@/pages/PaymentStatus";
-import Profile from "@/pages/Profile";
-import Vouchers from "@/pages/Vouchers";
-import Rewards from "@/pages/Rewards";
-import Admin from "@/pages/Admin";
-import NotFound from "@/pages/NotFound";
 
-const queryClient = new QueryClient();
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/admin",
+    element: <Admin />,
+  },
+  {
+    path: "/admin/usuarios",
+    element: <AdminUsers />,
+  },
+  {
+    path: "/admin/vouchers",
+    element: <AdminVouchers />,
+  },
+  {
+    path: "/admin/financeiro",
+    element: <AdminFinancial />,
+  },
+  {
+    path: "/auth",
+    element: <Auth />,
+  },
+  {
+    path: "/criar-evento",
+    element: <CreateEvent />,
+  },
+  {
+    path: "/duplicar-evento/:id",
+    element: <DuplicateEvent />,
+  },
+  {
+    path: "/editar-evento/:id",
+    element: <EditEvent />,
+  },
+  {
+    path: "/evento/:id",
+    element: <EventDetails />,
+  },
+  {
+    path: "/perfil",
+    element: <Profile />,
+  },
+  {
+    path: "/recompensas",
+    element: <Rewards />,
+  },
+  {
+    path: "/validar-ingresso",
+    element: <ValidateTicket />,
+  },
+  {
+    path: "/meus-ingressos",
+    element: <Vouchers />,
+  },
+  {
+    path: "/checkout/:eventId",
+    element: <Checkout />,
+  },
+  {
+    path: "/checkout/:eventId/finalizar",
+    element: <CheckoutFinish />,
+  },
+  {
+    path: "/pagamento/:paymentId",
+    element: <PaymentStatus />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/evento/:id" element={<EventDetails />} />
-          <Route path="/checkout/finish" element={<CheckoutFinish />} />
-          <Route path="/payment-status" element={<PaymentStatus />} />
-          <Route path="/perfil" element={<Profile />} />
-          <Route path="/meus-vouchers" element={<Vouchers />} />
-          <Route path="/recompensas" element={<Rewards />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </Router>
-    </QueryClientProvider>
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+    </>
   );
 }
 
