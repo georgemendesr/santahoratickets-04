@@ -16,6 +16,11 @@ serve(async (req) => {
   }
 
   try {
+    const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
+    if (!accessToken) {
+      throw new Error('Token do MercadoPago não configurado')
+    }
+
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -46,6 +51,14 @@ serve(async (req) => {
       paymentType 
     } = await req.json()
 
+    console.log('Dados recebidos:', {
+      eventId,
+      batchId,
+      quantity,
+      paymentType,
+      paymentMethodId
+    })
+
     if (!eventId || !quantity || !batchId) {
       throw new Error('Dados inválidos')
     }
@@ -69,7 +82,7 @@ serve(async (req) => {
 
     // Configurar MercadoPago
     mercadopago.configure({
-      access_token: Deno.env.get('MERCADOPAGO_ACCESS_TOKEN') ?? ''
+      access_token: accessToken
     })
 
     const totalAmount = batch.price * quantity
@@ -84,6 +97,10 @@ serve(async (req) => {
         payment_method_id: paymentMethodId,
         payer: {
           email: user.email,
+          identification: {
+            type: "CPF",
+            number: user.user_metadata?.cpf || ""
+          }
         }
       }
     } else if (paymentType === 'pix') {
@@ -93,7 +110,11 @@ serve(async (req) => {
         payment_method_id: 'pix',
         payer: {
           email: user.email,
-          first_name: user.user_metadata?.name || 'Cliente',
+          first_name: user.user_metadata?.name || user.email,
+          identification: {
+            type: "CPF",
+            number: user.user_metadata?.cpf || ""
+          }
         }
       }
     } else {
@@ -101,20 +122,15 @@ serve(async (req) => {
     }
 
     console.log('Criando pagamento:', paymentData)
-    const paymentResponse = await mercadopago.payment.save(paymentData)
+    const paymentResponse = await mercadopago.payment.create(paymentData)
     console.log('Resposta do pagamento:', paymentResponse)
 
-    if (!paymentResponse.response) {
+    if (!paymentResponse.body) {
       throw new Error('Resposta inválida do MercadoPago')
     }
 
-    if (paymentResponse.response.status === 'rejected') {
-      throw new Error('Pagamento rejeitado: ' + paymentResponse.response.status_detail)
-    }
-
-    // Verificar se temos os dados do PIX quando necessário
-    if (paymentType === 'pix' && !paymentResponse.response.point_of_interaction?.transaction_data?.qr_code) {
-      throw new Error('Dados do PIX não foram gerados corretamente')
+    if (paymentResponse.body.status === 'rejected') {
+      throw new Error('Pagamento rejeitado: ' + paymentResponse.body.status_detail)
     }
 
     // Criar registro de pagamento
@@ -126,9 +142,9 @@ serve(async (req) => {
         ticket_quantity: quantity,
         total_amount: totalAmount,
         payment_method_id: paymentMethodId,
-        status: paymentResponse.response.status,
+        status: paymentResponse.body.status,
         init_point: paymentType === 'pix' ? 
-          paymentResponse.response.point_of_interaction?.transaction_data?.qr_code : '',
+          paymentResponse.body.point_of_interaction?.transaction_data?.qr_code : '',
         payment_type: paymentType
       })
 
@@ -137,12 +153,12 @@ serve(async (req) => {
     }
 
     const responseData = {
-      status: paymentResponse.response.status,
-      payment_id: paymentResponse.response.id
+      status: paymentResponse.body.status,
+      payment_id: paymentResponse.body.id
     }
 
     if (paymentType === 'pix') {
-      const pixData = paymentResponse.response.point_of_interaction?.transaction_data
+      const pixData = paymentResponse.body.point_of_interaction?.transaction_data
       responseData.qr_code = pixData?.qr_code
       responseData.qr_code_base64 = pixData?.qr_code_base64
     }
