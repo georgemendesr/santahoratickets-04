@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,8 +12,6 @@ import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/integrations/supabase/utils";
 import { Event } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Pencil, Copy, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
