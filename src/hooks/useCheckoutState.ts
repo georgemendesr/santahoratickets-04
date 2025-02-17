@@ -50,8 +50,12 @@ export function useCheckoutState(
     setIsLoading(true);
 
     try {
-      // Primeiro, forçar um refresh do cache do schema
-      await supabase.schema('public').forceSchemaReload();
+      // Primeiro fazer um select para garantir que o schema está atualizado
+      await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
       const { error: profileError } = await supabase
         .from("user_profiles")
