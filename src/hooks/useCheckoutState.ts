@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { validateCPF, validatePhone } from "@/utils/validation";
 
+// Get the Supabase URL from the environment
+const SUPABASE_URL = "https://swlqrejfgvmjajhtoall.supabase.co";
+
 export function useCheckoutState(
   session: Session | null,
   eventId: string | null,
@@ -93,7 +96,7 @@ export function useCheckoutState(
 
     try {
       const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/create-payment`,
+        `${SUPABASE_URL}/functions/v1/create-payment`,
         {
           method: "POST",
           headers: {
