@@ -11,6 +11,9 @@ import AdminFinancial from "@/pages/AdminFinancial";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminVouchers from "@/pages/AdminVouchers";
 import AdminBatches from "@/pages/AdminBatches";
+import AdminParticipants from "@/pages/AdminParticipants";
+import AdminParticipantsList from "@/pages/AdminParticipantsList";
+import AdminParticipantsSales from "@/pages/AdminParticipantsSales";
 import CreateEvent from "@/pages/CreateEvent";
 import EditEvent from "@/pages/EditEvent";
 import DuplicateEvent from "@/pages/DuplicateEvent";
@@ -64,6 +67,18 @@ const router = createBrowserRouter([
   {
     path: "/admin/vouchers/batches",
     element: <AdminBatches />,
+  },
+  {
+    path: "/admin/participants",
+    element: <AdminParticipants />,
+  },
+  {
+    path: "/admin/participants/list",
+    element: <AdminParticipantsList />,
+  },
+  {
+    path: "/admin/participants/sales",
+    element: <AdminParticipantsSales />,
   },
   {
     path: "/events/create",

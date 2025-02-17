@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
-import { Ticket, LayoutTemplate } from "lucide-react";
+import { Ticket, LayoutTemplate, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function MainHeader() {
@@ -42,6 +42,27 @@ export function MainHeader() {
                   <Link to="/admin/vouchers">
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Vouchers
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/admin/participants">
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Participantes
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/admin/participants/list">
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Listar Participantes
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/admin/participants/sales">
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Vendas
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
