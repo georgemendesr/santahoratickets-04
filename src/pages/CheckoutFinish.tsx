@@ -23,6 +23,8 @@ const CheckoutFinish = () => {
     setCpf,
     phone,
     setPhone,
+    email,
+    setEmail,
     isLoading,
     showPaymentForm,
     handleSubmitProfile,
@@ -44,7 +46,12 @@ const CheckoutFinish = () => {
   };
 
   // Verificar login apenas quando for fazer o pagamento
-  const handlePaymentSubmit = (paymentData: { token: string; installments: number; paymentMethodId: string }) => {
+  const handlePaymentSubmit = (paymentData: { 
+    token?: string; 
+    installments?: number; 
+    paymentMethodId: string;
+    paymentType: "credit_card" | "pix";
+  }) => {
     if (!session) {
       toast.error(
         "É necessário fazer login para finalizar a compra",
@@ -80,11 +87,13 @@ const CheckoutFinish = () => {
         name={name}
         cpf={cpf}
         phone={phone}
+        email={email}
         isLoading={isLoading}
         showPaymentForm={showPaymentForm}
         onNameChange={setName}
         onCpfChange={setCpf}
         onPhoneChange={setPhone}
+        onEmailChange={setEmail}
         onSubmitProfile={handleProfileSubmit}
         onSubmitPayment={handlePaymentSubmit}
       />
