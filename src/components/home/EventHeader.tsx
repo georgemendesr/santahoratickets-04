@@ -35,8 +35,8 @@ export function EventHeader() {
         <div className="relative h-full w-full">
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-10" />
           <img 
-            src="/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png"
-            alt="Ambiente do evento"
+            src="/lovable-uploads/735c2365-f113-4cae-926c-1f72f6ecbcb3.png"
+            alt="Ambiente do bar"
             className="w-full h-full object-cover"
           />
         </div>
@@ -70,3 +70,4 @@ export function EventHeader() {
     </div>
   );
 }
+
