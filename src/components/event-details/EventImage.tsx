@@ -10,7 +10,8 @@ interface EventImageProps {
 
 export function EventImage({ src, alt }: EventImageProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const imageUrl = "public/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png";
+  // Remove o prefixo 'public/' do caminho da imagem
+  const imageUrl = "/lovable-uploads/c07e81e6-595c-4636-8fef-1f61c7240f65.png";
 
   return (
     <>
