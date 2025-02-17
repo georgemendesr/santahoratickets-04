@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, Clock, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const PaymentStatus = () => {
   const [searchParams] = useSearchParams();
@@ -27,13 +28,28 @@ const PaymentStatus = () => {
     // Buscar dados do QR Code se for pagamento PIX pendente
     const fetchPixData = async () => {
       if (status === "pending" && preferenceId) {
-        const { data: preference } = await supabase
+        console.log("Buscando dados do PIX para preferenceId:", preferenceId);
+        
+        const { data: preference, error } = await supabase
           .from("payment_preferences")
-          .select()
+          .select("*")
           .eq("id", preferenceId)
           .single();
 
+        if (error) {
+          console.error("Erro ao buscar preferência:", error);
+          toast.error("Erro ao carregar dados do PIX");
+          return;
+        }
+
+        console.log("Dados da preferência encontrados:", preference);
+
         if (preference?.payment_type === "pix") {
+          console.log("QR Code encontrado:", {
+            qr_code: preference.qr_code,
+            qr_code_base64: preference.qr_code_base64
+          });
+          
           setQrCode(preference.qr_code || null);
           setQrCodeBase64(preference.qr_code_base64 || null);
         }
@@ -147,7 +163,7 @@ const PaymentStatus = () => {
                           className="absolute right-1 top-1"
                           onClick={() => {
                             navigator.clipboard.writeText(qrCode);
-                            alert("Código PIX copiado!");
+                            toast.success("Código PIX copiado!");
                           }}
                         >
                           Copiar
