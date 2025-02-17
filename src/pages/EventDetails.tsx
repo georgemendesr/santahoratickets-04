@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -53,6 +54,8 @@ const EventDetails = () => {
   const { data: event, isLoading: isLoadingEvent } = useQuery({
     queryKey: ["event", id],
     queryFn: async () => {
+      if (!id) throw new Error("ID do evento não fornecido");
+      
       const { data, error } = await supabase
         .from("events")
         .select("*")
@@ -68,6 +71,8 @@ const EventDetails = () => {
   const { data: batches, isLoading: isLoadingBatches } = useQuery({
     queryKey: ["batches", id],
     queryFn: async () => {
+      if (!id) throw new Error("ID do evento não fornecido");
+
       const { data, error } = await supabase
         .from("batches")
         .select("*")
