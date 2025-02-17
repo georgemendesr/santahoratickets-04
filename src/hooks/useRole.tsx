@@ -16,8 +16,7 @@ export function useRole(session: Session | null) {
         .from("user_roles")
         .select("role")
         .eq("user_id", session.user.id)
-        .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("[useRole] Error fetching user role:", error);
