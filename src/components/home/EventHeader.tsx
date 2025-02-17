@@ -45,7 +45,7 @@ export function EventHeader() {
   }
 
   return (
-    <div className="relative min-h-[45vh] flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-[55vh] flex items-center justify-center overflow-hidden">
       {/* Background com overlay */}
       <div className="absolute inset-0">
         <div className="relative h-full w-full">
@@ -63,8 +63,8 @@ export function EventHeader() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="relative group animate-fade-in">
             <img 
-              src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
-              alt="Logo Santinha" 
+              src="/lovable-uploads/84e088a9-3b7b-41d9-9ef3-dd2894f717cf.png" 
+              alt="Logo HORA" 
               className="h-48 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
             />
           </div>
