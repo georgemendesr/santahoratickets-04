@@ -95,6 +95,23 @@ export function useCheckoutState(
     setIsLoading(true);
 
     try {
+      console.log('Iniciando requisição de pagamento:', {
+        url: `${SUPABASE_URL}/functions/v1/create-payment`,
+        data: {
+          eventId,
+          batchId: batch.id,
+          quantity: 1,
+          paymentType: paymentData.paymentType,
+          ...(paymentData.paymentType === "credit_card" ? {
+            cardToken: paymentData.token,
+            installments: paymentData.installments,
+            paymentMethodId: paymentData.paymentMethodId,
+          } : {
+            paymentMethodId: "pix"
+          }),
+        }
+      });
+
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/create-payment`,
         {
@@ -119,12 +136,14 @@ export function useCheckoutState(
         }
       );
 
+      const data = await response.json();
+      console.log('Resposta do pagamento:', data);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erro ao processar pagamento");
+        throw new Error(data.error || "Erro ao processar pagamento");
       }
 
-      const { status, payment_id, qr_code, qr_code_base64 } = await response.json();
+      const { status, payment_id, qr_code, qr_code_base64 } = data;
       
       if (paymentData.paymentType === "pix" && (!qr_code || !qr_code_base64)) {
         throw new Error("Dados do PIX não retornados corretamente");
@@ -134,6 +153,7 @@ export function useCheckoutState(
     } catch (error) {
       console.error("Erro ao processar pagamento:", error);
       toast.error("Erro ao processar seu pagamento. Tente novamente.");
+    } finally {
       setIsLoading(false);
     }
   };

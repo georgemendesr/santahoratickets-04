@@ -77,8 +77,12 @@ export function CheckoutContent({
             <div className="pt-4 border-t">
               <Tabs defaultValue="credit_card">
                 <TabsList className="w-full">
-                  <TabsTrigger value="credit_card" className="flex-1">Cartão de Crédito</TabsTrigger>
-                  <TabsTrigger value="pix" className="flex-1">PIX</TabsTrigger>
+                  <TabsTrigger value="credit_card" className="flex-1">
+                    Cartão de Crédito/Débito
+                  </TabsTrigger>
+                  <TabsTrigger value="pix" className="flex-1">
+                    PIX
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="credit_card">
                   <CreditCardForm
