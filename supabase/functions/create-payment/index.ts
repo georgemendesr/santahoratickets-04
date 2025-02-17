@@ -34,6 +34,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting payment processing...');
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -42,8 +44,14 @@ serve(async (req) => {
     // Parse and validate request body
     const requestData: PaymentRequest = await req.json();
     console.log('Received payment request:', {
-      ...requestData,
-      cardToken: requestData.cardToken ? '[REDACTED]' : undefined
+      preferenceId: requestData.preferenceId,
+      eventId: requestData.eventId,
+      batchId: requestData.batchId,
+      quantity: requestData.quantity,
+      paymentType: requestData.paymentType,
+      paymentMethodId: requestData.paymentMethodId,
+      hasCardToken: !!requestData.cardToken,
+      installments: requestData.installments
     });
 
     // Validate required fields
@@ -55,16 +63,35 @@ serve(async (req) => {
     }
 
     // Fetch payment preference
+    console.log('Fetching payment preference with ID:', requestData.preferenceId);
     const { data: preference, error: prefError } = await supabase
       .from('payment_preferences')
-      .select('*, user_profiles(name, email)')
+      .select(`
+        *,
+        user_profiles (
+          name,
+          email
+        )
+      `)
       .eq('id', requestData.preferenceId)
       .single();
 
-    if (prefError || !preference) {
+    if (prefError) {
       console.error('Error fetching payment preference:', prefError);
+      throw new Error(`Erro ao buscar preferência de pagamento: ${prefError.message}`);
+    }
+
+    if (!preference) {
+      console.error('Payment preference not found for ID:', requestData.preferenceId);
       throw new Error('Preferência de pagamento não encontrada');
     }
+
+    console.log('Found payment preference:', {
+      id: preference.id,
+      status: preference.status,
+      total_amount: preference.total_amount,
+      user_email: preference.user_profiles?.email
+    });
 
     // Validate batch availability
     const { data: batch, error: batchError } = await supabase
@@ -73,10 +100,21 @@ serve(async (req) => {
       .eq('id', requestData.batchId)
       .single();
 
-    if (batchError || !batch) {
+    if (batchError) {
       console.error('Error fetching batch:', batchError);
+      throw new Error(`Erro ao buscar lote: ${batchError.message}`);
+    }
+
+    if (!batch) {
       throw new Error('Lote não encontrado');
     }
+
+    console.log('Batch validation:', {
+      available: batch.available_tickets,
+      requested: requestData.quantity,
+      minPurchase: batch.min_purchase,
+      maxPurchase: batch.max_purchase
+    });
 
     if (batch.available_tickets < requestData.quantity) {
       throw new Error('Quantidade de ingressos indisponível');
@@ -93,6 +131,10 @@ serve(async (req) => {
     // Validate total amount
     const expectedAmount = batch.price * requestData.quantity;
     if (preference.total_amount !== expectedAmount) {
+      console.error('Amount mismatch:', {
+        expected: expectedAmount,
+        received: preference.total_amount
+      });
       throw new Error('Valor total inválido');
     }
 
@@ -117,9 +159,11 @@ serve(async (req) => {
       }
     };
 
-    console.log('Initiating payment with data:', {
-      ...paymentData,
-      token: paymentData.token ? '[REDACTED]' : undefined
+    console.log('Initiating MercadoPago payment:', {
+      amount: paymentData.transaction_amount,
+      payment_method_id: paymentData.payment_method_id,
+      description: paymentData.description,
+      payer_email: paymentData.payer.email
     });
 
     // Create payment in MercadoPago
@@ -133,7 +177,11 @@ serve(async (req) => {
     });
 
     const mpData: MercadoPagoPayment = await mpResponse.json();
-    console.log('MercadoPago response:', mpData);
+    console.log('MercadoPago response:', {
+      id: mpData.id,
+      status: mpData.status,
+      status_detail: mpData.status_detail
+    });
 
     if (!mpResponse.ok) {
       console.error('MercadoPago error:', mpData);
@@ -155,6 +203,8 @@ serve(async (req) => {
       throw updateError;
     }
 
+    console.log('Payment process completed successfully');
+
     // Return response with CORS headers
     return new Response(
       JSON.stringify({
@@ -171,7 +221,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error processing payment:', error);
+    console.error('Payment process failed:', error);
 
     return new Response(
       JSON.stringify({
