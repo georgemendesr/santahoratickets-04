@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -66,6 +67,25 @@ const ValidateTicket = () => {
     toast.error("Erro ao ler QR Code. Tente novamente.");
   };
 
+  const getQRImage = (qrCode: string) => {
+    const baseUrl = "https://api.qrserver.com/v1/create-qr-code/";
+    const params = new URLSearchParams({
+      data: qrCode,
+      size: "200x200",
+      format: "svg",
+      ...(ticket?.qr_code_background && { bgcolor: ticket.qr_code_background.replace('#', '') }),
+      ...(ticket?.qr_code_foreground && { color: ticket.qr_code_foreground.replace('#', '') }),
+      ...(ticket?.qr_code_logo && { 
+        logo: ticket.qr_code_logo,
+        ...(ticket?.qr_code_logo_size && { 
+          logo_size: ticket.qr_code_logo_size.toString() 
+        })
+      })
+    });
+
+    return `${baseUrl}?${params.toString()}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto px-4 py-8">
@@ -119,6 +139,17 @@ const ValidateTicket = () => {
                   <p>Local: {ticket.events.location}</p>
                   <p>Status: {ticket.used ? "Já utilizado" : "Válido"}</p>
                 </div>
+
+                {/* Exibir QR Code personalizado */}
+                {ticket.qr_code && (
+                  <div className="mt-4 flex justify-center">
+                    <img 
+                      src={getQRImage(ticket.qr_code)}
+                      alt="QR Code do ingresso"
+                      className="max-w-[200px] h-auto"
+                    />
+                  </div>
+                )}
 
                 <Button
                   className="w-full mt-6"

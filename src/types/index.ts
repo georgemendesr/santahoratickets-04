@@ -40,6 +40,10 @@ export interface Ticket {
   qr_code: string;
   used: boolean;
   created_at?: string;
+  qr_code_background?: string;
+  qr_code_foreground?: string;
+  qr_code_logo?: string;
+  qr_code_logo_size?: number;
 }
 
 export interface PaymentPreference {

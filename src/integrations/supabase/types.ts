@@ -365,6 +365,10 @@ export type Database = {
           id: string
           purchase_date: string
           qr_code: string
+          qr_code_background: string | null
+          qr_code_foreground: string | null
+          qr_code_logo: string | null
+          qr_code_logo_size: number | null
           used: boolean
           user_id: string
         }
@@ -374,6 +378,10 @@ export type Database = {
           id?: string
           purchase_date?: string
           qr_code: string
+          qr_code_background?: string | null
+          qr_code_foreground?: string | null
+          qr_code_logo?: string | null
+          qr_code_logo_size?: number | null
           used?: boolean
           user_id: string
         }
@@ -383,6 +391,10 @@ export type Database = {
           id?: string
           purchase_date?: string
           qr_code?: string
+          qr_code_background?: string | null
+          qr_code_foreground?: string | null
+          qr_code_logo?: string | null
+          qr_code_logo_size?: number | null
           used?: boolean
           user_id?: string
         }
