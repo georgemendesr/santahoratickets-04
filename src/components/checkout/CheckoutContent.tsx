@@ -75,23 +75,23 @@ export function CheckoutContent({
             />
           ) : (
             <div className="pt-4 border-t">
-              <Tabs defaultValue="credit_card">
-                <TabsList className="w-full">
-                  <TabsTrigger value="credit_card" className="flex-1">
-                    Cartão de Crédito/Débito
+              <Tabs defaultValue="credit_card" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="credit_card">
+                    Cartão de Crédito
                   </TabsTrigger>
-                  <TabsTrigger value="pix" className="flex-1">
+                  <TabsTrigger value="pix">
                     PIX
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="credit_card">
+                <TabsContent value="credit_card" className="mt-4">
                   <CreditCardForm
                     amount={batch.price * quantity}
                     onSubmit={(data) => onSubmitPayment({ ...data, paymentType: "credit_card" })}
                     isSubmitting={isLoading}
                   />
                 </TabsContent>
-                <TabsContent value="pix">
+                <TabsContent value="pix" className="mt-4">
                   <PIXForm
                     amount={batch.price * quantity}
                     onSubmit={() => onSubmitPayment({ paymentMethodId: "pix", paymentType: "pix" })}

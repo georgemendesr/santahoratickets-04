@@ -7,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
@@ -81,7 +80,7 @@ serve(async (req) => {
         transaction_amount: totalAmount,
         token: cardToken,
         description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
-        installments: installments,
+        installments: installments || 1,
         payment_method_id: paymentMethodId,
         payer: {
           email: user.email,
@@ -94,22 +93,32 @@ serve(async (req) => {
         payment_method_id: 'pix',
         payer: {
           email: user.email,
+          first_name: user.user_metadata?.name || 'Cliente',
         }
       }
     } else {
       throw new Error('Método de pagamento inválido')
     }
 
-    console.log('Criando pagamento:', paymentData);
+    console.log('Criando pagamento:', paymentData)
     const paymentResponse = await mercadopago.payment.save(paymentData)
-    console.log('Resposta do pagamento:', paymentResponse);
+    console.log('Resposta do pagamento:', paymentResponse)
+
+    if (!paymentResponse.response) {
+      throw new Error('Resposta inválida do MercadoPago')
+    }
 
     if (paymentResponse.response.status === 'rejected') {
       throw new Error('Pagamento rejeitado: ' + paymentResponse.response.status_detail)
     }
 
+    // Verificar se temos os dados do PIX quando necessário
+    if (paymentType === 'pix' && !paymentResponse.response.point_of_interaction?.transaction_data?.qr_code) {
+      throw new Error('Dados do PIX não foram gerados corretamente')
+    }
+
     // Criar registro de pagamento
-    const { data: paymentPreference, error: paymentError } = await supabaseClient
+    const { error: paymentError } = await supabaseClient
       .from('payment_preferences')
       .insert({
         event_id: eventId,
@@ -118,11 +127,10 @@ serve(async (req) => {
         total_amount: totalAmount,
         payment_method_id: paymentMethodId,
         status: paymentResponse.response.status,
-        init_point: paymentType === 'pix' ? paymentResponse.response.point_of_interaction?.transaction_data?.qr_code : '',
+        init_point: paymentType === 'pix' ? 
+          paymentResponse.response.point_of_interaction?.transaction_data?.qr_code : '',
         payment_type: paymentType
       })
-      .select()
-      .single()
 
     if (paymentError) {
       throw paymentError
@@ -134,8 +142,9 @@ serve(async (req) => {
     }
 
     if (paymentType === 'pix') {
-      responseData.qr_code = paymentResponse.response.point_of_interaction?.transaction_data?.qr_code
-      responseData.qr_code_base64 = paymentResponse.response.point_of_interaction?.transaction_data?.qr_code_base64
+      const pixData = paymentResponse.response.point_of_interaction?.transaction_data
+      responseData.qr_code = pixData?.qr_code
+      responseData.qr_code_base64 = pixData?.qr_code_base64
     }
 
     return new Response(
@@ -143,16 +152,16 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
+      }
     )
   } catch (error) {
-    console.error('Erro ao processar pagamento:', error);
+    console.error('Erro ao processar pagamento:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
-      },
+      }
     )
   }
 })
