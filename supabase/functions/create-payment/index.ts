@@ -27,6 +27,10 @@ interface PaymentRequest {
   paymentMethodId: string;
 }
 
+function generateIdempotencyKey(preferenceId: string): string {
+  return `${preferenceId}-${Date.now()}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -154,12 +158,17 @@ serve(async (req) => {
 
     console.log('MercadoPago payment data:', JSON.stringify(paymentData, null, 2));
 
+    // Generate idempotency key
+    const idempotencyKey = generateIdempotencyKey(requestData.preferenceId);
+    console.log('Generated idempotency key:', idempotencyKey);
+
     // Create payment in MercadoPago
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+        'X-Idempotency-Key': idempotencyKey,
       },
       body: JSON.stringify(paymentData),
     });
