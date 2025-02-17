@@ -49,21 +49,25 @@ export function EventHeader() {
       {/* Conteúdo centralizado */}
       <div className="relative z-20 container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Logo e Título */}
-          <div className="space-y-4">
-            <div className="relative group animate-fade-in mb-12">
+          {/* Logo */}
+          <div className="relative group animate-fade-in mb-12">
+            <img 
+              src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
+              alt="Logo Santinha" 
+              className="h-32 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
+            />
+          </div>
+
+          {/* Imagem de Capa do Evento */}
+          {event && (
+            <div className="relative mb-8">
               <img 
-                src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
-                alt="Logo Santinha" 
-                className="h-32 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
+                src="/lovable-uploads/2c1fd3fb-c442-4d54-8965-81264ae037ec.png"
+                alt="Bora Pago Dear"
+                className="w-full max-w-3xl mx-auto rounded-lg shadow-2xl"
               />
             </div>
-            {event && (
-              <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight drop-shadow-lg">
-                BORA PAGO DEAR
-              </h1>
-            )}
-          </div>
+          )}
 
           {/* Informações do Evento */}
           {event && (
