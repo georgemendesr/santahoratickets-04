@@ -5,29 +5,29 @@ import { ptBR } from "date-fns/locale";
 
 interface EventInfoProps {
   event: Event;
-  getLowStockAlert: (availableTickets: number) => JSX.Element | null;
+  getLowStockAlert: (availableTickets: number) => React.ReactNode;
 }
 
 export function EventInfo({ event, getLowStockAlert }: EventInfoProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="space-y-2">
       <div>
         <p className="text-sm text-muted-foreground">Data</p>
         <p className="font-medium">
-          {format(new Date(event.date), "dd/MM/yyyy")}
+          {format(new Date(event.start_date), "PPP", { locale: ptBR })}
+          {event.end_date && (
+            <> até {format(new Date(event.end_date), "PPP", { locale: ptBR })}</>
+          )}
         </p>
       </div>
+
       <div>
         <p className="text-sm text-muted-foreground">Horário</p>
-        <p className="font-medium">{event.time}</p>
-      </div>
-      <div>
-        <p className="text-sm text-muted-foreground">Preço</p>
         <p className="font-medium">
-          {new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(event.price)}
+          {format(new Date(event.start_date), "p", { locale: ptBR })}
+          {event.end_date && (
+            <> até {format(new Date(event.end_date), "p", { locale: ptBR })}</>
+          )}
         </p>
       </div>
     </div>

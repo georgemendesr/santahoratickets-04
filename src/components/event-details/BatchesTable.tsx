@@ -4,13 +4,31 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Eye, EyeOff, Users, ShoppingBag } from "lucide-react";
+import { Eye, EyeOff, Users, ShoppingBag, Plus, Minus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface BatchesTableProps {
   batches: Batch[];
 }
 
 export function BatchesTable({ batches }: BatchesTableProps) {
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
+
+  const handleIncrement = (batchId: string) => {
+    setSelectedQuantities(prev => ({
+      ...prev,
+      [batchId]: Math.min((prev[batchId] || 0) + 1, 10)
+    }));
+  };
+
+  const handleDecrement = (batchId: string) => {
+    setSelectedQuantities(prev => ({
+      ...prev,
+      [batchId]: Math.max((prev[batchId] || 0) - 1, 0)
+    }));
+  };
+
   const getBatchStatus = (batch: Batch) => {
     switch (batch.status) {
       case 'active':
@@ -67,6 +85,7 @@ export function BatchesTable({ batches }: BatchesTableProps) {
                 <TableHead>Período</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Visibilidade</TableHead>
+                <TableHead>Quantidade</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -96,6 +115,31 @@ export function BatchesTable({ batches }: BatchesTableProps) {
                   </TableCell>
                   <TableCell>{getBatchStatus(batch)}</TableCell>
                   <TableCell>{getVisibilityBadge(batch)}</TableCell>
+                  <TableCell>
+                    {batch.status === 'active' && (
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => handleDecrement(batch.id)}
+                          disabled={(selectedQuantities[batch.id] || 0) <= 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="font-medium text-lg w-8 text-center">
+                          {selectedQuantities[batch.id] || 0}
+                        </span>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => handleIncrement(batch.id)}
+                          disabled={(selectedQuantities[batch.id] || 0) >= 10}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
