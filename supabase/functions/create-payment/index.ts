@@ -28,7 +28,6 @@ interface PaymentRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -41,7 +40,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Parse and validate request body
     const requestData: PaymentRequest = await req.json();
     console.log('Received payment request:', {
       preferenceId: requestData.preferenceId,
@@ -66,13 +64,7 @@ serve(async (req) => {
     console.log('Fetching payment preference with ID:', requestData.preferenceId);
     const { data: preference, error: prefError } = await supabase
       .from('payment_preferences')
-      .select(`
-        *,
-        user_profiles (
-          name,
-          email
-        )
-      `)
+      .select('*')
       .eq('id', requestData.preferenceId)
       .single();
 
@@ -86,11 +78,23 @@ serve(async (req) => {
       throw new Error('Preferência de pagamento não encontrada');
     }
 
+    // Fetch user profile separately
+    const { data: userProfile, error: userError } = await supabase
+      .from('user_profiles')
+      .select('email, name')
+      .eq('id', preference.user_id)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user profile:', userError);
+      throw new Error('Erro ao buscar dados do usuário');
+    }
+
     console.log('Found payment preference:', {
       id: preference.id,
       status: preference.status,
       total_amount: preference.total_amount,
-      user_email: preference.user_profiles?.email
+      user_email: userProfile?.email
     });
 
     // Validate batch availability
@@ -155,7 +159,7 @@ serve(async (req) => {
       external_reference: `${requestData.eventId}|${preference.id}`,
       notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`,
       payer: {
-        email: preference.user_profiles?.email,
+        email: userProfile?.email,
       }
     };
 
@@ -205,7 +209,6 @@ serve(async (req) => {
 
     console.log('Payment process completed successfully');
 
-    // Return response with CORS headers
     return new Response(
       JSON.stringify({
         status: mpData.status,
