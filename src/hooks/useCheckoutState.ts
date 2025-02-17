@@ -57,7 +57,8 @@ export function useCheckoutState(
           name,
           cpf,
           phone,
-          email
+          email,
+          loyalty_points: 0
         })
         .select()
         .single();
@@ -79,7 +80,6 @@ export function useCheckoutState(
     cardToken?: string,
     installments?: number
   ) => {
-    // Gerar um init_point único para o pagamento
     const init_point = `${eventId}-${session!.user.id}-${Date.now()}`;
     
     const { data: preference, error } = await supabase
@@ -120,7 +120,6 @@ export function useCheckoutState(
     let toastId = toast.loading("Processando pagamento...");
 
     try {
-      // Criar preferência de pagamento
       const preference = await createPaymentPreference(
         paymentData.paymentType,
         paymentData.paymentMethodId,
@@ -128,7 +127,6 @@ export function useCheckoutState(
         paymentData.installments
       );
 
-      // Processar pagamento
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           preferenceId: preference.id,
@@ -158,7 +156,6 @@ export function useCheckoutState(
         return;
       }
 
-      // Redirecionar para página de status com referência externa para voltar ao evento
       navigate(`/payment/status?status=${status}&payment_id=${payment_id}&external_reference=${eventId}|${preference.id}`);
     } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
