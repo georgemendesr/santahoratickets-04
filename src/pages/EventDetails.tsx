@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -33,6 +32,23 @@ const EventDetails = () => {
   const [phone, setPhone] = useState("");
   const [referralCode, setReferralCode] = useState<string | null>(() => searchParams.get('ref'));
   const [referrer, setReferrer] = useState<{ name: string } | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      toast.error(
+        "É necessário fazer login para acessar os detalhes do evento",
+        {
+          description: "Você será redirecionado para a página de login",
+          action: {
+            label: "Fazer Login",
+            onClick: () => navigate("/auth", { state: { redirect: `/event/${id}` } })
+          },
+          duration: 5000
+        }
+      );
+      navigate("/auth", { state: { redirect: `/event/${id}` } });
+    }
+  }, [session, navigate, id]);
 
   const { data: event, isLoading: isLoadingEvent } = useQuery({
     queryKey: ["event", id],
@@ -218,6 +234,10 @@ const EventDetails = () => {
 
   const isLoading = isLoadingEvent || isLoadingBatches;
 
+  if (!session) {
+    return null;
+  }
+
   if (isLoading) {
     return (
       <EventLayout onBack={() => navigate(-1)}>
@@ -237,10 +257,10 @@ const EventDetails = () => {
   return (
     <EventLayout onBack={() => navigate(-1)}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <EventImage src={event.image} alt={event.title} />
+        <EventImage src={event?.image} alt={event?.title} />
 
         <div className="space-y-6">
-          <EventHeader event={event} />
+          {event && <EventHeader event={event} />}
 
           {referrer && (
             <Alert>
@@ -250,26 +270,28 @@ const EventDetails = () => {
             </Alert>
           )}
 
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
+          {event && (
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
 
-              <div>
-                <p className="text-sm text-muted-foreground">Local</p>
-                <p className="font-medium">{event.location}</p>
-              </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Local</p>
+                  <p className="font-medium">{event.location}</p>
+                </div>
 
-              {getLowStockAlert(event.available_tickets)}
+                {getLowStockAlert(event.available_tickets)}
 
-              <EventActions
-                event={event}
-                isAdmin={isAdmin}
-                onPurchase={handlePurchase}
-                onShare={handleShare}
-                onEdit={() => navigate(`/edit/${event.id}`)}
-              />
-            </CardContent>
-          </Card>
+                <EventActions
+                  event={event}
+                  isAdmin={isAdmin}
+                  onPurchase={handlePurchase}
+                  onShare={handleShare}
+                  onEdit={() => navigate(`/edit/${event.id}`)}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <BatchesTable batches={batches || []} />
 
