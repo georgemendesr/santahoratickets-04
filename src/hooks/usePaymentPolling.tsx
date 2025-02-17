@@ -53,6 +53,9 @@ export const usePaymentPolling = ({
           if (preference.status === "pending" && !isPolling) {
             setIsPolling(true);
             startPolling(preferenceId);
+          } else if (preference.status !== "pending") {
+            console.log("Status atual não é pending:", preference.status);
+            handleStatusChange(preference.status);
           }
         }
       }
@@ -61,8 +64,25 @@ export const usePaymentPolling = ({
     fetchPixData();
   }, [status, preferenceId, isPolling]);
 
+  const handleStatusChange = (newStatus: string) => {
+    console.log("Mudança de status detectada:", newStatus);
+    
+    if (newStatus === "approved") {
+      toast.success("Pagamento aprovado!");
+      navigate(`/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`);
+    } else if (newStatus === "rejected") {
+      toast.error("Pagamento rejeitado");
+      navigate(`/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`);
+    }
+  };
+
   const startPolling = async (prefId: string) => {
+    console.log("Iniciando polling para preferenceId:", prefId);
+    
+    // Polling mais frequente: a cada 2 segundos
     const pollInterval = setInterval(async () => {
+      console.log("Verificando status do pagamento...");
+      
       const { data: preference, error } = await supabase
         .from("payment_preferences")
         .select("status")
@@ -75,23 +95,27 @@ export const usePaymentPolling = ({
         return;
       }
 
-      if (preference?.status === "approved") {
-        clearInterval(pollInterval);
-        toast.success("Pagamento aprovado!");
-        navigate(`/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`);
-      } else if (preference?.status === "rejected") {
-        clearInterval(pollInterval);
-        toast.error("Pagamento rejeitado");
-        navigate(`/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`);
-      }
-    }, 5000);
+      console.log("Status atual:", preference?.status);
 
+      if (preference?.status !== "pending") {
+        clearInterval(pollInterval);
+        setIsPolling(false);
+        handleStatusChange(preference.status);
+      }
+    }, 2000); // Reduzido para 2 segundos
+
+    // Limitar o tempo total de polling para 5 minutos
     setTimeout(() => {
+      console.log("Tempo de polling expirado");
       clearInterval(pollInterval);
       setIsPolling(false);
     }, 300000);
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      console.log("Limpando intervalo de polling");
+      clearInterval(pollInterval);
+      setIsPolling(false);
+    };
   };
 
   return {
