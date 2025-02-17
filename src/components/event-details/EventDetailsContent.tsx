@@ -91,9 +91,6 @@ export function EventDetailsContent({
 
         {referralCode && <ReferralCard code={referralCode} />}
       </div>
-      <div className="space-y-6">
-        {/* Coluna vazia para manter o layout de duas colunas */}
-      </div>
     </div>
   );
 }
