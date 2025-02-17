@@ -26,23 +26,38 @@ VALUES\n${values};
 `;
 };
 
-export const exportSupabaseData = async () => {
-  const tables = [
-    'events',
-    'batches',
-    'tickets',
-    'payment_preferences',
-    'user_profiles',
-    'user_roles',
-    'loyalty_points_history',
-    'rewards',
-    'reward_redemptions',
-    'referrals',
-    'referral_uses',
-    'saved_cards',
-    'ticket_participants'
-  ];
+type TableName = 
+  | "events"
+  | "batches"
+  | "tickets"
+  | "payment_preferences"
+  | "user_profiles"
+  | "user_roles"
+  | "loyalty_points_history"
+  | "rewards"
+  | "reward_redemptions"
+  | "referrals"
+  | "referral_uses"
+  | "saved_cards"
+  | "ticket_participants";
 
+const tables: TableName[] = [
+  'events',
+  'batches',
+  'tickets',
+  'payment_preferences',
+  'user_profiles',
+  'user_roles',
+  'loyalty_points_history',
+  'rewards',
+  'reward_redemptions',
+  'referrals',
+  'referral_uses',
+  'saved_cards',
+  'ticket_participants'
+];
+
+export const exportSupabaseData = async () => {
   let sqlContent = '-- Arquivo de exportação de dados\n';
   sqlContent += `-- Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm:ss')}\n\n`;
 
