@@ -93,7 +93,7 @@ export function useCheckoutState(
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
+        `${supabase.supabaseUrl}/functions/v1/create-payment`,
         {
           method: "POST",
           headers: {
@@ -117,10 +117,16 @@ export function useCheckoutState(
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao processar pagamento");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao processar pagamento");
       }
 
-      const { status, payment_id } = await response.json();
+      const { status, payment_id, qr_code, qr_code_base64 } = await response.json();
+      
+      if (paymentData.paymentType === "pix" && (!qr_code || !qr_code_base64)) {
+        throw new Error("Dados do PIX não retornados corretamente");
+      }
+
       navigate(`/payment/${status}?payment_id=${payment_id}`);
     } catch (error) {
       console.error("Erro ao processar pagamento:", error);
