@@ -35,22 +35,17 @@ serve(async (req) => {
   try {
     console.log('Starting payment processing...');
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const requestData: PaymentRequest = await req.json();
-    console.log('Received payment request:', {
-      preferenceId: requestData.preferenceId,
-      eventId: requestData.eventId,
-      batchId: requestData.batchId,
-      quantity: requestData.quantity,
-      paymentType: requestData.paymentType,
-      paymentMethodId: requestData.paymentMethodId,
-      hasCardToken: !!requestData.cardToken,
-      installments: requestData.installments
-    });
+    console.log('Request data:', JSON.stringify(requestData, null, 2));
 
     // Validate required fields
     const requiredFields = ['preferenceId', 'eventId', 'batchId', 'quantity', 'paymentType', 'paymentMethodId'];
@@ -61,12 +56,13 @@ serve(async (req) => {
     }
 
     // Fetch payment preference
-    console.log('Fetching payment preference with ID:', requestData.preferenceId);
     const { data: preference, error: prefError } = await supabase
       .from('payment_preferences')
-      .select('*')
+      .select()
       .eq('id', requestData.preferenceId)
-      .single();
+      .maybeSingle();
+
+    console.log('Payment preference query result:', { data: preference, error: prefError });
 
     if (prefError) {
       console.error('Error fetching payment preference:', prefError);
@@ -74,35 +70,35 @@ serve(async (req) => {
     }
 
     if (!preference) {
-      console.error('Payment preference not found for ID:', requestData.preferenceId);
       throw new Error('Preferência de pagamento não encontrada');
     }
 
-    // Fetch user profile separately
+    // Fetch user profile
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
       .select('email, name')
       .eq('id', preference.user_id)
-      .single();
+      .maybeSingle();
+
+    console.log('User profile query result:', { data: userProfile, error: userError });
 
     if (userError) {
       console.error('Error fetching user profile:', userError);
       throw new Error('Erro ao buscar dados do usuário');
     }
 
-    console.log('Found payment preference:', {
-      id: preference.id,
-      status: preference.status,
-      total_amount: preference.total_amount,
-      user_email: userProfile?.email
-    });
+    if (!userProfile?.email) {
+      throw new Error('Email do usuário não encontrado');
+    }
 
     // Validate batch availability
     const { data: batch, error: batchError } = await supabase
       .from('batches')
-      .select('available_tickets, min_purchase, max_purchase, price')
+      .select()
       .eq('id', requestData.batchId)
-      .single();
+      .maybeSingle();
+
+    console.log('Batch query result:', { data: batch, error: batchError });
 
     if (batchError) {
       console.error('Error fetching batch:', batchError);
@@ -113,18 +109,11 @@ serve(async (req) => {
       throw new Error('Lote não encontrado');
     }
 
-    console.log('Batch validation:', {
-      available: batch.available_tickets,
-      requested: requestData.quantity,
-      minPurchase: batch.min_purchase,
-      maxPurchase: batch.max_purchase
-    });
-
     if (batch.available_tickets < requestData.quantity) {
       throw new Error('Quantidade de ingressos indisponível');
     }
 
-    if (requestData.quantity < batch.min_purchase) {
+    if (requestData.quantity < (batch.min_purchase || 1)) {
       throw new Error(`Quantidade mínima de compra: ${batch.min_purchase}`);
     }
 
@@ -133,8 +122,8 @@ serve(async (req) => {
     }
 
     // Validate total amount
-    const expectedAmount = batch.price * requestData.quantity;
-    if (preference.total_amount !== expectedAmount) {
+    const expectedAmount = Number(batch.price) * requestData.quantity;
+    if (Number(preference.total_amount) !== expectedAmount) {
       console.error('Amount mismatch:', {
         expected: expectedAmount,
         received: preference.total_amount
@@ -147,9 +136,9 @@ serve(async (req) => {
       throw new Error('Token do MercadoPago não configurado');
     }
 
-    // Prepare payment data for MercadoPago
+    // Prepare payment data
     const paymentData = {
-      transaction_amount: preference.total_amount,
+      transaction_amount: Number(preference.total_amount),
       payment_method_id: requestData.paymentMethodId,
       ...(requestData.paymentType === 'credit_card' ? {
         token: requestData.cardToken,
@@ -157,18 +146,13 @@ serve(async (req) => {
       } : {}),
       description: `Ingresso para evento ${requestData.eventId}`,
       external_reference: `${requestData.eventId}|${preference.id}`,
-      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`,
+      notification_url: `${supabaseUrl}/functions/v1/webhook-payment`,
       payer: {
-        email: userProfile?.email,
+        email: userProfile.email,
       }
     };
 
-    console.log('Initiating MercadoPago payment:', {
-      amount: paymentData.transaction_amount,
-      payment_method_id: paymentData.payment_method_id,
-      description: paymentData.description,
-      payer_email: paymentData.payer.email
-    });
+    console.log('MercadoPago payment data:', JSON.stringify(paymentData, null, 2));
 
     // Create payment in MercadoPago
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -180,19 +164,14 @@ serve(async (req) => {
       body: JSON.stringify(paymentData),
     });
 
-    const mpData: MercadoPagoPayment = await mpResponse.json();
-    console.log('MercadoPago response:', {
-      id: mpData.id,
-      status: mpData.status,
-      status_detail: mpData.status_detail
-    });
+    const mpData = await mpResponse.json();
+    console.log('MercadoPago response:', JSON.stringify(mpData, null, 2));
 
     if (!mpResponse.ok) {
-      console.error('MercadoPago error:', mpData);
-      throw new Error(`Erro MercadoPago: ${mpData.status_detail}`);
+      throw new Error(`Erro MercadoPago: ${mpData.message || mpData.status_detail || JSON.stringify(mpData)}`);
     }
 
-    // Update payment preference with external data
+    // Update payment preference
     const { error: updateError } = await supabase
       .from('payment_preferences')
       .update({
@@ -204,7 +183,7 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating payment preference:', updateError);
-      throw updateError;
+      throw new Error('Erro ao atualizar preferência de pagamento');
     }
 
     console.log('Payment process completed successfully');
