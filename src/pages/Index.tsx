@@ -21,16 +21,21 @@ export default function Index() {
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
 
-  const { data: events, isLoading } = useQuery({
+  const { data: events, isLoading, error } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .order("date", { ascending: true });
 
-      if (error) throw error;
-      return data as Event[];
+        if (error) throw error;
+        return data as Event[];
+      } catch (error) {
+        console.error("Erro ao carregar eventos:", error);
+        throw error;
+      }
     },
   });
 
@@ -129,12 +134,24 @@ export default function Index() {
     return { name: "3º Lote", class: "text-red-600" };
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <p className="text-lg text-red-600">Erro ao carregar eventos. Por favor, tente novamente mais tarde.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center">
-            <p>Carregando evento...</p>
+            <p className="text-lg">Carregando evento...</p>
           </div>
         </div>
       </div>
@@ -144,8 +161,8 @@ export default function Index() {
   if (!currentEvent) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto">
-          <div className="text-center mt-8">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
             <p className="text-lg text-muted-foreground">
               Nenhum evento disponível no momento.
             </p>
@@ -159,10 +176,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <EventHeader />
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-5xl mx-auto space-y-16">
           <EventCard 
