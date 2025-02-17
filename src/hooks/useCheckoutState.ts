@@ -195,7 +195,7 @@ export function useCheckoutState(
         return;
       }
 
-      navigate(`/payment/status?status=${status}&payment_id=${payment_id}&external_reference=${eventId}|${preference.id}`);
+      navigate(`/payment-status?status=${status}&payment_id=${payment_id}&external_reference=${eventId}|${preference.id}`);
     } catch (error: any) {
       console.error("Erro detalhado ao processar pagamento:", {
         error,
