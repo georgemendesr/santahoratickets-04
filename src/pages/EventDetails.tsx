@@ -60,12 +60,17 @@ const EventDetails = () => {
       return;
     }
     
-    navigate(`/checkout/finish?event=${event.id}&quantity=1`);
+    navigate(`/checkout?event=${event.id}&quantity=1`);
   };
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createProfileMutation.mutate();
+  };
+
+  const handleEdit = () => {
+    if (!event?.id) return;
+    navigate(`/events/${event.id}/edit`);
   };
 
   if (isLoading) {
@@ -95,7 +100,7 @@ const EventDetails = () => {
         referralCode={referralCode}
         onShare={handleShare}
         onPurchase={handlePurchase}
-        onEdit={() => navigate(`/edit/${event.id}`)}
+        onEdit={handleEdit}
       />
 
       <ProfileDialog

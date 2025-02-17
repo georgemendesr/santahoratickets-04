@@ -31,7 +31,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     if (location.pathname === "/") setCurrentTab("/");
     else if (location.pathname === "/vouchers") setCurrentTab("/vouchers");
     else if (location.pathname === "/rewards") setCurrentTab("/rewards");
-    else if (location.pathname === "/admin") setCurrentTab("/admin");
+    else if (location.pathname.startsWith("/admin")) setCurrentTab("/admin");
   }, [location]);
 
   return (
