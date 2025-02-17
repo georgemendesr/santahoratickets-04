@@ -6,21 +6,31 @@ import mercadopago from 'https://esm.sh/mercadopago@1.5.14'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
+
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      req.headers.get('Authorization')?.split(' ')[1] ?? ''
+      authHeader.replace('Bearer ', '')
     )
 
     if (authError || !user) {
