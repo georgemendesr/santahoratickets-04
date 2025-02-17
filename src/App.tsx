@@ -65,7 +65,7 @@ const router = createBrowserRouter([
     element: <AdminVouchers />,
   },
   {
-    path: "/admin/vouchers/batches",
+    path: "/admin/batches",
     element: <AdminBatches />,
   },
   {
