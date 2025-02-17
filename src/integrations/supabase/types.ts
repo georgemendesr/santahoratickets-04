@@ -217,6 +217,8 @@ export type Database = {
           last_attempt_at: string | null
           payment_method_id: string | null
           payment_type: string | null
+          qr_code: string | null
+          qr_code_base64: string | null
           status: string | null
           ticket_quantity: number
           total_amount: number
@@ -235,6 +237,8 @@ export type Database = {
           last_attempt_at?: string | null
           payment_method_id?: string | null
           payment_type?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
           status?: string | null
           ticket_quantity: number
           total_amount: number
@@ -253,6 +257,8 @@ export type Database = {
           last_attempt_at?: string | null
           payment_method_id?: string | null
           payment_type?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
           status?: string | null
           ticket_quantity?: number
           total_amount?: number
