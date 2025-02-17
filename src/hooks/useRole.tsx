@@ -5,10 +5,12 @@ import { Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types";
 
 export function useRole(session: Session | null) {
-  const { data: role } = useQuery({
+  const { data: role, isError } = useQuery({
     queryKey: ["user-role", session?.user.id],
     queryFn: async () => {
       if (!session?.user.id) return null;
+      
+      console.log("Fetching role for user:", session.user.id);
 
       const { data, error } = await supabase
         .from("user_roles")
@@ -21,12 +23,14 @@ export function useRole(session: Session | null) {
         return "user" as UserRole; // Fallback to user role
       }
 
-      return (data?.role ?? "user") as UserRole; // Return user role if no data
+      console.log("User role data:", data);
+      return (data?.role ?? "user") as UserRole;
     },
     enabled: !!session?.user.id,
   });
 
   const isAdmin = role === "admin";
+  console.log("Is admin?", isAdmin, "Role:", role);
 
   return {
     role,
