@@ -1,17 +1,16 @@
 
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Event, Batch } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { CreditCardForm } from "@/components/checkout/CreditCardForm";
+import { OrderSummary } from "@/components/checkout/OrderSummary";
+import { CustomerForm } from "@/components/checkout/CustomerForm";
+import { useCheckoutQueries } from "@/hooks/useCheckoutQueries";
+import { supabase } from "@/integrations/supabase/client";
 
 const CheckoutFinish = () => {
   const [searchParams] = useSearchParams();
@@ -26,7 +25,8 @@ const CheckoutFinish = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
-  // Verificar login apenas na página de checkout
+  const { event, batch } = useCheckoutQueries(eventId);
+
   useEffect(() => {
     if (!session) {
       toast.error(
@@ -52,43 +52,6 @@ const CheckoutFinish = () => {
     }
   }, [session, navigate, eventId, quantity]);
 
-  const { data: event } = useQuery({
-    queryKey: ["event", eventId],
-    queryFn: async () => {
-      if (!eventId) return null;
-
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", eventId)
-        .single();
-
-      if (error) throw error;
-      return data as Event;
-    },
-    enabled: !!eventId,
-  });
-
-  const { data: batch } = useQuery({
-    queryKey: ["active-batch", eventId],
-    queryFn: async () => {
-      if (!eventId) return null;
-
-      const { data, error } = await supabase
-        .from("batches")
-        .select("*")
-        .eq("event_id", eventId)
-        .eq("status", "active")
-        .order("order_number", { ascending: true })
-        .limit(1)
-        .single();
-
-      if (error) throw error;
-      return data as Batch;
-    },
-    enabled: !!eventId,
-  });
-
   const handleSubmitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -105,7 +68,6 @@ const CheckoutFinish = () => {
     setIsLoading(true);
 
     try {
-      // Atualizar perfil do usuário
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
@@ -139,7 +101,6 @@ const CheckoutFinish = () => {
     setIsLoading(true);
 
     try {
-      // Criar pagamento no MercadoPago
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
         {
@@ -164,8 +125,6 @@ const CheckoutFinish = () => {
       }
 
       const { status, payment_id } = await response.json();
-
-      // Redirecionar baseado no status do pagamento
       navigate(`/payment/${status}?payment_id=${payment_id}`);
     } catch (error) {
       console.error("Erro ao processar pagamento:", error);
@@ -215,66 +174,23 @@ const CheckoutFinish = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Lote</p>
-                    <p className="font-medium">{batch.title}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Quantidade</p>
-                    <p className="font-medium">{quantity} ingresso(s)</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Valor Total</p>
-                    <p className="font-medium">
-                      {new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(batch.price * quantity)}
-                    </p>
-                  </div>
-                </div>
+                <OrderSummary 
+                  event={event}
+                  batch={batch}
+                  quantity={quantity}
+                />
 
                 {!showPaymentForm ? (
-                  <form onSubmit={handleSubmitProfile} className="space-y-4 pt-4 border-t">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo</Label>
-                      <Input
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cpf">CPF</Label>
-                      <Input
-                        id="cpf"
-                        value={cpf}
-                        onChange={(e) => setCpf(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input
-                        id="phone"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Processando..." : "Continuar"}
-                    </Button>
-                  </form>
+                  <CustomerForm
+                    name={name}
+                    cpf={cpf}
+                    phone={phone}
+                    isLoading={isLoading}
+                    onNameChange={setName}
+                    onCpfChange={setCpf}
+                    onPhoneChange={setPhone}
+                    onSubmit={handleSubmitProfile}
+                  />
                 ) : (
                   <div className="pt-4 border-t">
                     <CreditCardForm
