@@ -15,8 +15,14 @@ serve(async (req) => {
   try {
     const { preferenceId, eventId, batchId, quantity, paymentType, cardToken, installments, paymentMethodId } = await req.json();
     
+    // Validar dados obrigatórios, incluindo paymentMethodId para cartão
     if (!preferenceId || !eventId || !batchId || !quantity || !paymentType) {
       throw new Error("Dados obrigatórios faltando");
+    }
+
+    // Validar paymentMethodId específico para cartão de crédito
+    if (paymentType === 'credit_card' && !paymentMethodId) {
+      throw new Error("Payment Method ID é obrigatório para cartão de crédito");
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -78,7 +84,7 @@ serve(async (req) => {
         }
       : {
           ...basePaymentData,
-          payment_method_id: "pix"  // Removido payment_type_id, apenas payment_method_id para PIX
+          payment_method_id: "pix"
         };
 
     console.log('Payload para MercadoPago:', JSON.stringify(paymentData, null, 2));
