@@ -15,8 +15,7 @@ serve(async (req) => {
   try {
     const { preferenceId, eventId, batchId, quantity, paymentType, cardToken, installments, paymentMethodId } = await req.json();
     
-    // Validar dados obrigatórios
-    if (!preferenceId || !eventId || !batchId || !quantity || !paymentType || !paymentMethodId) {
+    if (!preferenceId || !eventId || !batchId || !quantity || !paymentType) {
       throw new Error("Dados obrigatórios faltando");
     }
 
@@ -79,12 +78,10 @@ serve(async (req) => {
         }
       : {
           ...basePaymentData,
-          payment_method_id: "pix",
-          payment_type_id: "bank_transfer",
-          transaction_details: {
-            financial_institution: "bcb"
-          }
+          payment_method_id: "pix"  // Removido payment_type_id, apenas payment_method_id para PIX
         };
+
+    console.log('Payload para MercadoPago:', JSON.stringify(paymentData, null, 2));
 
     // Criar pagamento no MercadoPago
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
