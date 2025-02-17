@@ -10,7 +10,7 @@ export function useRole(session: Session | null) {
     queryFn: async () => {
       if (!session?.user.id) return null;
       
-      console.log("Fetching role for user:", session.user.id);
+      console.log("[useRole] Fetching role for user:", session.user.id);
 
       const { data, error } = await supabase
         .from("user_roles")
@@ -19,18 +19,18 @@ export function useRole(session: Session | null) {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching user role:", error);
+        console.error("[useRole] Error fetching user role:", error);
         return "user" as UserRole; // Fallback to user role
       }
 
-      console.log("User role data:", data);
+      console.log("[useRole] User role data:", data);
       return (data?.role ?? "user") as UserRole;
     },
     enabled: !!session?.user.id,
   });
 
   const isAdmin = role === "admin";
-  console.log("Is admin?", isAdmin, "Role:", role);
+  console.log("[useRole] Is admin?", isAdmin, "Role:", role);
 
   return {
     role,
