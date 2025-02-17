@@ -1,4 +1,3 @@
-
 export const getImageUrl = (path: string | null) => {
   if (!path) return { publicUrl: null };
   
