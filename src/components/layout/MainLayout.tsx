@@ -4,6 +4,8 @@ import { MainFooter } from "./MainFooter";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -12,6 +14,8 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const { isAdmin } = useRole(session);
   const [currentTab, setCurrentTab] = useState("/");
 
   useEffect(() => {
@@ -19,6 +23,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     if (location.pathname === "/") setCurrentTab("/");
     else if (location.pathname === "/meus-vouchers") setCurrentTab("/meus-vouchers");
     else if (location.pathname === "/recompensas") setCurrentTab("/recompensas");
+    else if (location.pathname === "/admin") setCurrentTab("/admin");
   }, [location]);
 
   return (
@@ -51,6 +56,15 @@ export function MainLayout({ children }: MainLayoutProps) {
               >
                 Recompensas
               </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger 
+                  value="/admin" 
+                  onClick={() => navigate("/admin")}
+                  className="data-[state=active]:bg-primary/10"
+                >
+                  Admin
+                </TabsTrigger>
+              )}
             </TabsList>
           </Tabs>
         </div>
