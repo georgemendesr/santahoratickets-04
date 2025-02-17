@@ -37,46 +37,56 @@ export function EventHeader() {
       {/* Background com overlay */}
       <div className="absolute inset-0">
         <div className="relative h-full w-full">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background z-10" />
-          <div className="absolute inset-0">
-            <img 
-              src="/lovable-uploads/3932db3c-50e4-470f-b6df-55c45faf431c.png"
-              alt="Ambiente do evento"
-              className="w-full h-full object-cover animate-fade-in"
-            />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FF4B5C]/90 via-[#A020F0]/70 to-background z-10" />
+          <img 
+            src="/lovable-uploads/735c2365-f113-4cae-926c-1f72f6ecbcb3.png"
+            alt="Bora Pago Dear - Kolla Kommigo"
+            className="w-full h-full object-cover animate-fade-in"
+          />
         </div>
       </div>
 
       {/* Conteúdo centralizado */}
       <div className="relative z-20 container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Logo */}
-          <div className="relative group animate-fade-in mb-12">
-            <img 
-              src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
-              alt="Logo Santinha" 
-              className="h-48 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
-            />
+          {/* Logo e Título */}
+          <div className="space-y-4">
+            <div className="relative group animate-fade-in mb-12">
+              <img 
+                src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
+                alt="Logo Santinha" 
+                className="h-32 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
+              />
+            </div>
+            {event && (
+              <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight drop-shadow-lg">
+                BORA PAGO DEAR
+              </h1>
+            )}
           </div>
 
           {/* Informações do Evento */}
           {event && (
             <div className="space-y-6 text-white">
-              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                {event.title}
-              </h1>
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                <img 
+                  src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png"
+                  alt="Kolla Kommigo"
+                  className="h-8 w-8 object-contain"
+                />
+                <span className="text-xl font-medium">Kolla Kommigo</span>
+              </div>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-lg">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <Calendar className="h-5 w-5" />
                   <span>{format(new Date(event.date), "PPPP", { locale: ptBR })}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <Clock className="h-5 w-5" />
                   <span>{event.time}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <MapPin className="h-5 w-5" />
                   <span>{event.location}</span>
                 </div>
