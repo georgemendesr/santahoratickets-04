@@ -29,8 +29,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     // Atualiza a tab baseado na rota atual
     if (location.pathname === "/") setCurrentTab("/");
-    else if (location.pathname === "/meus-vouchers") setCurrentTab("/meus-vouchers");
-    else if (location.pathname === "/recompensas") setCurrentTab("/recompensas");
+    else if (location.pathname === "/vouchers") setCurrentTab("/vouchers");
+    else if (location.pathname === "/rewards") setCurrentTab("/rewards");
     else if (location.pathname === "/admin") setCurrentTab("/admin");
   }, [location]);
 
@@ -39,7 +39,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <MainHeader />
       
       {/* Menu de navegação - só mostra se estiver logado */}
-      {!loading && session && (
+      {!loading && session && !isAdmin && (
         <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
           <div className="container mx-auto px-4">
             <Tabs value={currentTab} className="w-full">
@@ -52,28 +52,37 @@ export function MainLayout({ children }: MainLayoutProps) {
                   Eventos
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="/meus-vouchers" 
-                  onClick={() => navigate("/meus-vouchers")}
+                  value="/vouchers" 
+                  onClick={() => navigate("/vouchers")}
                   className="data-[state=active]:bg-primary/10"
                 >
                   Meus Vouchers
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="/recompensas" 
-                  onClick={() => navigate("/recompensas")}
+                  value="/rewards" 
+                  onClick={() => navigate("/rewards")}
                   className="data-[state=active]:bg-primary/10"
                 >
                   Recompensas
                 </TabsTrigger>
-                {isAdmin && (
-                  <TabsTrigger 
-                    value="/admin" 
-                    onClick={() => navigate("/admin")}
-                    className="data-[state=active]:bg-primary/10"
-                  >
-                    Admin
-                  </TabsTrigger>
-                )}
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+      )}
+
+      {!loading && session && isAdmin && (
+        <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
+          <div className="container mx-auto px-4">
+            <Tabs value={currentTab} className="w-full">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger 
+                  value="/admin" 
+                  onClick={() => navigate("/admin")}
+                  className="data-[state=active]:bg-primary/10"
+                >
+                  Admin
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
