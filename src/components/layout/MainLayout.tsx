@@ -14,12 +14,13 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const { isAdmin } = useRole(session);
   const [currentTab, setCurrentTab] = useState("/");
 
   console.log("MainLayout Render:", {
     session,
+    loading,
     isAdmin,
     currentTab,
     pathname: location.pathname
@@ -38,7 +39,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <MainHeader />
       
       {/* Menu de navegação - só mostra se estiver logado */}
-      {session && (
+      {!loading && session && (
         <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
           <div className="container mx-auto px-4">
             <Tabs value={currentTab} className="w-full">
@@ -50,32 +51,28 @@ export function MainLayout({ children }: MainLayoutProps) {
                 >
                   Eventos
                 </TabsTrigger>
-                {session && (
-                  <>
-                    <TabsTrigger 
-                      value="/meus-vouchers" 
-                      onClick={() => navigate("/meus-vouchers")}
-                      className="data-[state=active]:bg-primary/10"
-                    >
-                      Meus Vouchers
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="/recompensas" 
-                      onClick={() => navigate("/recompensas")}
-                      className="data-[state=active]:bg-primary/10"
-                    >
-                      Recompensas
-                    </TabsTrigger>
-                    {isAdmin && (
-                      <TabsTrigger 
-                        value="/admin" 
-                        onClick={() => navigate("/admin")}
-                        className="data-[state=active]:bg-primary/10"
-                      >
-                        Admin
-                      </TabsTrigger>
-                    )}
-                  </>
+                <TabsTrigger 
+                  value="/meus-vouchers" 
+                  onClick={() => navigate("/meus-vouchers")}
+                  className="data-[state=active]:bg-primary/10"
+                >
+                  Meus Vouchers
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="/recompensas" 
+                  onClick={() => navigate("/recompensas")}
+                  className="data-[state=active]:bg-primary/10"
+                >
+                  Recompensas
+                </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger 
+                    value="/admin" 
+                    onClick={() => navigate("/admin")}
+                    className="data-[state=active]:bg-primary/10"
+                  >
+                    Admin
+                  </TabsTrigger>
                 )}
               </TabsList>
             </Tabs>
