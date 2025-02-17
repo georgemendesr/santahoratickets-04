@@ -122,26 +122,36 @@ export function BatchesTable({ batches }: BatchesTableProps) {
                   <TableCell>{getBatchStatus(batch)}</TableCell>
                   <TableCell>
                     {batch.status === 'active' && (
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          onClick={() => handleDecrement(batch.id)}
-                          disabled={(selectedQuantities[batch.id] || 0) <= 0}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="font-medium text-lg w-8 text-center">
-                          {selectedQuantities[batch.id] || 0}
-                        </span>
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          onClick={() => handleIncrement(batch.id)}
-                          disabled={(selectedQuantities[batch.id] || 0) >= 10}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => handleDecrement(batch.id)}
+                            disabled={(selectedQuantities[batch.id] || 0) <= 0}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="font-medium text-lg w-8 text-center">
+                            {selectedQuantities[batch.id] || 0}
+                          </span>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => handleIncrement(batch.id)}
+                            disabled={(selectedQuantities[batch.id] || 0) >= 10}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {selectedQuantities[batch.id] > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            Você pagará: {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(batch.price * (selectedQuantities[batch.id] || 0))}
+                          </p>
+                        )}
                       </div>
                     )}
                   </TableCell>
