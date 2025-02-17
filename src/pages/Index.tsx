@@ -31,6 +31,14 @@ export default function Index() {
 
   const currentEvent = events?.[0];
 
+  const handlePurchase = () => {
+    if (currentEvent) {
+      navigate(`/evento/${currentEvent.id}`);
+    } else {
+      toast.error("Evento não encontrado");
+    }
+  };
+
   const getBatchInfo = (event: Event) => {
     const today = new Date();
     const eventDate = new Date(event.date);
@@ -82,13 +90,20 @@ export default function Index() {
     );
   }
 
+  const batchInfo = getBatchInfo(currentEvent);
+
   return (
     <div className="min-h-screen">
       <EventHeader />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-5xl mx-auto space-y-16">
-          <EventCard event={currentEvent} />
+          <EventCard 
+            event={currentEvent} 
+            batchInfo={batchInfo}
+            onPurchase={handlePurchase}
+            isPending={false}
+          />
           <BenefitsSection />
         </div>
       </div>
