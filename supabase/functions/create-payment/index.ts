@@ -16,30 +16,45 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Iniciando processamento de pagamento');
+    
     const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
     if (!accessToken) {
       throw new Error('Token do MercadoPago não configurado')
     }
 
     // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Configuração do Supabase ausente')
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
 
     // Verify authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      throw new Error('No authorization header')
+      throw new Error('Header de autorização ausente')
     }
+
+    console.log('Verificando autenticação...');
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
       authHeader.replace('Bearer ', '')
     )
 
-    if (authError || !user) {
-      throw new Error('Não autorizado')
+    if (authError) {
+      console.error('Erro de autenticação:', authError);
+      throw new Error('Erro de autenticação')
     }
+
+    if (!user) {
+      throw new Error('Usuário não encontrado')
+    }
+
+    console.log('Usuário autenticado:', user.id);
 
     const { 
       eventId, 
@@ -64,20 +79,26 @@ serve(async (req) => {
     }
 
     // Buscar informações do evento e do lote
-    const { data: event } = await supabaseClient
+    const { data: event, error: eventError } = await supabaseClient
       .from('events')
       .select('*')
       .eq('id', eventId)
       .single()
 
-    const { data: batch } = await supabaseClient
+    if (eventError) {
+      console.error('Erro ao buscar evento:', eventError);
+      throw new Error('Evento não encontrado')
+    }
+
+    const { data: batch, error: batchError } = await supabaseClient
       .from('batches')
       .select('*')
       .eq('id', batchId)
       .single()
 
-    if (!event || !batch) {
-      throw new Error('Evento ou lote não encontrado')
+    if (batchError) {
+      console.error('Erro ao buscar lote:', batchError);
+      throw new Error('Lote não encontrado')
     }
 
     // Configurar MercadoPago
@@ -109,7 +130,6 @@ serve(async (req) => {
         description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
         payment_method_id: 'pix',
         payment_type_id: 'pix',
-        notification_url: 'https://seu-dominio.com/webhook',
         payer: {
           email: user.email,
           first_name: user.user_metadata?.name || user.email,
@@ -151,6 +171,7 @@ serve(async (req) => {
       })
 
     if (paymentError) {
+      console.error('Erro ao salvar preferência:', paymentError);
       throw paymentError
     }
 
@@ -175,7 +196,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro ao processar pagamento:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

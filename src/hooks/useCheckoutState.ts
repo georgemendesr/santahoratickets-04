@@ -109,23 +109,35 @@ export function useCheckoutState(
       console.log('Iniciando requisição de pagamento:', paymentBody);
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: paymentBody
+        body: paymentBody,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
-      console.log('Resposta do pagamento:', data);
+      console.log('Resposta do pagamento:', data, error);
 
-      if (error) throw new Error(error.message || "Erro ao processar pagamento");
+      if (error) {
+        console.error('Erro detalhado:', error);
+        throw new Error(error.message || "Erro ao processar pagamento");
+      }
       
+      if (!data) {
+        throw new Error("Resposta vazia do servidor");
+      }
+
       const { status, payment_id, qr_code, qr_code_base64 } = data;
       
       if (paymentData.paymentType === "pix" && (!qr_code || !qr_code_base64)) {
+        console.error('Dados do PIX incompletos:', data);
         throw new Error("Dados do PIX não retornados corretamente");
       }
 
       navigate(`/payment/${status}?payment_id=${payment_id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
-      toast.error("Erro ao processar seu pagamento. Tente novamente.");
+      toast.error(error.message || "Erro ao processar seu pagamento. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
