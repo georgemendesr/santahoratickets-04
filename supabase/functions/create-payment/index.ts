@@ -10,51 +10,63 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('1. Iniciando função create-payment');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('2. Requisição OPTIONS - CORS preflight');
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Iniciando processamento de pagamento');
+    console.log('3. Verificando configurações básicas');
     
     const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
     if (!accessToken) {
+      console.error('4. Token do MercadoPago não encontrado');
       throw new Error('Token do MercadoPago não configurado')
     }
+    console.log('4. Token do MercadoPago encontrado');
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     
     if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('5. Configurações do Supabase ausentes');
       throw new Error('Configuração do Supabase ausente')
     }
+    console.log('5. Configurações do Supabase encontradas');
 
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
 
     // Verify authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('6. Header de autorização ausente');
       throw new Error('Header de autorização ausente')
     }
+    console.log('6. Header de autorização presente:', authHeader.substring(0, 20) + '...');
 
-    console.log('Verificando autenticação...');
-
+    console.log('7. Verificando autenticação do usuário');
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
       authHeader.replace('Bearer ', '')
     )
 
     if (authError) {
-      console.error('Erro de autenticação:', authError);
+      console.error('8. Erro de autenticação:', authError);
       throw new Error('Erro de autenticação')
     }
 
     if (!user) {
+      console.error('8. Usuário não encontrado');
       throw new Error('Usuário não encontrado')
     }
+    console.log('8. Usuário autenticado:', user.id);
 
-    console.log('Usuário autenticado:', user.id);
+    console.log('9. Lendo body da requisição');
+    const body = await req.json()
+    console.log('Body recebido:', body);
 
     const { 
       eventId, 
@@ -64,9 +76,9 @@ serve(async (req) => {
       installments, 
       paymentMethodId,
       paymentType 
-    } = await req.json()
+    } = body
 
-    console.log('Dados recebidos:', {
+    console.log('10. Dados extraídos:', {
       eventId,
       batchId,
       quantity,
@@ -75,10 +87,12 @@ serve(async (req) => {
     })
 
     if (!eventId || !quantity || !batchId) {
+      console.error('11. Dados obrigatórios ausentes');
       throw new Error('Dados inválidos')
     }
 
     // Buscar informações do evento e do lote
+    console.log('12. Buscando informações do evento');
     const { data: event, error: eventError } = await supabaseClient
       .from('events')
       .select('*')
@@ -86,10 +100,12 @@ serve(async (req) => {
       .single()
 
     if (eventError) {
-      console.error('Erro ao buscar evento:', eventError);
+      console.error('13. Erro ao buscar evento:', eventError);
       throw new Error('Evento não encontrado')
     }
+    console.log('13. Evento encontrado:', event.title);
 
+    console.log('14. Buscando informações do lote');
     const { data: batch, error: batchError } = await supabaseClient
       .from('batches')
       .select('*')
@@ -97,11 +113,13 @@ serve(async (req) => {
       .single()
 
     if (batchError) {
-      console.error('Erro ao buscar lote:', batchError);
+      console.error('15. Erro ao buscar lote:', batchError);
       throw new Error('Lote não encontrado')
     }
+    console.log('15. Lote encontrado:', batch.title);
 
     // Configurar MercadoPago
+    console.log('16. Configurando MercadoPago');
     mercadopago.configure({
       access_token: accessToken
     })
@@ -140,22 +158,27 @@ serve(async (req) => {
         }
       }
     } else {
+      console.error('17. Método de pagamento inválido:', paymentType);
       throw new Error('Método de pagamento inválido')
     }
 
-    console.log('Criando pagamento:', paymentData)
+    console.log('17. Dados do pagamento preparados:', paymentData);
+    console.log('18. Criando pagamento no MercadoPago');
     const paymentResponse = await mercadopago.payment.create(paymentData)
-    console.log('Resposta do pagamento:', paymentResponse)
+    console.log('19. Resposta do pagamento:', paymentResponse)
 
     if (!paymentResponse.body) {
+      console.error('20. Resposta do MercadoPago inválida');
       throw new Error('Resposta inválida do MercadoPago')
     }
 
     if (paymentResponse.body.status === 'rejected') {
+      console.error('20. Pagamento rejeitado:', paymentResponse.body.status_detail);
       throw new Error('Pagamento rejeitado: ' + paymentResponse.body.status_detail)
     }
 
     // Criar registro de pagamento
+    console.log('21. Salvando registro de pagamento');
     const { error: paymentError } = await supabaseClient
       .from('payment_preferences')
       .insert({
@@ -171,9 +194,10 @@ serve(async (req) => {
       })
 
     if (paymentError) {
-      console.error('Erro ao salvar preferência:', paymentError);
+      console.error('22. Erro ao salvar preferência:', paymentError);
       throw paymentError
     }
+    console.log('22. Registro de pagamento salvo com sucesso');
 
     const responseData = {
       status: paymentResponse.body.status,
@@ -186,6 +210,7 @@ serve(async (req) => {
       responseData.qr_code_base64 = pixData?.qr_code_base64
     }
 
+    console.log('23. Retornando resposta de sucesso');
     return new Response(
       JSON.stringify(responseData),
       {
