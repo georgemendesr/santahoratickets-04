@@ -1,20 +1,12 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "sonner";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
-import CreateEvent from "@/pages/CreateEvent";
-import EditEvent from "@/pages/EditEvent";
-import DuplicateEvent from "@/pages/DuplicateEvent";
-import EventDetails from "@/pages/EventDetails";
-import ValidateTicket from "@/pages/ValidateTicket";
-import Rewards from "@/pages/Rewards";
 import NotFound from "@/pages/NotFound";
-import Checkout from "@/pages/Checkout";
+import EventDetails from "@/pages/EventDetails";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 import CheckoutFinish from "@/pages/CheckoutFinish";
-import "./App.css";
+import PaymentStatus from "@/pages/PaymentStatus";
 
 const queryClient = new QueryClient();
 
@@ -25,19 +17,13 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/create" element={<CreateEvent />} />
-          <Route path="/edit/:id" element={<EditEvent />} />
-          <Route path="/duplicate/:id" element={<DuplicateEvent />} />
           <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/checkout/:id" element={<Checkout />} />
-          <Route path="/checkout/:id/finish" element={<CheckoutFinish />} />
-          <Route path="/validate" element={<ValidateTicket />} />
-          <Route path="/rewards" element={<Rewards />} />
+          <Route path="/checkout/finish" element={<CheckoutFinish />} />
+          <Route path="/payment/:status" element={<PaymentStatus />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Toaster />
       </BrowserRouter>
-      <Toaster />
-      <SonnerToaster position="top-right" />
     </QueryClientProvider>
   );
 }

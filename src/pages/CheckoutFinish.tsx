@@ -22,6 +22,7 @@ const CheckoutFinish = () => {
   const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Verificar login apenas na página de checkout
   useEffect(() => {
@@ -99,7 +100,10 @@ const CheckoutFinish = () => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
+      // Atualizar perfil do usuário
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
@@ -112,25 +116,36 @@ const CheckoutFinish = () => {
       if (profileError) throw profileError;
 
       if (batch && eventId) {
-        const { error: paymentError } = await supabase
-          .from("payment_preferences")
-          .insert({
-            event_id: eventId,
-            user_id: session.user.id,
-            ticket_quantity: quantity,
-            total_amount: batch.price * quantity,
-            init_point: "mercadopago_url_placeholder",
-            status: "pending",
-          });
+        // Criar pagamento no MercadoPago
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              eventId,
+              batchId: batch.id,
+              quantity,
+            }),
+          }
+        );
 
-        if (paymentError) throw paymentError;
+        if (!response.ok) {
+          throw new Error("Erro ao processar pagamento");
+        }
+
+        const { init_point } = await response.json();
+
+        // Redirecionar para o MercadoPago
+        window.location.href = init_point;
       }
-
-      toast.success("Perfil atualizado com sucesso!");
-      navigate(`/event/${eventId}`);
     } catch (error) {
       console.error("Erro ao processar checkout:", error);
       toast.error("Erro ao processar seu pedido. Tente novamente.");
+      setIsLoading(false);
     }
   };
 
@@ -229,8 +244,9 @@ const CheckoutFinish = () => {
                   <Button 
                     type="submit" 
                     className="w-full"
+                    disabled={isLoading}
                   >
-                    Pagar
+                    {isLoading ? "Processando..." : "Pagar"}
                   </Button>
                 </div>
               </form>
