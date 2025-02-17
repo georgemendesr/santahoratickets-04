@@ -36,6 +36,7 @@ const EventDetails = () => {
   const handleShare = async () => {
     if (!session) {
       toast.error("Faça login para compartilhar o evento");
+      navigate('/auth');
       return;
     }
 
@@ -47,18 +48,24 @@ const EventDetails = () => {
     createReferralMutation.mutate();
   };
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createProfileMutation.mutate();
-  };
-
   const handlePurchase = () => {
     if (!event?.id) {
       toast.error("Evento não encontrado");
       return;
     }
+
+    if (!session) {
+      toast.error("Faça login para comprar ingressos");
+      navigate('/auth');
+      return;
+    }
     
     navigate(`/checkout/finish?event=${event.id}&quantity=1`);
+  };
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createProfileMutation.mutate();
   };
 
   if (isLoading) {

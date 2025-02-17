@@ -2,13 +2,15 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Gift, Ticket } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface LoyaltyCardProps {
   points: number;
 }
 
 export function LoyaltyCard({ points }: LoyaltyCardProps) {
+  const navigate = useNavigate();
+
   return (
     <Card>
       <CardHeader>
@@ -26,17 +28,20 @@ export function LoyaltyCard({ points }: LoyaltyCardProps) {
         </p>
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button asChild variant="outline">
-          <Link to="/meus-vouchers" className="flex items-center gap-2">
-            <Ticket className="h-4 w-4" />
-            Meus Vouchers
-          </Link>
+        <Button 
+          variant="outline"
+          onClick={() => navigate('/meus-vouchers')}
+          className="flex items-center gap-2"
+        >
+          <Ticket className="h-4 w-4" />
+          Meus Vouchers
         </Button>
-        <Button asChild>
-          <Link to="/recompensas" className="flex items-center gap-2">
-            <Gift className="h-4 w-4" />
-            Trocar Pontos
-          </Link>
+        <Button
+          onClick={() => navigate('/recompensas')}
+          className="flex items-center gap-2"
+        >
+          <Gift className="h-4 w-4" />
+          Trocar Pontos
         </Button>
       </CardFooter>
     </Card>
