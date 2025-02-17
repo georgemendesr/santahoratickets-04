@@ -27,6 +27,24 @@ interface PaymentRequest {
   paymentMethodId: string;
 }
 
+function validatePaymentRequest(data: PaymentRequest) {
+  const errors = [];
+  
+  if (!data.preferenceId) errors.push("preferenceId é obrigatório");
+  if (!data.eventId) errors.push("eventId é obrigatório");
+  if (!data.batchId) errors.push("batchId é obrigatório");
+  if (!data.quantity || data.quantity < 1) errors.push("quantity deve ser maior que 0");
+  if (!data.paymentType) errors.push("paymentType é obrigatório");
+  if (!data.paymentMethodId) errors.push("paymentMethodId é obrigatório");
+  
+  if (data.paymentType === "credit_card") {
+    if (!data.cardToken) errors.push("cardToken é obrigatório para pagamento com cartão");
+    if (!data.installments || data.installments < 1) errors.push("installments deve ser maior que 0");
+  }
+
+  return errors;
+}
+
 function generateIdempotencyKey(preferenceId: string): string {
   return `${preferenceId}-${Date.now()}`;
 }
@@ -37,39 +55,42 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting payment processing...');
+    console.log('1. Iniciando processamento do pagamento...');
 
+    // Validar configuração do Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase configuration missing');
+      throw new Error('Configuração do Supabase ausente');
+    }
+
+    if (!accessToken) {
+      throw new Error('Token do MercadoPago não configurado');
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Validar dados da requisição
     const requestData: PaymentRequest = await req.json();
-    console.log('Request data:', JSON.stringify(requestData, null, 2));
+    console.log('2. Dados recebidos:', JSON.stringify(requestData, null, 2));
 
-    // Validate required fields
-    const requiredFields = ['preferenceId', 'eventId', 'batchId', 'quantity', 'paymentType', 'paymentMethodId'];
-    const missingFields = requiredFields.filter(field => !requestData[field as keyof PaymentRequest]);
-    
-    if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    const validationErrors = validatePaymentRequest(requestData);
+    if (validationErrors.length > 0) {
+      throw new Error(`Erros de validação: ${validationErrors.join(', ')}`);
     }
 
-    // Fetch payment preference
+    // Buscar preferência de pagamento
+    console.log('3. Buscando preferência de pagamento...');
     const { data: preference, error: prefError } = await supabase
       .from('payment_preferences')
       .select()
       .eq('id', requestData.preferenceId)
       .maybeSingle();
 
-    console.log('Payment preference query result:', { data: preference, error: prefError });
-
     if (prefError) {
-      console.error('Error fetching payment preference:', prefError);
+      console.error('Erro ao buscar preferência:', prefError);
       throw new Error(`Erro ao buscar preferência de pagamento: ${prefError.message}`);
     }
 
@@ -77,70 +98,64 @@ serve(async (req) => {
       throw new Error('Preferência de pagamento não encontrada');
     }
 
-    // Fetch user profile
+    console.log('4. Preferência encontrada:', {
+      id: preference.id,
+      total_amount: preference.total_amount,
+      status: preference.status
+    });
+
+    // Buscar perfil do usuário
+    console.log('5. Buscando perfil do usuário...');
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
       .select('email, name')
       .eq('id', preference.user_id)
       .maybeSingle();
 
-    console.log('User profile query result:', { data: userProfile, error: userError });
-
-    if (userError) {
-      console.error('Error fetching user profile:', userError);
-      throw new Error('Erro ao buscar dados do usuário');
+    if (userError || !userProfile?.email) {
+      console.error('Erro ao buscar usuário:', userError);
+      throw new Error('Dados do usuário não encontrados');
     }
 
-    if (!userProfile?.email) {
-      throw new Error('Email do usuário não encontrado');
-    }
+    console.log('6. Perfil encontrado:', {
+      email: userProfile.email,
+      name: userProfile.name
+    });
 
-    // Validate batch availability
+    // Validar lote
+    console.log('7. Validando lote...');
     const { data: batch, error: batchError } = await supabase
       .from('batches')
       .select()
       .eq('id', requestData.batchId)
       .maybeSingle();
 
-    console.log('Batch query result:', { data: batch, error: batchError });
-
-    if (batchError) {
-      console.error('Error fetching batch:', batchError);
-      throw new Error(`Erro ao buscar lote: ${batchError.message}`);
-    }
-
-    if (!batch) {
+    if (batchError || !batch) {
+      console.error('Erro ao buscar lote:', batchError);
       throw new Error('Lote não encontrado');
     }
+
+    console.log('8. Lote validado:', {
+      available: batch.available_tickets,
+      requested: requestData.quantity,
+      price: batch.price
+    });
 
     if (batch.available_tickets < requestData.quantity) {
       throw new Error('Quantidade de ingressos indisponível');
     }
 
-    if (requestData.quantity < (batch.min_purchase || 1)) {
-      throw new Error(`Quantidade mínima de compra: ${batch.min_purchase}`);
-    }
-
-    if (batch.max_purchase && requestData.quantity > batch.max_purchase) {
-      throw new Error(`Quantidade máxima de compra: ${batch.max_purchase}`);
-    }
-
-    // Validate total amount
+    // Validar valor total
     const expectedAmount = Number(batch.price) * requestData.quantity;
     if (Number(preference.total_amount) !== expectedAmount) {
-      console.error('Amount mismatch:', {
+      console.error('9. Divergência de valores:', {
         expected: expectedAmount,
         received: preference.total_amount
       });
       throw new Error('Valor total inválido');
     }
 
-    const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
-    if (!accessToken) {
-      throw new Error('Token do MercadoPago não configurado');
-    }
-
-    // Prepare payment data
+    // Preparar dados para o MercadoPago
     const paymentData = {
       transaction_amount: Number(preference.total_amount),
       payment_method_id: requestData.paymentMethodId,
@@ -153,16 +168,19 @@ serve(async (req) => {
       notification_url: `${supabaseUrl}/functions/v1/webhook-payment`,
       payer: {
         email: userProfile.email,
+        first_name: userProfile.name?.split(' ')[0] || '',
+        last_name: userProfile.name?.split(' ').slice(1).join(' ') || ''
       }
     };
 
-    console.log('MercadoPago payment data:', JSON.stringify(paymentData, null, 2));
+    console.log('10. Dados do pagamento:', JSON.stringify(paymentData, null, 2));
 
-    // Generate idempotency key
+    // Gerar chave de idempotência
     const idempotencyKey = generateIdempotencyKey(requestData.preferenceId);
-    console.log('Generated idempotency key:', idempotencyKey);
+    console.log('11. Chave de idempotência:', idempotencyKey);
 
-    // Create payment in MercadoPago
+    // Criar pagamento no MercadoPago
+    console.log('12. Enviando requisição para o MercadoPago...');
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
@@ -174,13 +192,15 @@ serve(async (req) => {
     });
 
     const mpData = await mpResponse.json();
-    console.log('MercadoPago response:', JSON.stringify(mpData, null, 2));
+    console.log('13. Resposta do MercadoPago:', JSON.stringify(mpData, null, 2));
 
     if (!mpResponse.ok) {
+      console.error('Erro do MercadoPago:', mpData);
       throw new Error(`Erro MercadoPago: ${mpData.message || mpData.status_detail || JSON.stringify(mpData)}`);
     }
 
-    // Update payment preference
+    // Atualizar preferência de pagamento
+    console.log('14. Atualizando preferência de pagamento...');
     const { error: updateError } = await supabase
       .from('payment_preferences')
       .update({
@@ -191,11 +211,11 @@ serve(async (req) => {
       .eq('id', preference.id);
 
     if (updateError) {
-      console.error('Error updating payment preference:', updateError);
+      console.error('Erro ao atualizar preferência:', updateError);
       throw new Error('Erro ao atualizar preferência de pagamento');
     }
 
-    console.log('Payment process completed successfully');
+    console.log('15. Processo de pagamento concluído com sucesso');
 
     return new Response(
       JSON.stringify({
@@ -212,7 +232,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Payment process failed:', error);
+    console.error('Erro no processo de pagamento:', error);
 
     return new Response(
       JSON.stringify({
