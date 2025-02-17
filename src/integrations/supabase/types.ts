@@ -12,42 +12,60 @@ export type Database = {
       batches: {
         Row: {
           available_tickets: number
+          batch_group: string | null
           created_at: string
+          description: string | null
           end_date: string | null
           event_id: string
           id: string
+          is_visible: boolean | null
+          max_purchase: number | null
+          min_purchase: number | null
           order_number: number
           price: number
           start_date: string
           status: string | null
           title: string
           total_tickets: number
+          visibility: string | null
         }
         Insert: {
           available_tickets: number
+          batch_group?: string | null
           created_at?: string
+          description?: string | null
           end_date?: string | null
           event_id: string
           id?: string
+          is_visible?: boolean | null
+          max_purchase?: number | null
+          min_purchase?: number | null
           order_number: number
           price: number
           start_date: string
           status?: string | null
           title: string
           total_tickets: number
+          visibility?: string | null
         }
         Update: {
           available_tickets?: number
+          batch_group?: string | null
           created_at?: string
+          description?: string | null
           end_date?: string | null
           event_id?: string
           id?: string
+          is_visible?: boolean | null
+          max_purchase?: number | null
+          min_purchase?: number | null
           order_number?: number
           price?: number
           start_date?: string
           status?: string | null
           title?: string
           total_tickets?: number
+          visibility?: string | null
         }
         Relationships: [
           {

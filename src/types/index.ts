@@ -1,4 +1,3 @@
-
 export interface Event {
   id: string;
   title: string;
@@ -17,6 +16,7 @@ export interface Batch {
   id: string;
   event_id: string;
   title: string;
+  description?: string;
   price: number;
   available_tickets: number;
   total_tickets: number;
@@ -25,6 +25,11 @@ export interface Batch {
   status: 'active' | 'ended' | 'sold_out';
   created_at?: string;
   order_number: number;
+  visibility: 'public' | 'guest_only' | 'internal_pdv';
+  is_visible: boolean;
+  min_purchase: number;
+  max_purchase?: number;
+  batch_group?: string;
 }
 
 export interface Ticket {
