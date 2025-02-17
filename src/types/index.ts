@@ -83,10 +83,13 @@ export interface PaymentPreference {
 
 export interface UserProfile {
   id: string;
-  cpf: string;
-  birth_date: string;
+  cpf: string | null;
+  birth_date: string | null;
   loyalty_points: number;
   created_at?: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
 }
 
 export interface LoyaltyPointsHistory {

@@ -54,11 +54,11 @@ const Profile = () => {
                 <>
                   <div>
                     <p className="text-sm font-medium">CPF</p>
-                    <p className="text-sm text-muted-foreground">{profile.cpf}</p>
+                    <p className="text-sm text-muted-foreground">{profile.cpf || 'Não informado'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Telefone</p>
-                    <p className="text-sm text-muted-foreground">{profile.phone}</p>
+                    <p className="text-sm text-muted-foreground">{profile.phone || 'Não informado'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Pontos de Fidelidade</p>
