@@ -10,6 +10,20 @@ export interface Event {
   available_tickets: number;
   status?: 'published' | 'draft' | 'ended';
   created_at?: string;
+  gross_revenue?: number;
+  net_revenue?: number;
+  average_ticket_price?: number;
+  pending_orders?: number;
+  view_count?: number;
+  promo_codes_count?: number;
+  pdv_count?: number;
+  form_fields_count?: number;
+  staff_count?: number;
+  checked_in_count?: number;
+  total_checkins?: number;
+  approved_tickets?: number;
+  pending_tickets?: number;
+  refunded_tickets?: number;
 }
 
 export interface Batch {

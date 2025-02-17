@@ -1,7 +1,7 @@
 
 import { Event } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Ticket } from "lucide-react";
+import { Calendar, MapPin, Ticket, Users, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +45,14 @@ export function EventCard({
               {batchInfo.name}
             </span>
           </div>
+          {event.view_count !== undefined && (
+            <div className="absolute bottom-4 right-4">
+              <span className="px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm text-sm">
+                <Users className="inline-block w-4 h-4 mr-1" />
+                {event.view_count} visualizações
+              </span>
+            </div>
+          )}
         </div>
         
         <div className="p-8 space-y-6 flex flex-col justify-between">
@@ -76,15 +84,46 @@ export function EventCard({
                 <MapPin className="mr-2 h-5 w-5 text-purple-500" />
                 <span>{event.location}</span>
               </div>
+
+              {/* Estatísticas do evento */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="flex items-center text-gray-600">
+                  <Ticket className="mr-2 h-5 w-5 text-purple-500" />
+                  <span>{event.available_tickets} disponíveis</span>
+                </div>
+                {event.approved_tickets !== undefined && (
+                  <div className="flex items-center text-gray-600">
+                    <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />
+                    <span>{event.approved_tickets} vendidos</span>
+                  </div>
+                )}
+                {event.pending_tickets !== undefined && event.pending_tickets > 0 && (
+                  <div className="flex items-center text-gray-600">
+                    <Clock className="mr-2 h-5 w-5 text-yellow-500" />
+                    <span>{event.pending_tickets} pendentes</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="text-2xl font-bold text-purple-600">
-              {new Intl.NumberFormat("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              }).format(event.price)}
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold text-purple-600">
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(event.price)}
+              </div>
+              {event.gross_revenue !== undefined && event.gross_revenue > 0 && (
+                <div className="text-sm text-gray-600 flex items-center">
+                  <DollarSign className="w-4 h-4 mr-1 text-green-500" />
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(event.gross_revenue)}
+                </div>
+              )}
             </div>
             
             <Button 

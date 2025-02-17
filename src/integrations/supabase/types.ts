@@ -79,43 +79,85 @@ export type Database = {
       }
       events: {
         Row: {
+          approved_tickets: number | null
           available_tickets: number
+          average_ticket_price: number | null
+          checked_in_count: number | null
           created_at: string
           date: string
           description: string
+          form_fields_count: number | null
+          gross_revenue: number | null
           id: string
           image: string
           location: string
+          net_revenue: number | null
+          pdv_count: number | null
+          pending_orders: number | null
+          pending_tickets: number | null
           price: number
+          promo_codes_count: number | null
+          refunded_tickets: number | null
+          staff_count: number | null
           status: string | null
           time: string
           title: string
+          total_checkins: number | null
+          view_count: number | null
         }
         Insert: {
+          approved_tickets?: number | null
           available_tickets: number
+          average_ticket_price?: number | null
+          checked_in_count?: number | null
           created_at?: string
           date: string
           description: string
+          form_fields_count?: number | null
+          gross_revenue?: number | null
           id?: string
           image: string
           location: string
+          net_revenue?: number | null
+          pdv_count?: number | null
+          pending_orders?: number | null
+          pending_tickets?: number | null
           price: number
+          promo_codes_count?: number | null
+          refunded_tickets?: number | null
+          staff_count?: number | null
           status?: string | null
           time: string
           title: string
+          total_checkins?: number | null
+          view_count?: number | null
         }
         Update: {
+          approved_tickets?: number | null
           available_tickets?: number
+          average_ticket_price?: number | null
+          checked_in_count?: number | null
           created_at?: string
           date?: string
           description?: string
+          form_fields_count?: number | null
+          gross_revenue?: number | null
           id?: string
           image?: string
           location?: string
+          net_revenue?: number | null
+          pdv_count?: number | null
+          pending_orders?: number | null
+          pending_tickets?: number | null
           price?: number
+          promo_codes_count?: number | null
+          refunded_tickets?: number | null
+          staff_count?: number | null
           status?: string | null
           time?: string
           title?: string
+          total_checkins?: number | null
+          view_count?: number | null
         }
         Relationships: []
       }
