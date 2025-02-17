@@ -584,6 +584,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_batch_tickets: {
+        Args: {
+          p_event_id: string
+          p_quantity: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

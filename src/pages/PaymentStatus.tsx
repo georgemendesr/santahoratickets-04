@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Clock, ArrowLeft } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, ArrowLeft, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ const PaymentStatus = () => {
   const preferenceId = reference?.split("|")[1];
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
 
   useEffect(() => {
     // Redirecionar para home se não houver status
@@ -52,12 +53,53 @@ const PaymentStatus = () => {
           
           setQrCode(preference.qr_code || null);
           setQrCodeBase64(preference.qr_code_base64 || null);
+
+          // Iniciar polling se o status ainda estiver pendente
+          if (preference.status === "pending" && !isPolling) {
+            setIsPolling(true);
+            startPolling(preferenceId);
+          }
         }
       }
     };
 
     fetchPixData();
-  }, [status, payment_id, navigate, preferenceId]);
+  }, [status, payment_id, navigate, preferenceId, isPolling]);
+
+  // Função para verificar o status do pagamento
+  const startPolling = async (prefId: string) => {
+    const pollInterval = setInterval(async () => {
+      const { data: preference, error } = await supabase
+        .from("payment_preferences")
+        .select("status")
+        .eq("id", prefId)
+        .single();
+
+      if (error) {
+        console.error("Erro ao verificar status:", error);
+        clearInterval(pollInterval);
+        return;
+      }
+
+      if (preference?.status === "approved") {
+        clearInterval(pollInterval);
+        toast.success("Pagamento aprovado!");
+        navigate(`/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`);
+      } else if (preference?.status === "rejected") {
+        clearInterval(pollInterval);
+        toast.error("Pagamento rejeitado");
+        navigate(`/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`);
+      }
+    }, 5000); // Verificar a cada 5 segundos
+
+    // Limpar o intervalo após 5 minutos
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      setIsPolling(false);
+    }, 300000);
+
+    return () => clearInterval(pollInterval);
+  };
 
   const getStatusInfo = () => {
     switch (status) {
@@ -93,7 +135,7 @@ const PaymentStatus = () => {
           buttonText: "Tentar Novamente",
           buttonAction: () => navigate(`/event/${eventId}`),
           alert: {
-            description: "Por favor, verifique os dados do cartão e tente novamente.",
+            description: "Por favor, verifique os dados e tente novamente.",
             className: "bg-red-50 border-red-200 text-red-800"
           }
         };
@@ -155,17 +197,18 @@ const PaymentStatus = () => {
                           type="text"
                           value={qrCode}
                           readOnly
-                          className="w-full p-2 text-sm bg-gray-50 border rounded"
+                          className="w-full p-2 text-sm bg-gray-50 border rounded pr-20"
                         />
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="absolute right-1 top-1"
+                          className="absolute right-1 top-1 h-8"
                           onClick={() => {
                             navigator.clipboard.writeText(qrCode);
                             toast.success("Código PIX copiado!");
                           }}
                         >
+                          <Copy className="h-4 w-4 mr-1" />
                           Copiar
                         </Button>
                       </div>
