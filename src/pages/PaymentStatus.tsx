@@ -1,12 +1,12 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Clock, ArrowLeft, Copy } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+import { PixQRCode } from "@/components/payment/PixQRCode";
+import { PaymentStatusInfo } from "@/components/payment/PaymentStatusInfo";
+import { usePaymentPolling } from "@/hooks/usePaymentPolling";
 
 const PaymentStatus = () => {
   const [searchParams] = useSearchParams();
@@ -16,145 +16,20 @@ const PaymentStatus = () => {
   const [reference] = useState(searchParams.get("external_reference"));
   const eventId = reference?.split("|")[0];
   const preferenceId = reference?.split("|")[1];
-  const [qrCode, setQrCode] = useState<string | null>(null);
-  const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
 
-  useEffect(() => {
-    // Redirecionar para home se não houver status
-    if (!status || !payment_id) {
-      navigate("/");
-    }
+  const { qrCode, qrCodeBase64 } = usePaymentPolling({
+    preferenceId,
+    payment_id,
+    reference,
+    status,
+    navigate
+  });
 
-    // Buscar dados do QR Code se for pagamento PIX pendente
-    const fetchPixData = async () => {
-      if (status === "pending" && preferenceId) {
-        console.log("Buscando dados do PIX para preferenceId:", preferenceId);
-        
-        const { data: preference, error } = await supabase
-          .from("payment_preferences")
-          .select("*")
-          .eq("id", preferenceId)
-          .single();
-
-        if (error) {
-          console.error("Erro ao buscar preferência:", error);
-          toast.error("Erro ao carregar dados do PIX");
-          return;
-        }
-
-        console.log("Dados da preferência encontrados:", preference);
-
-        if (preference?.payment_type === "pix") {
-          console.log("QR Code encontrado:", {
-            qr_code: preference.qr_code,
-            qr_code_base64: preference.qr_code_base64
-          });
-          
-          setQrCode(preference.qr_code || null);
-          setQrCodeBase64(preference.qr_code_base64 || null);
-
-          // Iniciar polling se o status ainda estiver pendente
-          if (preference.status === "pending" && !isPolling) {
-            setIsPolling(true);
-            startPolling(preferenceId);
-          }
-        }
-      }
-    };
-
-    fetchPixData();
-  }, [status, payment_id, navigate, preferenceId, isPolling]);
-
-  // Função para verificar o status do pagamento
-  const startPolling = async (prefId: string) => {
-    const pollInterval = setInterval(async () => {
-      const { data: preference, error } = await supabase
-        .from("payment_preferences")
-        .select("status")
-        .eq("id", prefId)
-        .single();
-
-      if (error) {
-        console.error("Erro ao verificar status:", error);
-        clearInterval(pollInterval);
-        return;
-      }
-
-      if (preference?.status === "approved") {
-        clearInterval(pollInterval);
-        toast.success("Pagamento aprovado!");
-        navigate(`/payment/status?status=approved&payment_id=${payment_id}&external_reference=${reference}`);
-      } else if (preference?.status === "rejected") {
-        clearInterval(pollInterval);
-        toast.error("Pagamento rejeitado");
-        navigate(`/payment/status?status=rejected&payment_id=${payment_id}&external_reference=${reference}`);
-      }
-    }, 5000); // Verificar a cada 5 segundos
-
-    // Limpar o intervalo após 5 minutos
-    setTimeout(() => {
-      clearInterval(pollInterval);
-      setIsPolling(false);
-    }, 300000);
-
-    return () => clearInterval(pollInterval);
-  };
-
-  const getStatusInfo = () => {
-    switch (status) {
-      case "approved":
-        return {
-          title: "Pagamento Aprovado!",
-          description: "Seus ingressos foram gerados com sucesso.",
-          icon: <CheckCircle2 className="w-12 h-12 text-green-500" />,
-          buttonText: "Ver Meus Ingressos",
-          buttonAction: () => navigate("/tickets"),
-          alert: {
-            description: "Você receberá um e-mail com seus ingressos em breve.",
-            className: "bg-green-50 border-green-200 text-green-800"
-          }
-        };
-      case "pending":
-        return {
-          title: "Pagamento em Processamento",
-          description: "Aguardando confirmação do pagamento.",
-          icon: <Clock className="w-12 h-12 text-yellow-500" />,
-          buttonText: "Voltar para o Evento",
-          buttonAction: () => navigate(`/event/${eventId}`),
-          alert: {
-            description: "Assim que o pagamento for confirmado, seus ingressos serão gerados automaticamente.",
-            className: "bg-yellow-50 border-yellow-200 text-yellow-800"
-          }
-        };
-      case "rejected":
-        return {
-          title: "Pagamento não Aprovado",
-          description: "Houve um problema com seu pagamento.",
-          icon: <AlertCircle className="w-12 h-12 text-red-500" />,
-          buttonText: "Tentar Novamente",
-          buttonAction: () => navigate(`/event/${eventId}`),
-          alert: {
-            description: "Por favor, verifique os dados e tente novamente.",
-            className: "bg-red-50 border-red-200 text-red-800"
-          }
-        };
-      default:
-        return {
-          title: "Status Desconhecido",
-          description: "Não foi possível determinar o status do pagamento.",
-          icon: <AlertCircle className="w-12 h-12 text-gray-500" />,
-          buttonText: "Voltar para Home",
-          buttonAction: () => navigate("/"),
-          alert: {
-            description: "Se você tiver dúvidas, entre em contato com nosso suporte.",
-            className: "bg-gray-50 border-gray-200 text-gray-800"
-          }
-        };
-    }
-  };
-
-  const statusInfo = getStatusInfo();
+  // Redirecionar para home se não houver status
+  if (!status || !payment_id) {
+    navigate("/");
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
@@ -171,57 +46,19 @@ const PaymentStatus = () => {
         <div className="max-w-md mx-auto">
           <Card>
             <CardHeader>
-              <div className="flex flex-col items-center space-y-4">
-                {statusInfo.icon}
-                <CardTitle className="text-center text-2xl">{statusInfo.title}</CardTitle>
-              </div>
+              <PaymentStatusInfo
+                status={status}
+                eventId={eventId}
+                navigate={navigate}
+              />
             </CardHeader>
             <CardContent className="space-y-6">
-              <p className="text-center text-muted-foreground">
-                {statusInfo.description}
-              </p>
-
-              {status === "pending" && qrCodeBase64 && (
-                <div className="flex flex-col items-center space-y-4 p-4 bg-white rounded-lg">
-                  <p className="font-medium text-center">Escaneie o QR Code para pagar com PIX</p>
-                  <img 
-                    src={`data:image/png;base64,${qrCodeBase64}`}
-                    alt="QR Code PIX"
-                    className="w-48 h-48"
-                  />
-                  {qrCode && (
-                    <div className="w-full">
-                      <p className="text-sm text-center mb-2">Ou copie o código PIX:</p>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={qrCode}
-                          readOnly
-                          className="w-full p-2 text-sm bg-gray-50 border rounded pr-20"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1 h-8"
-                          onClick={() => {
-                            navigator.clipboard.writeText(qrCode);
-                            toast.success("Código PIX copiado!");
-                          }}
-                        >
-                          <Copy className="h-4 w-4 mr-1" />
-                          Copiar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {status === "pending" && qrCodeBase64 && qrCode && (
+                <PixQRCode
+                  qrCode={qrCode}
+                  qrCodeBase64={qrCodeBase64}
+                />
               )}
-
-              <Alert className={statusInfo.alert.className}>
-                <AlertDescription>
-                  {statusInfo.alert.description}
-                </AlertDescription>
-              </Alert>
 
               {payment_id && (
                 <p className="text-center text-sm text-muted-foreground">
@@ -231,9 +68,12 @@ const PaymentStatus = () => {
 
               <Button 
                 className="w-full" 
-                onClick={statusInfo.buttonAction}
+                onClick={() => {
+                  const statusInfo = getStatusInfo({ status, eventId, navigate });
+                  statusInfo.buttonAction();
+                }}
               >
-                {statusInfo.buttonText}
+                {getStatusInfo({ status, eventId, navigate }).buttonText}
               </Button>
             </CardContent>
           </Card>
