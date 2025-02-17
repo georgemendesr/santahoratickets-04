@@ -27,7 +27,14 @@ serve(async (req) => {
       throw new Error('Não autorizado')
     }
 
-    const { eventId, quantity, batchId } = await req.json()
+    const { 
+      eventId, 
+      batchId, 
+      quantity, 
+      cardToken, 
+      installments, 
+      paymentMethodId 
+    } = await req.json()
 
     if (!eventId || !quantity || !batchId) {
       throw new Error('Dados inválidos')
@@ -55,27 +62,21 @@ serve(async (req) => {
       access_token: Deno.env.get('MERCADOPAGO_ACCESS_TOKEN') ?? ''
     })
 
-    // Criar preferência de pagamento
-    const preference = {
-      items: [
-        {
-          title: `${event.title} - ${batch.title}`,
-          description: event.description,
-          quantity: quantity,
-          currency_id: 'BRL',
-          unit_price: Number(batch.price)
-        }
-      ],
-      external_reference: `${eventId}|${user.id}|${quantity}|${batchId}`,
-      back_urls: {
-        success: `${Deno.env.get('APP_URL')}/payment/success`,
-        pending: `${Deno.env.get('APP_URL')}/payment/pending`,
-        failure: `${Deno.env.get('APP_URL')}/payment/failure`
-      },
-      auto_return: 'approved'
+    const totalAmount = batch.price * quantity
+
+    // Criar pagamento
+    const payment = {
+      transaction_amount: totalAmount,
+      token: cardToken,
+      description: `${event.title} - ${batch.title} (${quantity} ingressos)`,
+      installments: installments,
+      payment_method_id: paymentMethodId,
+      payer: {
+        email: user.email,
+      }
     }
 
-    const response = await mercadopago.preferences.create(preference)
+    const paymentResponse = await mercadopago.payment.save(payment)
 
     // Criar registro de pagamento
     const { data: paymentPreference, error: paymentError } = await supabaseClient
@@ -84,9 +85,12 @@ serve(async (req) => {
         event_id: eventId,
         user_id: user.id,
         ticket_quantity: quantity,
-        total_amount: batch.price * quantity,
-        init_point: response.body.init_point,
-        status: 'pending'
+        total_amount: totalAmount,
+        card_token: cardToken,
+        installments: installments,
+        payment_method_id: paymentMethodId,
+        status: paymentResponse.status,
+        init_point: '' // Não é necessário para checkout transparente
       })
       .select()
       .single()
@@ -97,9 +101,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        init_point: response.body.init_point,
-        preference_id: response.body.id,
-        payment_id: paymentPreference.id
+        status: paymentResponse.status,
+        payment_id: paymentResponse.id
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

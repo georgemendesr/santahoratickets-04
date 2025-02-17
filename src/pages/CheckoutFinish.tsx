@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { CreditCardForm } from "@/components/checkout/CreditCardForm";
 
 const CheckoutFinish = () => {
   const [searchParams] = useSearchParams();
@@ -23,6 +24,7 @@ const CheckoutFinish = () => {
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   // Verificar login apenas na página de checkout
   useEffect(() => {
@@ -87,7 +89,7 @@ const CheckoutFinish = () => {
     enabled: !!eventId,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!session?.user) {
@@ -115,36 +117,59 @@ const CheckoutFinish = () => {
 
       if (profileError) throw profileError;
 
-      if (batch && eventId) {
-        // Criar pagamento no MercadoPago
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              eventId,
-              batchId: batch.id,
-              quantity,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Erro ao processar pagamento");
-        }
-
-        const { init_point } = await response.json();
-
-        // Redirecionar para o MercadoPago
-        window.location.href = init_point;
-      }
+      setShowPaymentForm(true);
+      setIsLoading(false);
     } catch (error) {
-      console.error("Erro ao processar checkout:", error);
-      toast.error("Erro ao processar seu pedido. Tente novamente.");
+      console.error("Erro ao atualizar perfil:", error);
+      toast.error("Erro ao atualizar seu perfil. Tente novamente.");
+      setIsLoading(false);
+    }
+  };
+
+  const handlePayment = async (paymentData: {
+    token: string;
+    installments: number;
+    paymentMethodId: string;
+  }) => {
+    if (!session?.user || !batch || !eventId) {
+      toast.error("Dados inválidos para processamento");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Criar pagamento no MercadoPago
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            eventId,
+            batchId: batch.id,
+            quantity,
+            cardToken: paymentData.token,
+            installments: paymentData.installments,
+            paymentMethodId: paymentData.paymentMethodId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao processar pagamento");
+      }
+
+      const { status, payment_id } = await response.json();
+
+      // Redirecionar baseado no status do pagamento
+      navigate(`/payment/${status}?payment_id=${payment_id}`);
+    } catch (error) {
+      console.error("Erro ao processar pagamento:", error);
+      toast.error("Erro ao processar seu pagamento. Tente novamente.");
       setIsLoading(false);
     }
   };
@@ -189,7 +214,7 @@ const CheckoutFinish = () => {
               <CardTitle>Finalizar Compra - {event.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-6">
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Lote</p>
@@ -210,46 +235,56 @@ const CheckoutFinish = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
+                {!showPaymentForm ? (
+                  <form onSubmit={handleSubmitProfile} className="space-y-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome Completo</Label>
+                      <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF</Label>
+                      <Input
+                        id="cpf"
+                        value={cpf}
+                        onChange={(e) => setCpf(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Processando..." : "Continuar"}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="pt-4 border-t">
+                    <CreditCardForm
+                      amount={batch.price * quantity}
+                      onSubmit={handlePayment}
+                      isSubmitting={isLoading}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cpf">CPF</Label>
-                    <Input
-                      id="cpf"
-                      value={cpf}
-                      onChange={(e) => setCpf(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input
-                      id="phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Processando..." : "Pagar"}
-                  </Button>
-                </div>
-              </form>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

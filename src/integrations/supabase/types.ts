@@ -409,6 +409,33 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_cards: {
+        Row: {
+          card_brand: string
+          card_token: string
+          created_at: string
+          id: string
+          last_four_digits: string
+          user_id: string
+        }
+        Insert: {
+          card_brand: string
+          card_token: string
+          created_at?: string
+          id?: string
+          last_four_digits: string
+          user_id: string
+        }
+        Update: {
+          card_brand?: string
+          card_token?: string
+          created_at?: string
+          id?: string
+          last_four_digits?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           created_at: string
