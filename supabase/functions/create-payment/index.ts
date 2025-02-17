@@ -9,7 +9,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -87,12 +87,16 @@ serve(async (req) => {
 
     console.log("Payload para MercadoPago:", JSON.stringify(paymentData, null, 2));
 
+    // Gerar X-Idempotency-Key único
+    const idempotencyKey = `${preferenceId}-${new Date().toISOString()}`;
+
     // Criar pagamento no Mercado Pago
     const paymentResponse = await fetch(`${mercadoPagoUrl}/v1/payments`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoAccessToken}`,
         'Content-Type': 'application/json',
+        'X-Idempotency-Key': idempotencyKey
       },
       body: JSON.stringify(paymentData),
     });
@@ -112,7 +116,7 @@ serve(async (req) => {
         qr_code_base64: paymentResult.point_of_interaction.transaction_data.qr_code_base64
       });
 
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from('payment_preferences')
         .update({
           qr_code: paymentResult.point_of_interaction.transaction_data.qr_code,
@@ -120,6 +124,10 @@ serve(async (req) => {
           external_id: paymentResult.id.toString()
         })
         .eq('id', preferenceId);
+
+      if (updateError) {
+        console.error("Erro ao salvar dados do PIX:", updateError);
+      }
     }
 
     return new Response(
