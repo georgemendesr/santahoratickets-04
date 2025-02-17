@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { EventHeader } from "@/components/home/EventHeader";
 import { EventCard } from "@/components/home/EventCard";
 import { BenefitsSection } from "@/components/home/BenefitsSection";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -54,59 +55,67 @@ export default function Index() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <p className="text-lg text-red-600">Erro ao carregar eventos. Por favor, tente novamente mais tarde.</p>
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+          <div className="container mx-auto px-4 py-16">
+            <div className="text-center">
+              <p className="text-lg text-red-600">Erro ao carregar eventos. Por favor, tente novamente mais tarde.</p>
+            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <p className="text-lg">Carregando evento...</p>
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+          <div className="container mx-auto px-4 py-16">
+            <div className="text-center">
+              <p className="text-lg">Carregando evento...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   if (!currentEvent) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <p className="text-lg text-muted-foreground">
-              Nenhum evento disponível no momento.
-            </p>
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+          <div className="container mx-auto px-4 py-16">
+            <div className="text-center">
+              <p className="text-lg text-muted-foreground">
+                Nenhum evento disponível no momento.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   const batchInfo = getBatchInfo(currentEvent);
 
   return (
-    <div className="min-h-screen">
-      <EventHeader />
+    <MainLayout>
+      <div className="min-h-screen">
+        <EventHeader />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="max-w-5xl mx-auto space-y-16">
-          <EventCard 
-            event={currentEvent} 
-            batchInfo={batchInfo}
-            onPurchase={handlePurchase}
-            isPending={false}
-          />
-          <BenefitsSection />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="max-w-5xl mx-auto space-y-16">
+            <EventCard 
+              event={currentEvent} 
+              batchInfo={batchInfo}
+              onPurchase={handlePurchase}
+              isPending={false}
+            />
+            <BenefitsSection />
+          </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
