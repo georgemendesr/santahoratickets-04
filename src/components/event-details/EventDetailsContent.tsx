@@ -53,11 +53,12 @@ export function EventDetailsContent({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <EventImage src={event?.image} alt={event?.title} />
+      <div>
+        <EventHeader event={event} />
+        <EventImage src={event?.image} alt={event?.title} />
+      </div>
 
       <div className="space-y-6">
-        <EventHeader event={event} />
-
         {referrer && (
           <Alert>
             <AlertDescription className="text-sm">
