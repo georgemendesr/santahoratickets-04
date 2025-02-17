@@ -48,12 +48,14 @@ export function CheckoutContent({
   onSubmitPayment,
 }: CheckoutContentProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Finalizar Compra - {event.title}</CardTitle>
+    <Card className="glass-card shadow-2xl">
+      <CardHeader className="border-b border-border/50 pb-6">
+        <CardTitle className="text-2xl md:text-3xl font-medium tracking-tight">
+          Finalizar Compra - {event.title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
+        <div className="space-y-8 py-4">
           <OrderSummary 
             event={event}
             batch={batch}
@@ -74,20 +76,24 @@ export function CheckoutContent({
               onSubmit={onSubmitProfile}
             />
           ) : (
-            <div className="pt-4 border-t">
+            <div className="pt-6 border-t border-border/50">
               <Tabs defaultValue="credit_card" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="credit_card">Cartão de Crédito</TabsTrigger>
-                  <TabsTrigger value="pix">PIX</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 mb-8">
+                  <TabsTrigger value="credit_card" className="text-base">
+                    Cartão de Crédito
+                  </TabsTrigger>
+                  <TabsTrigger value="pix" className="text-base">
+                    PIX
+                  </TabsTrigger>
                 </TabsList>
-                <TabsContent value="credit_card">
+                <TabsContent value="credit_card" className="mt-4 space-y-6">
                   <CreditCardForm
                     amount={batch.price * quantity}
                     onSubmit={(data) => onSubmitPayment({ ...data, paymentType: "credit_card" })}
                     isSubmitting={isLoading}
                   />
                 </TabsContent>
-                <TabsContent value="pix">
+                <TabsContent value="pix" className="mt-4 space-y-6">
                   <PIXForm
                     amount={batch.price * quantity}
                     onSubmit={() => onSubmitPayment({ paymentMethodId: "pix", paymentType: "pix" })}

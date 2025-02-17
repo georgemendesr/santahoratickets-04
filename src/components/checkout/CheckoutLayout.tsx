@@ -14,13 +14,13 @@ export function CheckoutLayout({ children, onBackClick }: CheckoutLayoutProps) {
   
   return (
     <MainLayout>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"
           onClick={onBackClick || (() => navigate(-1))}
-          className="mb-4"
+          className="mb-6 group hover:bg-white/50"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Voltar
         </Button>
 
