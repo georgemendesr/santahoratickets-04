@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,48 +19,69 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Log do corpo da requisição
+    // Log da requisição completa para debug
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
     const body = await req.json();
     console.log('Webhook recebido:', JSON.stringify(body, null, 2));
 
-    // Validar o formato da requisição
-    if (!body.type || !body.data || !body.data.id) {
-      throw new Error('Formato de notificação inválido');
+    // Validar o tipo de notificação
+    if (body.type !== 'payment' || !body.data || !body.data.id) {
+      console.error('Formato inválido:', body);
+      return new Response(
+        JSON.stringify({ error: 'Formato de notificação inválido' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
     }
 
-    // Buscar detalhes do pagamento no Mercado Pago
-    const mercadoPagoUrl = 'https://api.mercadopago.com';
     const mercadoPagoAccessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
-
     if (!mercadoPagoAccessToken) {
       throw new Error('Token do Mercado Pago não configurado');
     }
 
+    // Buscar detalhes do pagamento no Mercado Pago
+    const paymentId = body.data.id;
+    console.log('Buscando pagamento:', paymentId);
+
     const paymentResponse = await fetch(
-      `${mercadoPagoUrl}/v1/payments/${body.data.id}`,
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
         headers: {
           'Authorization': `Bearer ${mercadoPagoAccessToken}`,
+          'Content-Type': 'application/json'
         },
       }
     );
 
     if (!paymentResponse.ok) {
-      console.error('Erro ao buscar pagamento:', await paymentResponse.text());
+      const errorText = await paymentResponse.text();
+      console.error('Erro ao buscar pagamento:', {
+        status: paymentResponse.status,
+        response: errorText
+      });
       throw new Error(`Erro ao buscar dados do pagamento: ${paymentResponse.status}`);
     }
 
     const paymentData = await paymentResponse.json();
     console.log('Dados do pagamento:', JSON.stringify(paymentData, null, 2));
 
-    // Extrair referência externa (event_id|preference_id)
+    // Extrair referências do external_reference (formato: eventId|preferenceId)
     const [eventId, preferenceId] = (paymentData.external_reference || '').split('|');
 
     if (!eventId || !preferenceId) {
+      console.error('Referência externa inválida:', paymentData.external_reference);
       throw new Error('Referência externa inválida');
     }
 
-    console.log('Referências encontradas:', { eventId, preferenceId });
+    console.log('Processando pagamento:', {
+      eventId,
+      preferenceId,
+      status: paymentData.status
+    });
 
     // Buscar preferência de pagamento
     const { data: preference, error: preferenceError } = await supabaseClient
@@ -73,14 +95,13 @@ serve(async (req) => {
       throw new Error('Preferência de pagamento não encontrada');
     }
 
-    console.log('Preferência encontrada:', preference);
-
     // Atualizar status do pagamento
     const { error: updateError } = await supabaseClient
       .from('payment_preferences')
       .update({
         status: paymentData.status,
         external_id: paymentData.id.toString(),
+        last_attempt_at: new Date().toISOString()
       })
       .eq('id', preferenceId);
 
@@ -91,7 +112,7 @@ serve(async (req) => {
 
     // Se o pagamento foi aprovado, gerar ingressos
     if (paymentData.status === 'approved') {
-      console.log('Gerando ingressos para o pagamento aprovado');
+      console.log('Pagamento aprovado, gerando ingressos...');
 
       const tickets = Array.from({ length: preference.ticket_quantity }, () => ({
         event_id: eventId,
@@ -111,15 +132,16 @@ serve(async (req) => {
       }
 
       // Atualizar quantidade de ingressos disponíveis
-      const { error: eventError } = await supabaseClient
-        .from('events')
-        .update({
-          available_tickets: preference.ticket_quantity
-        })
-        .eq('id', eventId);
+      const { error: batchError } = await supabaseClient.rpc(
+        'update_batch_tickets',
+        { 
+          p_event_id: eventId,
+          p_quantity: preference.ticket_quantity
+        }
+      );
 
-      if (eventError) {
-        console.error('Erro ao atualizar evento:', eventError);
+      if (batchError) {
+        console.error('Erro ao atualizar lote:', batchError);
       }
 
       console.log('Ingressos gerados com sucesso:', tickets.length);
@@ -129,19 +151,19 @@ serve(async (req) => {
       JSON.stringify({ success: true }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        status: 200
       }
     );
 
   } catch (error) {
     console.error('Erro no webhook:', error);
+    // Importante: Sempre retornar 200 para o Mercado Pago não reenviar
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200, // Importante: Retornar 200 mesmo em caso de erro para o Mercado Pago não tentar reenviar
+        status: 200
       }
     );
   }
 });
-
