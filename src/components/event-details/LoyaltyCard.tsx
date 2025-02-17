@@ -1,6 +1,8 @@
 
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Gift } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Gift, Ticket } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface LoyaltyCardProps {
   points: number;
@@ -18,6 +20,25 @@ export function LoyaltyCard({ points }: LoyaltyCardProps) {
           Você tem {points} pontos acumulados
         </CardDescription>
       </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Use seus pontos para resgatar recompensas exclusivas e aproveitar benefícios especiais.
+        </p>
+      </CardContent>
+      <CardFooter className="flex gap-2">
+        <Button asChild variant="outline">
+          <Link to="/tickets" className="flex items-center gap-2">
+            <Ticket className="h-4 w-4" />
+            Meus Vouchers
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link to="/rewards" className="flex items-center gap-2">
+            <Gift className="h-4 w-4" />
+            Resgatar Pontos
+          </Link>
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
