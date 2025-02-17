@@ -205,39 +205,54 @@ export type Database = {
       }
       payment_preferences: {
         Row: {
+          attempts: number | null
           card_token: string | null
           created_at: string
+          error_message: string | null
           event_id: string
+          external_id: string | null
           id: string
           init_point: string
           installments: number | null
+          last_attempt_at: string | null
           payment_method_id: string | null
+          payment_type: string | null
           status: string | null
           ticket_quantity: number
           total_amount: number
           user_id: string
         }
         Insert: {
+          attempts?: number | null
           card_token?: string | null
           created_at?: string
+          error_message?: string | null
           event_id: string
+          external_id?: string | null
           id?: string
           init_point: string
           installments?: number | null
+          last_attempt_at?: string | null
           payment_method_id?: string | null
+          payment_type?: string | null
           status?: string | null
           ticket_quantity: number
           total_amount: number
           user_id: string
         }
         Update: {
+          attempts?: number | null
           card_token?: string | null
           created_at?: string
+          error_message?: string | null
           event_id?: string
+          external_id?: string | null
           id?: string
           init_point?: string
           installments?: number | null
+          last_attempt_at?: string | null
           payment_method_id?: string | null
+          payment_type?: string | null
           status?: string | null
           ticket_quantity?: number
           total_amount?: number

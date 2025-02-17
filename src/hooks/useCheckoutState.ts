@@ -50,32 +50,55 @@ export function useCheckoutState(
     setIsLoading(true);
 
     try {
-      // Primeiro fazer um select para garantir que o schema está atualizado
-      await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
       const { error: profileError } = await supabase
         .from("user_profiles")
-        .update({
+        .upsert({
+          id: session.user.id,
           name,
           cpf,
           phone,
           email
         })
-        .eq("id", session.user.id);
+        .select()
+        .single();
 
       if (profileError) throw profileError;
 
       setShowPaymentForm(true);
-      setIsLoading(false);
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
       toast.error("Erro ao atualizar seu perfil. Tente novamente.");
+    } finally {
       setIsLoading(false);
     }
+  };
+
+  const createPaymentPreference = async (
+    paymentType: string,
+    paymentMethodId: string,
+    cardToken?: string,
+    installments?: number
+  ) => {
+    const { data: preference, error } = await supabase
+      .from("payment_preferences")
+      .insert({
+        event_id: eventId,
+        user_id: session!.user.id,
+        ticket_quantity: 1,
+        total_amount: batch.price,
+        payment_type: paymentType,
+        payment_method_id: paymentMethodId,
+        card_token: cardToken,
+        installments,
+        status: "pending",
+        attempts: 0,
+        last_attempt_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return preference;
   };
 
   const handlePayment = async (paymentData: {
@@ -90,50 +113,61 @@ export function useCheckoutState(
     }
 
     setIsLoading(true);
+    let toastId = toast.loading("Processando pagamento...");
 
     try {
-      const paymentBody = {
-        eventId,
-        batchId: batch.id,
-        quantity: 1,
-        paymentType: paymentData.paymentType,
-        ...(paymentData.paymentType === "credit_card" ? {
-          cardToken: paymentData.token,
-          installments: paymentData.installments,
-          paymentMethodId: paymentData.paymentMethodId,
-        } : {
-          paymentMethodId: "pix"
-        }),
-      };
+      // Criar preferência de pagamento
+      const preference = await createPaymentPreference(
+        paymentData.paymentType,
+        paymentData.paymentMethodId,
+        paymentData.token,
+        paymentData.installments
+      );
 
-      console.log('Enviando dados de pagamento:', paymentBody);
-
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify(paymentBody)
+      // Processar pagamento
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: {
+          preferenceId: preference.id,
+          eventId,
+          batchId: batch.id,
+          quantity: 1,
+          paymentType: paymentData.paymentType,
+          ...(paymentData.paymentType === "credit_card" ? {
+            cardToken: paymentData.token,
+            installments: paymentData.installments,
+            paymentMethodId: paymentData.paymentMethodId,
+          } : {
+            paymentMethodId: "pix"
+          }),
+        }
       });
 
-      console.log('Resposta do pagamento:', data, error);
-
-      if (error) {
-        console.error('Erro detalhado:', error);
-        throw new Error(error.message || "Erro ao processar pagamento");
-      }
-      
-      if (!data) {
-        throw new Error("Resposta vazia do servidor");
-      }
+      if (error) throw error;
+      if (!data) throw new Error("Resposta vazia do servidor");
 
       const { status, payment_id, qr_code, qr_code_base64 } = data;
+
+      toast.dismiss(toastId);
       
-      if (paymentData.paymentType === "pix" && (!qr_code || !qr_code_base64)) {
-        console.error('Dados do PIX incompletos:', data);
-        throw new Error("Dados do PIX não retornados corretamente");
+      if (status === "rejected") {
+        toast.error("Pagamento não aprovado. Por favor, tente novamente.");
+        return;
       }
 
       navigate(`/payment/${status}?payment_id=${payment_id}`);
     } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
-      toast.error(error.message || "Erro ao processar seu pagamento. Tente novamente.");
+      toast.dismiss(toastId);
+      toast.error(
+        error.message || "Erro ao processar seu pagamento. Tente novamente.",
+        {
+          duration: 5000,
+          action: {
+            label: "Tentar Novamente",
+            onClick: () => handlePayment(paymentData)
+          }
+        }
+      );
     } finally {
       setIsLoading(false);
     }
