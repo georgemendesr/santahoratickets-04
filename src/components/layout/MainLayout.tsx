@@ -70,7 +70,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
       </div>
 
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
+      <main className="flex-1">
         {children}
       </main>
       <MainFooter />
