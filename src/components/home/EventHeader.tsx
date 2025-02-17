@@ -19,7 +19,7 @@ export function EventHeader() {
       </div>
 
       {/* Conteúdo centralizado */}
-      <div className="relative z-20 text-center space-y-8 px-4">
+      <div className="relative z-20 text-center">
         <div className="relative group animate-fade-in">
           <img 
             src="/lovable-uploads/1435babf-b231-494c-a8fb-9dd1239cd347.png" 
@@ -27,21 +27,12 @@ export function EventHeader() {
             className="h-48 mx-auto hover:scale-105 transition-transform duration-300 filter drop-shadow-xl"
           />
         </div>
-        
-        <div className="space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
-            A melhor festa universitária está de volta!
-          </h2>
-          <p className="text-lg md:text-xl text-gray-200">
-            Venha viver momentos únicos com música ao vivo, ambiente descontraído e muita diversão
-          </p>
-        </div>
+      </div>
 
-        {/* Indicador de scroll */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
-            <div className="w-1 h-3 bg-white/70 rounded-full" />
-          </div>
+      {/* Indicador de scroll */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
+          <div className="w-1 h-3 bg-white/70 rounded-full" />
         </div>
       </div>
 
