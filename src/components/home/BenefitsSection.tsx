@@ -32,15 +32,15 @@ export function BenefitsSection() {
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Ganhe 1 ponto para cada pulseira comprada</p>
+                <p>Ganhe 1 ponto para cada ingresso comprado</p>
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Ganhe pontos extras ao indicar amigos</p>
+                <p>Pontos extras por indicar amigos</p>
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Acumule pontos e troque por brindes exclusivos</p>
+                <p>Troque seus pontos por brindes exclusivos</p>
               </div>
             </div>
           </CardContent>
@@ -50,25 +50,25 @@ export function BenefitsSection() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />
-              Benefícios
+              Vantagens Exclusivas
             </CardTitle>
             <CardDescription>
-              Vantagens exclusivas para membros
+              Benefícios especiais para membros
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Acesso antecipado às vendas de pulseiras</p>
+                <p>Acesso antecipado à venda de ingressos</p>
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Descontos exclusivos em eventos especiais</p>
+                <p>Descontos exclusivos em eventos</p>
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-1" />
-                <p>Brindes e experiências VIP</p>
+                <p>Experiências VIP e brindes especiais</p>
               </div>
             </div>
           </CardContent>
