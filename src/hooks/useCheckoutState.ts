@@ -149,7 +149,7 @@ export function useCheckoutState(
       if (error) throw error;
       if (!data) throw new Error("Resposta vazia do servidor");
 
-      const { status, payment_id, qr_code, qr_code_base64 } = data;
+      const { status, payment_id } = data;
 
       toast.dismiss(toastId);
       
@@ -158,7 +158,8 @@ export function useCheckoutState(
         return;
       }
 
-      navigate(`/payment/${status}?payment_id=${payment_id}`);
+      // Redirecionar para página de status com referência externa para voltar ao evento
+      navigate(`/payment/status?status=${status}&payment_id=${payment_id}&external_reference=${eventId}|${preference.id}`);
     } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
       toast.dismiss(toastId);
