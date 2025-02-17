@@ -7,6 +7,7 @@ import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import CreateEvent from "@/pages/CreateEvent";
 import EditEvent from "@/pages/EditEvent";
+import DuplicateEvent from "@/pages/DuplicateEvent";
 import EventDetails from "@/pages/EventDetails";
 import ValidateTicket from "@/pages/ValidateTicket";
 import Rewards from "@/pages/Rewards";
@@ -26,6 +27,7 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/create" element={<CreateEvent />} />
           <Route path="/edit/:id" element={<EditEvent />} />
+          <Route path="/duplicate/:id" element={<DuplicateEvent />} />
           <Route path="/event/:id" element={<EventDetails />} />
           <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/checkout/:id/finish" element={<CheckoutFinish />} />
