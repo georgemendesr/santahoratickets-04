@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-const Rewards = () => {
+const Vouchers = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
 
@@ -28,14 +28,14 @@ const Rewards = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recompensas</CardTitle>
+            <CardTitle>Meus Vouchers</CardTitle>
             <CardDescription>
-              Troque seus pontos por recompensas exclusivas
+              Visualize seus vouchers e códigos promocionais
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Em breve você poderá trocar seus pontos por recompensas exclusivas.
+              Você ainda não possui nenhum voucher.
             </p>
           </CardContent>
         </Card>
@@ -44,4 +44,4 @@ const Rewards = () => {
   );
 };
 
-export default Rewards;
+export default Vouchers;
