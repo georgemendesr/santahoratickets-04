@@ -26,7 +26,7 @@ serve(async (req) => {
       console.error('4. Token do MercadoPago não encontrado');
       throw new Error('Token do MercadoPago não configurado')
     }
-    console.log('4. Token do MercadoPago encontrado');
+    console.log('4. Token do MercadoPago encontrado:', accessToken.substring(0, 10) + '...');
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -65,8 +65,17 @@ serve(async (req) => {
     console.log('8. Usuário autenticado:', user.id);
 
     console.log('9. Lendo body da requisição');
-    const body = await req.json()
-    console.log('Body recebido:', body);
+    const rawBody = await req.text();
+    console.log('Body raw recebido:', rawBody);
+    
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (error) {
+      console.error('Erro ao fazer parse do JSON:', error);
+      throw new Error('Body inválido: ' + error.message);
+    }
+    console.log('Body parseado:', body);
 
     const { 
       eventId, 
@@ -83,11 +92,13 @@ serve(async (req) => {
       batchId,
       quantity,
       paymentType,
-      paymentMethodId
-    })
+      paymentMethodId,
+      cardToken: cardToken ? 'presente' : 'ausente',
+      installments
+    });
 
     if (!eventId || !quantity || !batchId) {
-      console.error('11. Dados obrigatórios ausentes');
+      console.error('11. Dados obrigatórios ausentes:', { eventId, quantity, batchId });
       throw new Error('Dados inválidos')
     }
 
@@ -162,10 +173,11 @@ serve(async (req) => {
       throw new Error('Método de pagamento inválido')
     }
 
-    console.log('17. Dados do pagamento preparados:', paymentData);
+    console.log('17. Dados do pagamento preparados:', JSON.stringify(paymentData, null, 2));
+    
     console.log('18. Criando pagamento no MercadoPago');
-    const paymentResponse = await mercadopago.payment.create(paymentData)
-    console.log('19. Resposta do pagamento:', paymentResponse)
+    const paymentResponse = await mercadopago.payment.create(paymentData);
+    console.log('19. Resposta do pagamento:', JSON.stringify(paymentResponse, null, 2));
 
     if (!paymentResponse.body) {
       console.error('20. Resposta do MercadoPago inválida');
@@ -210,7 +222,7 @@ serve(async (req) => {
       responseData.qr_code_base64 = pixData?.qr_code_base64
     }
 
-    console.log('23. Retornando resposta de sucesso');
+    console.log('23. Retornando resposta de sucesso:', JSON.stringify(responseData, null, 2));
     return new Response(
       JSON.stringify(responseData),
       {
@@ -219,7 +231,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Erro ao processar pagamento:', error)
+    console.error('Erro detalhado:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
