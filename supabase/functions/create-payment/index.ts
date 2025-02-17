@@ -8,148 +8,190 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const { eventId, quantity, paymentType, token, installments } = await req.json();
+    console.log('Dados recebidos:', { eventId, quantity, paymentType });
+
+    // Validar dados necessários
+    if (!eventId || !quantity || !paymentType) {
+      throw new Error('Dados incompletos');
+    }
+
+    // Criar cliente Supabase
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { preferenceId, eventId, batchId, quantity, paymentType, cardToken, installments, paymentMethodId } = await req.json();
-
-    console.log("Dados recebidos:", {
-      preferenceId,
-      eventId,
-      batchId,
-      quantity,
-      paymentType,
-      hasCardToken: !!cardToken,
-      installments,
-      paymentMethodId
-    });
-
-    // Buscar dados do usuário e evento
-    const { data: { user } } = await supabaseClient.auth.getUser(req.headers.get('Authorization')?.split('Bearer ')[1] ?? '');
-    
-    if (!user) {
-      throw new Error('Usuário não autenticado');
+    // Verificar JWT do usuário
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Não autorizado');
     }
 
-    // Buscar perfil do usuário
-    const { data: profile } = await supabaseClient
-      .from('user_profiles')
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
+
+    if (userError || !user) {
+      throw new Error('Usuário não autorizado');
+    }
+
+    // Buscar evento
+    const { data: event, error: eventError } = await supabaseClient
+      .from('events')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', eventId)
       .single();
 
-    if (!profile) {
-      throw new Error('Perfil do usuário não encontrado');
+    if (eventError || !event) {
+      throw new Error('Evento não encontrado');
     }
 
-    console.log("Dados do perfil encontrados:", profile);
+    // Buscar lote ativo
+    const { data: batch, error: batchError } = await supabaseClient
+      .from('batches')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('status', 'active')
+      .order('order_number', { ascending: true })
+      .limit(1)
+      .single();
 
-    // Configurar o cliente do Mercado Pago
-    const mercadoPagoUrl = 'https://api.mercadopago.com';
+    if (batchError || !batch) {
+      throw new Error('Nenhum lote disponível');
+    }
+
+    // Verificar disponibilidade
+    if (batch.available_tickets < quantity) {
+      throw new Error('Quantidade indisponível');
+    }
+
+    // Criar preferência de pagamento no Supabase
+    const { data: preference, error: preferenceError } = await supabaseClient
+      .from('payment_preferences')
+      .insert({
+        event_id: eventId,
+        user_id: user.id,
+        ticket_quantity: quantity,
+        total_amount: batch.price * quantity,
+        init_point: '',
+        status: 'pending',
+        payment_type: paymentType
+      })
+      .select()
+      .single();
+
+    if (preferenceError || !preference) {
+      throw new Error('Erro ao criar preferência');
+    }
+
     const mercadoPagoAccessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
-
     if (!mercadoPagoAccessToken) {
       throw new Error('Token do Mercado Pago não configurado');
     }
 
-    // Preparar dados do pagamento
+    // Criar pagamento no Mercado Pago
     const paymentData: any = {
-      transaction_amount: 1, // Valor fixo para teste
-      description: `Ingresso para evento ${eventId}`,
-      external_reference: `${eventId}|${preferenceId}`,
-      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`,
+      transaction_amount: batch.price * quantity,
+      description: `${quantity}x Ingressos para ${event.title}`,
+      payment_method_id: paymentType === 'credit_card' ? 'master' : 'pix',
       payer: {
-        email: profile.email,
-        first_name: profile.name.split(' ')[0],
-        last_name: profile.name.split(' ').slice(1).join(' '),
-        identification: {
-          type: "CPF",
-          number: profile.cpf.replace(/\D/g, '')
-        }
-      }
+        email: user.email
+      },
+      external_reference: `${eventId}|${preference.id}`,
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`
     };
 
-    // Adicionar dados específicos do método de pagamento
-    if (paymentType === 'credit_card') {
-      paymentData.payment_method_id = paymentMethodId;
-      paymentData.token = cardToken;
+    // Adicionar dados específicos para cartão de crédito
+    if (paymentType === 'credit_card' && token) {
+      paymentData.token = token;
       paymentData.installments = installments || 1;
-    } else if (paymentType === 'pix') {
-      paymentData.payment_method_id = 'pix';
     }
 
-    console.log("Payload para MercadoPago:", JSON.stringify(paymentData, null, 2));
+    console.log('Criando pagamento:', paymentData);
 
-    // Gerar X-Idempotency-Key único
-    const idempotencyKey = `${preferenceId}-${new Date().toISOString()}`;
+    // Gerar uma chave de idempotência única
+    const idempotencyKey = crypto.randomUUID();
 
-    // Criar pagamento no Mercado Pago
-    const paymentResponse = await fetch(`${mercadoPagoUrl}/v1/payments`, {
+    const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoAccessToken}`,
         'Content-Type': 'application/json',
         'X-Idempotency-Key': idempotencyKey
       },
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify(paymentData)
     });
 
-    const paymentResult = await paymentResponse.json();
-    
-    console.log("Resposta do MercadoPago:", JSON.stringify(paymentResult, null, 2));
+    const responseData = await response.json();
+    console.log('Resposta do MercadoPago:', JSON.stringify(responseData, null, 2));
 
-    if (!paymentResponse.ok) {
-      throw new Error(`Erro ao criar pagamento: ${JSON.stringify(paymentResult)}`);
-    }
-
-    // Para pagamentos PIX, salvar o QR code
-    if (paymentType === 'pix' && paymentResult.point_of_interaction?.transaction_data?.qr_code) {
-      console.log("Salvando dados do PIX:", {
-        qr_code: paymentResult.point_of_interaction.transaction_data.qr_code,
-        qr_code_base64: paymentResult.point_of_interaction.transaction_data.qr_code_base64
-      });
-
-      const { error: updateError } = await supabaseClient
+    if (!response.ok) {
+      // Atualizar preferência com erro
+      await supabaseClient
         .from('payment_preferences')
         .update({
-          qr_code: paymentResult.point_of_interaction.transaction_data.qr_code,
-          qr_code_base64: paymentResult.point_of_interaction.transaction_data.qr_code_base64,
-          external_id: paymentResult.id.toString()
+          status: 'rejected',
+          error_message: responseData.message || 'Erro desconhecido'
         })
-        .eq('id', preferenceId);
+        .eq('id', preference.id);
 
-      if (updateError) {
-        console.error("Erro ao salvar dados do PIX:", updateError);
-      }
+      throw new Error(responseData.message || 'Erro ao criar pagamento');
+    }
+
+    // Para PIX, extrair o QR code
+    let qrCode = null;
+    let qrCodeBase64 = null;
+
+    if (paymentType === 'pix' && responseData.point_of_interaction?.transaction_data) {
+      qrCode = responseData.point_of_interaction.transaction_data.qr_code;
+      qrCodeBase64 = responseData.point_of_interaction.transaction_data.qr_code_base64;
+    }
+
+    // Atualizar preferência com dados do pagamento
+    const { error: updateError } = await supabaseClient
+      .from('payment_preferences')
+      .update({
+        external_id: responseData.id.toString(),
+        status: responseData.status,
+        qr_code: qrCode,
+        qr_code_base64: qrCodeBase64,
+        payment_method_id: responseData.payment_method_id,
+        card_token: token,
+        installments: installments
+      })
+      .eq('id', preference.id);
+
+    if (updateError) {
+      console.error('Erro ao atualizar preferência:', updateError);
     }
 
     return new Response(
-      JSON.stringify({
-        payment_id: paymentResult.id,
-        status: paymentResult.status,
-        status_detail: paymentResult.status_detail,
+      JSON.stringify({ 
+        id: responseData.id,
+        status: responseData.status,
+        qr_code: qrCode,
+        qr_code_base64: qrCodeBase64
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
+      }
     );
 
   } catch (error) {
-    console.error('Erro ao processar pagamento:', error);
+    console.error('Erro:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
-      },
+      }
     );
   }
 });
