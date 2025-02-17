@@ -66,17 +66,12 @@ export function EventDetailsContent({
           </Alert>
         )}
 
+        <BatchesTable batches={batches} />
+
         <Card>
           <CardContent className="p-6 space-y-4">
             <EventInfo event={event} getLowStockAlert={getLowStockAlert} />
-
-            <div>
-              <p className="text-sm text-muted-foreground">Local</p>
-              <p className="font-medium">{event.location}</p>
-            </div>
-
             {getLowStockAlert(event.available_tickets)}
-
             <EventActions
               event={event}
               isAdmin={isAdmin}
@@ -86,8 +81,6 @@ export function EventDetailsContent({
             />
           </CardContent>
         </Card>
-
-        <BatchesTable batches={batches} />
 
         {profile && <LoyaltyCard points={profile.loyalty_points} />}
 
