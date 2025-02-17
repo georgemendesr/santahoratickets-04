@@ -5,10 +5,10 @@ import { Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types";
 
 export function useRole(session: Session | null) {
-  const { data: role, isError } = useQuery({
+  const { data: role } = useQuery({
     queryKey: ["user-role", session?.user.id],
     queryFn: async () => {
-      if (!session?.user.id) return null;
+      if (!session?.user.id) return "user" as UserRole;
       
       console.log("[useRole] Fetching role for user:", session.user.id);
 
@@ -16,11 +16,12 @@ export function useRole(session: Session | null) {
         .from("user_roles")
         .select("role")
         .eq("user_id", session.user.id)
-        .maybeSingle();
+        .limit(1)
+        .single();
 
       if (error) {
         console.error("[useRole] Error fetching user role:", error);
-        return "user" as UserRole; // Fallback to user role
+        return "user" as UserRole;
       }
 
       console.log("[useRole] User role data:", data);
