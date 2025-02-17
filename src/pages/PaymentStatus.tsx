@@ -1,24 +1,47 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, Clock, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const PaymentStatus = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const status = searchParams.get("status");
   const payment_id = searchParams.get("payment_id");
-  const eventId = searchParams.get("external_reference")?.split("|")[0];
+  const [reference] = useState(searchParams.get("external_reference"));
+  const eventId = reference?.split("|")[0];
+  const preferenceId = reference?.split("|")[1];
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirecionar para home se não houver status
     if (!status || !payment_id) {
       navigate("/");
     }
-  }, [status, payment_id, navigate]);
+
+    // Buscar dados do QR Code se for pagamento PIX pendente
+    const fetchPixData = async () => {
+      if (status === "pending" && preferenceId) {
+        const { data: preference } = await supabase
+          .from("payment_preferences")
+          .select()
+          .eq("id", preferenceId)
+          .single();
+
+        if (preference?.payment_type === "pix") {
+          setQrCode(preference.qr_code || null);
+          setQrCodeBase64(preference.qr_code_base64 || null);
+        }
+      }
+    };
+
+    fetchPixData();
+  }, [status, payment_id, navigate, preferenceId]);
 
   const getStatusInfo = () => {
     switch (status) {
@@ -99,6 +122,41 @@ const PaymentStatus = () => {
               <p className="text-center text-muted-foreground">
                 {statusInfo.description}
               </p>
+
+              {status === "pending" && qrCodeBase64 && (
+                <div className="flex flex-col items-center space-y-4 p-4 bg-white rounded-lg">
+                  <p className="font-medium text-center">Escaneie o QR Code para pagar com PIX</p>
+                  <img 
+                    src={`data:image/png;base64,${qrCodeBase64}`}
+                    alt="QR Code PIX"
+                    className="w-48 h-48"
+                  />
+                  {qrCode && (
+                    <div className="w-full">
+                      <p className="text-sm text-center mb-2">Ou copie o código PIX:</p>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={qrCode}
+                          readOnly
+                          className="w-full p-2 text-sm bg-gray-50 border rounded"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1"
+                          onClick={() => {
+                            navigator.clipboard.writeText(qrCode);
+                            alert("Código PIX copiado!");
+                          }}
+                        >
+                          Copiar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Alert className={statusInfo.alert.className}>
                 <AlertDescription>
