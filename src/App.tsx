@@ -1,24 +1,24 @@
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import EventDetails from "@/pages/EventDetails";
+import Checkout from "@/pages/Checkout";
+import PaymentStatus from "@/pages/PaymentStatus";
+import CheckoutFinish from "@/pages/CheckoutFinish";
 import Admin from "@/pages/Admin";
+import AdminFinancial from "@/pages/AdminFinancial";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminVouchers from "@/pages/AdminVouchers";
-import AdminFinancial from "@/pages/AdminFinancial";
-import Auth from "@/pages/Auth";
+import AdminBatches from "@/pages/AdminBatches";
 import CreateEvent from "@/pages/CreateEvent";
-import DuplicateEvent from "@/pages/DuplicateEvent";
 import EditEvent from "@/pages/EditEvent";
-import EventDetails from "@/pages/EventDetails";
+import DuplicateEvent from "@/pages/DuplicateEvent";
 import Profile from "@/pages/Profile";
 import Rewards from "@/pages/Rewards";
 import ValidateTicket from "@/pages/ValidateTicket";
 import Vouchers from "@/pages/Vouchers";
 import NotFound from "@/pages/NotFound";
-import Checkout from "@/pages/Checkout";
-import CheckoutFinish from "@/pages/CheckoutFinish";
-import PaymentStatus from "@/pages/PaymentStatus";
 
 const router = createBrowserRouter([
   {
@@ -26,11 +26,35 @@ const router = createBrowserRouter([
     element: <Index />,
   },
   {
+    path: "/auth",
+    element: <Auth />,
+  },
+  {
+    path: "/event/:id",
+    element: <EventDetails />,
+  },
+  {
+    path: "/checkout",
+    element: <Checkout />,
+  },
+  {
+    path: "/payment-status",
+    element: <PaymentStatus />,
+  },
+  {
+    path: "/checkout/finish",
+    element: <CheckoutFinish />,
+  },
+  {
     path: "/admin",
     element: <Admin />,
   },
   {
-    path: "/admin/usuarios",
+    path: "/admin/financial",
+    element: <AdminFinancial />,
+  },
+  {
+    path: "/admin/users",
     element: <AdminUsers />,
   },
   {
@@ -38,56 +62,36 @@ const router = createBrowserRouter([
     element: <AdminVouchers />,
   },
   {
-    path: "/admin/financeiro",
-    element: <AdminFinancial />,
+    path: "/admin/vouchers/batches",
+    element: <AdminBatches />,
   },
   {
-    path: "/auth",
-    element: <Auth />,
-  },
-  {
-    path: "/criar-evento",
+    path: "/events/create",
     element: <CreateEvent />,
   },
   {
-    path: "/duplicar-evento/:id",
-    element: <DuplicateEvent />,
-  },
-  {
-    path: "/editar-evento/:id",
+    path: "/events/:id/edit",
     element: <EditEvent />,
   },
   {
-    path: "/evento/:id",
-    element: <EventDetails />,
+    path: "/events/:id/duplicate",
+    element: <DuplicateEvent />,
   },
   {
-    path: "/perfil",
+    path: "/profile",
     element: <Profile />,
   },
   {
-    path: "/recompensas",
+    path: "/rewards",
     element: <Rewards />,
   },
   {
-    path: "/validar-ingresso",
+    path: "/validate-ticket",
     element: <ValidateTicket />,
   },
   {
-    path: "/meus-ingressos",
+    path: "/vouchers",
     element: <Vouchers />,
-  },
-  {
-    path: "/checkout/:eventId",
-    element: <Checkout />,
-  },
-  {
-    path: "/checkout/:eventId/finalizar",
-    element: <CheckoutFinish />,
-  },
-  {
-    path: "/pagamento/:paymentId",
-    element: <PaymentStatus />,
   },
   {
     path: "*",
@@ -96,12 +100,7 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return (
-    <>
-      <RouterProvider router={router} />
-      <Toaster />
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
