@@ -37,10 +37,14 @@ const CheckoutFinish = () => {
     );
   }
 
-  // Só mostra o aviso de login quando o usuário tentar prosseguir com a compra
+  // Só mostra o aviso de login quando o usuário tentar fazer o pagamento
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+    handleSubmitProfile(e);
+  };
+
+  // Verificar login apenas quando for fazer o pagamento
+  const handlePaymentSubmit = (paymentData: { token: string; installments: number; paymentMethodId: string }) => {
     if (!session) {
       toast.error(
         "É necessário fazer login para finalizar a compra",
@@ -64,8 +68,7 @@ const CheckoutFinish = () => {
       });
       return;
     }
-
-    handleSubmitProfile(e);
+    handlePayment(paymentData);
   };
 
   return (
@@ -83,7 +86,7 @@ const CheckoutFinish = () => {
         onCpfChange={setCpf}
         onPhoneChange={setPhone}
         onSubmitProfile={handleProfileSubmit}
-        onSubmitPayment={handlePayment}
+        onSubmitPayment={handlePaymentSubmit}
       />
     </CheckoutLayout>
   );
