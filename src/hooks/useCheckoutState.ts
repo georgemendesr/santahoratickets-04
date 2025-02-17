@@ -79,9 +79,13 @@ export function useCheckoutState(
     cardToken?: string,
     installments?: number
   ) => {
+    // Gerar um init_point único para o pagamento
+    const init_point = `${eventId}-${session!.user.id}-${Date.now()}`;
+    
     const { data: preference, error } = await supabase
       .from("payment_preferences")
       .insert({
+        init_point,
         event_id: eventId,
         user_id: session!.user.id,
         ticket_quantity: 1,
