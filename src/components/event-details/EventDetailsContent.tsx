@@ -2,7 +2,6 @@
 import { Event, Batch } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { EventHeader } from "./EventHeader";
 import { EventInfo } from "./EventInfo";
 import { EventActions } from "./EventActions";
 import { BatchesTable } from "./BatchesTable";
@@ -54,7 +53,6 @@ export function EventDetailsContent({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <EventHeader event={event} />
         <EventImage src={event?.image} alt={event?.title} />
       </div>
 
