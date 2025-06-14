@@ -1,6 +1,4 @@
 
-# A string used to distinguish different Supabase projects on the same host. Defaults to the
-# working directory name when running `supabase init`.
 project_id = "swlqrejfgvmjajhtoall"
 
 [api]
@@ -47,7 +45,6 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 
-# Configuração das Edge Functions
 [functions.validate-ticket]
 verify_jwt = true
 
@@ -70,6 +67,30 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.get-profile]
+verify_jwt = true
+
+[functions."tickets/validate-ticket"]
+verify_jwt = true
+
+[functions."payments/create-payment-preference"]
+verify_jwt = true
+
+[functions."admin/dashboard-summary"]
+verify_jwt = true
+
+[functions."users/get-profile"]
+verify_jwt = true
+
+[functions."fidelity/get-user-balance"]
+verify_jwt = true
+
+[functions."fidelity/redeem-reward"]
+verify_jwt = true
+
+[functions."fidelity/list-rewards"]
+verify_jwt = false
+
+[functions."admin/manage-rewards"]
 verify_jwt = true
 
 [edge_runtime]

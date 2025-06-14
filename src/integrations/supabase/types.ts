@@ -156,6 +156,116 @@ export type Database = {
         }
         Relationships: []
       }
+      fidelity_points: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          reference_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points: number
+          reference_id?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          reference_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fidelity_redemptions: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          points_used: number
+          reward_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points_used: number
+          reward_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points_used?: number
+          reward_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fidelity_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "fidelity_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fidelity_rewards: {
+        Row: {
+          active: boolean
+          available_units: number | null
+          created_at: string
+          description: string
+          icon: string | null
+          id: string
+          name: string
+          points_required: number
+          total_units: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          available_units?: number | null
+          created_at?: string
+          description: string
+          icon?: string | null
+          id?: string
+          name: string
+          points_required: number
+          total_units?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          available_units?: number | null
+          created_at?: string
+          description?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          points_required?: number
+          total_units?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loyalty_points_history: {
         Row: {
           created_at: string
@@ -525,6 +635,10 @@ export type Database = {
       generate_unique_referral_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_points_balance: {
+        Args: { user_id_param: string }
+        Returns: number
       }
       has_role: {
         Args: { user_id: string; role: Database["public"]["Enums"]["app_role"] }
