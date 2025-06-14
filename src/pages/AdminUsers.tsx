@@ -4,15 +4,31 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { UserRolesTable } from "@/components/admin/UserRolesTable";
+import { useEffect } from "react";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const { isAdmin } = useRole(session);
 
-  if (!isAdmin) {
-    navigate("/");
-    return null;
+  useEffect(() => {
+    if (!loading && (!session || !isAdmin)) {
+      console.log("[AdminUsers] Access denied, redirecting to home");
+      navigate("/");
+    }
+  }, [loading, session, isAdmin, navigate]);
+
+  // Show loading while checking authentication
+  if (loading || !session || !isAdmin) {
+    return (
+      <MainLayout>
+        <div className="container max-w-7xl mx-auto py-8">
+          <div className="flex justify-center items-center min-h-[200px]">
+            <p>Verificando permissões...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
 
   return (

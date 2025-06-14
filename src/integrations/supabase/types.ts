@@ -512,6 +512,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_has_role: {
+        Args: { required_role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
       generate_unique_referral_code: {
         Args: Record<PropertyKey, never>
         Returns: string

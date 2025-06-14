@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -10,39 +10,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { UserProfile, UserRole } from "@/types";
-import { useState } from "react";
+import { UserRole } from "@/types";
+import { useAdminUsers } from "@/hooks/useAdminQueries";
+import { toast } from "sonner";
 
 export function UserRolesTable() {
   const [updating, setUpdating] = useState(false);
-
-  const { data: users, refetch } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: async () => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("user_profiles")
-        .select("*");
-
-      if (profilesError) throw profilesError;
-
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("*");
-
-      if (rolesError) throw rolesError;
-
-      return profiles.map((profile: UserProfile) => ({
-        ...profile,
-        role: roles.find((r) => r.user_id === profile.id)?.role || "user",
-      }));
-    },
-  });
+  const { data: users, refetch } = useAdminUsers();
 
   const toggleUserRole = async (userId: string, currentRole: UserRole) => {
     setUpdating(true);
     try {
       const newRole = currentRole === "admin" ? "user" : "admin";
       
+      console.log(`[UserRolesTable] Updating role for user ${userId} from ${currentRole} to ${newRole}`);
+
       const { error } = await supabase
         .from("user_roles")
         .upsert(
@@ -50,14 +32,24 @@ export function UserRolesTable() {
           { onConflict: "user_id" }
         );
 
-      if (error) throw error;
+      if (error) {
+        console.error("[UserRolesTable] Error updating role:", error);
+        throw error;
+      }
+
+      toast.success(`Role atualizado para ${newRole}`);
       await refetch();
-    } catch (error) {
-      console.error("Erro ao atualizar role:", error);
+    } catch (error: any) {
+      console.error("[UserRolesTable] Error:", error);
+      toast.error("Erro ao atualizar role: " + error.message);
     } finally {
       setUpdating(false);
     }
   };
+
+  if (!users) {
+    return <div>Carregando usuários...</div>;
+  }
 
   return (
     <div className="rounded-md border">
@@ -71,7 +63,7 @@ export function UserRolesTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users?.map((user) => (
+          {users.map((user) => (
             <TableRow key={user.id}>
               <TableCell>{user.name || "N/A"}</TableCell>
               <TableCell>{user.email || "N/A"}</TableCell>
