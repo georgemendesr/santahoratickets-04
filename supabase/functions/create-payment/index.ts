@@ -14,12 +14,29 @@ serve(async (req) => {
   }
 
   try {
-    const { eventId, quantity, paymentType, token, installments } = await req.json();
-    console.log('Dados recebidos:', { eventId, quantity, paymentType });
+    const { 
+      preferenceId, 
+      eventId, 
+      batchId, 
+      quantity, 
+      paymentType, 
+      cardToken, 
+      installments, 
+      paymentMethodId 
+    } = await req.json();
+
+    console.log('Dados recebidos:', { 
+      preferenceId, 
+      eventId, 
+      batchId, 
+      quantity, 
+      paymentType, 
+      paymentMethodId 
+    });
 
     // Validar dados necessários
-    if (!eventId || !quantity || !paymentType) {
-      throw new Error('Dados incompletos');
+    if (!preferenceId || !eventId || !batchId || !quantity || !paymentType) {
+      throw new Error('Dados incompletos para processamento');
     }
 
     // Criar cliente Supabase
@@ -31,14 +48,27 @@ serve(async (req) => {
     // Verificar JWT do usuário
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Não autorizado');
+      throw new Error('Token de autorização não fornecido');
     }
 
     const jwt = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
 
     if (userError || !user) {
+      console.error('Erro de autenticação:', userError);
       throw new Error('Usuário não autorizado');
+    }
+
+    // Buscar dados da preferência
+    const { data: preference, error: prefError } = await supabaseClient
+      .from('payment_preferences')
+      .select('*')
+      .eq('id', preferenceId)
+      .single();
+
+    if (prefError || !preference) {
+      console.error('Erro ao buscar preferência:', prefError);
+      throw new Error('Preferência de pagamento não encontrada');
     }
 
     // Buscar evento
@@ -49,45 +79,37 @@ serve(async (req) => {
       .single();
 
     if (eventError || !event) {
+      console.error('Erro ao buscar evento:', eventError);
       throw new Error('Evento não encontrado');
     }
 
-    // Buscar lote ativo
+    // Buscar lote
     const { data: batch, error: batchError } = await supabaseClient
       .from('batches')
       .select('*')
-      .eq('event_id', eventId)
-      .eq('status', 'active')
-      .order('order_number', { ascending: true })
-      .limit(1)
+      .eq('id', batchId)
       .single();
 
     if (batchError || !batch) {
-      throw new Error('Nenhum lote disponível');
+      console.error('Erro ao buscar lote:', batchError);
+      throw new Error('Lote não encontrado');
     }
 
     // Verificar disponibilidade
     if (batch.available_tickets < quantity) {
-      throw new Error('Quantidade indisponível');
+      throw new Error('Quantidade de ingressos não disponível');
     }
 
-    // Criar preferência de pagamento no Supabase
-    const { data: preference, error: preferenceError } = await supabaseClient
-      .from('payment_preferences')
-      .insert({
-        event_id: eventId,
-        user_id: user.id,
-        ticket_quantity: quantity,
-        total_amount: batch.price * quantity,
-        init_point: '',
-        status: 'pending',
-        payment_type: paymentType
-      })
-      .select()
+    // Buscar perfil do usuário
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
       .single();
 
-    if (preferenceError || !preference) {
-      throw new Error('Erro ao criar preferência');
+    if (profileError || !profile) {
+      console.error('Erro ao buscar perfil:', profileError);
+      throw new Error('Perfil do usuário não encontrado');
     }
 
     const mercadoPagoAccessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
@@ -95,28 +117,46 @@ serve(async (req) => {
       throw new Error('Token do Mercado Pago não configurado');
     }
 
-    // Criar pagamento no Mercado Pago
+    // Preparar dados do pagamento
+    const totalAmount = batch.price * quantity;
     const paymentData: any = {
-      transaction_amount: batch.price * quantity,
+      transaction_amount: totalAmount,
       description: `${quantity}x Ingressos para ${event.title}`,
-      payment_method_id: paymentType === 'credit_card' ? 'master' : 'pix',
+      payment_method_id: paymentMethodId,
       payer: {
-        email: user.email
+        email: user.email,
+        first_name: profile.name?.split(' ')[0] || 'Cliente',
+        last_name: profile.name?.split(' ').slice(1).join(' ') || 'MercadoPago',
+        identification: {
+          type: 'CPF',
+          number: profile.cpf?.replace(/\D/g, '') || '00000000000'
+        }
       },
-      external_reference: `${eventId}|${preference.id}`,
-      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`
+      external_reference: `${eventId}|${preferenceId}|${quantity}`,
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-payment`,
+      metadata: {
+        event_id: eventId,
+        batch_id: batchId,
+        preference_id: preferenceId,
+        user_id: user.id,
+        quantity: quantity
+      }
     };
 
     // Adicionar dados específicos para cartão de crédito
-    if (paymentType === 'credit_card' && token) {
-      paymentData.token = token;
+    if (paymentType === 'credit_card' && cardToken) {
+      paymentData.token = cardToken;
       paymentData.installments = installments || 1;
     }
 
-    console.log('Criando pagamento:', paymentData);
+    console.log('Criando pagamento no Mercado Pago:', {
+      amount: totalAmount,
+      method: paymentMethodId,
+      type: paymentType
+    });
 
-    // Gerar uma chave de idempotência única
-    const idempotencyKey = crypto.randomUUID();
+    // Gerar chave de idempotência única
+    const idempotencyKey = `${preferenceId}-${Date.now()}`;
 
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
@@ -137,14 +177,16 @@ serve(async (req) => {
         .from('payment_preferences')
         .update({
           status: 'rejected',
-          error_message: responseData.message || 'Erro desconhecido'
+          error_message: responseData.message || 'Erro na API do Mercado Pago',
+          attempts: preference.attempts + 1,
+          last_attempt_at: new Date().toISOString()
         })
-        .eq('id', preference.id);
+        .eq('id', preferenceId);
 
-      throw new Error(responseData.message || 'Erro ao criar pagamento');
+      throw new Error(responseData.message || 'Erro ao processar pagamento no Mercado Pago');
     }
 
-    // Para PIX, extrair o QR code
+    // Extrair dados específicos do PIX se aplicável
     let qrCode = null;
     let qrCodeBase64 = null;
 
@@ -162,21 +204,26 @@ serve(async (req) => {
         qr_code: qrCode,
         qr_code_base64: qrCodeBase64,
         payment_method_id: responseData.payment_method_id,
-        card_token: token,
-        installments: installments
+        payment_type: responseData.payment_type_id,
+        card_token: cardToken,
+        installments: installments,
+        attempts: preference.attempts + 1,
+        last_attempt_at: new Date().toISOString()
       })
-      .eq('id', preference.id);
+      .eq('id', preferenceId);
 
     if (updateError) {
       console.error('Erro ao atualizar preferência:', updateError);
     }
 
+    // Retornar dados do pagamento
     return new Response(
       JSON.stringify({ 
-        id: responseData.id,
+        payment_id: responseData.id,
         status: responseData.status,
         qr_code: qrCode,
-        qr_code_base64: qrCodeBase64
+        qr_code_base64: qrCodeBase64,
+        message: paymentType === 'pix' ? 'PIX gerado com sucesso' : 'Pagamento processado'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -185,9 +232,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Erro:', error);
+    console.error('Erro na Edge Function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Erro ao processar pagamento. Tente novamente.'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

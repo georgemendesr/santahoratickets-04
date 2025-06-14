@@ -45,9 +45,9 @@ export async function createPaymentPreference(
 
   if (error) {
     console.error("Erro ao criar preferência:", error);
-    throw error;
+    throw new Error("Erro ao criar preferência de pagamento: " + error.message);
   }
 
-  console.log("Preferência criada:", preference);
+  console.log("Preferência criada com sucesso:", preference);
   return preference;
 }
