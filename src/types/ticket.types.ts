@@ -11,4 +11,6 @@ export interface Ticket {
   qr_code_foreground?: string;
   qr_code_logo?: string;
   qr_code_logo_size?: number;
+  check_in_time?: string;
+  checked_in_by?: string;
 }
