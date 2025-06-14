@@ -21,6 +21,7 @@ import Profile from "@/pages/Profile";
 import Rewards from "@/pages/Rewards";
 import ValidateTicket from "@/pages/ValidateTicket";
 import Vouchers from "@/pages/Vouchers";
+import TestingDashboard from "@/pages/TestingDashboard";
 import NotFound from "@/pages/NotFound";
 
 const router = createBrowserRouter([
@@ -107,6 +108,10 @@ const router = createBrowserRouter([
   {
     path: "/vouchers",
     element: <Vouchers />,
+  },
+  {
+    path: "/testing",
+    element: <TestingDashboard />,
   },
   {
     path: "*",
