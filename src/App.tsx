@@ -25,6 +25,7 @@ import AdminFinanceiro from "./pages/AdminFinanceiro";
 import AdminParticipants from "./pages/AdminParticipants";
 import AdminUsers from "./pages/AdminUsers";
 import AdminVouchers from "./pages/AdminVouchers";
+import AdminBatches from "./pages/AdminBatches";
 import Fidelity from "./pages/Fidelity";
 import AdminRewards from "./pages/AdminRewards";
 
@@ -51,6 +52,7 @@ function App() {
           <Route path="/admin/participantes" element={<AdminParticipants />} />
           <Route path="/admin/usuarios" element={<AdminUsers />} />
           <Route path="/admin/vouchers" element={<AdminVouchers />} />
+          <Route path="/admin/lotes" element={<AdminBatches />} />
           <Route path="/fidelidade" element={<Fidelity />} />
           <Route path="/admin/recompensas" element={<AdminRewards />} />
         </Routes>
