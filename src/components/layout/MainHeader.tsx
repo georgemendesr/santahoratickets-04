@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Calendar, ChevronDown, Gift, LogOut, User } from "lucide-react";
+import { Calendar, ChevronDown, Gift, LogOut, Settings, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
@@ -35,12 +36,12 @@ export function MainHeader() {
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link
-              to="/"
+              to="/eventos"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
               Eventos
             </Link>
-            {session && (
+            {session && !isAdmin && (
               <>
                 <Link
                   to="/meus-ingressos"
@@ -66,13 +67,15 @@ export function MainHeader() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
+                    <Settings className="mr-1 h-3 w-3" />
                     Admin <ChevronDown className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuItem onClick={() => navigate("/admin")}>
                     Dashboard
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate("/admin/financeiro")}>
                     Financeiro
                   </DropdownMenuItem>
@@ -83,7 +86,7 @@ export function MainHeader() {
                     Usuários
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/admin/vouchers")}>
-                    Vouchers
+                    Vouchers Admin
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/admin/recompensas")}>
                     Recompensas
@@ -122,10 +125,12 @@ export function MainHeader() {
                   <User className="mr-2 h-4 w-4" />
                   <span>Perfil</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/fidelidade")}>
-                  <Gift className="mr-2 h-4 w-4" />
-                  <span>Programa de Fidelidade</span>
-                </DropdownMenuItem>
+                {!isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate("/fidelidade")}>
+                    <Gift className="mr-2 h-4 w-4" />
+                    <span>Programa de Fidelidade</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />

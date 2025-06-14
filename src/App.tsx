@@ -11,11 +11,14 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 
 import Index from "./pages/Index";
+import Events from "./pages/Events";
+import CreateEvent from "./pages/CreateEvent";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import EventDetails from "./pages/EventDetails";
 import EditEvent from "./pages/EditEvent";
 import CheckoutFinish from "./pages/CheckoutFinish";
+import MyTickets from "./pages/MyTickets";
 import Vouchers from "./pages/Vouchers";
 import Admin from "./pages/Admin";
 import AdminFinanceiro from "./pages/AdminFinanceiro";
@@ -34,11 +37,14 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/eventos" element={<Events />} />
+          <Route path="/eventos/criar" element={<CreateEvent />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/event/:id" element={<EventDetails />} />
           <Route path="/edit/:id" element={<EditEvent />} />
           <Route path="/checkout/finish" element={<CheckoutFinish />} />
+          <Route path="/meus-ingressos" element={<MyTickets />} />
           <Route path="/vouchers" element={<Vouchers />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/financeiro" element={<AdminFinanceiro />} />
