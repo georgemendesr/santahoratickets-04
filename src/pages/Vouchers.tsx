@@ -17,22 +17,38 @@ const Vouchers = () => {
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["tickets", session?.user?.id],
     queryFn: async () => {
-      // Buscar tickets com informações do evento
-      const { data, error } = await supabase
+      // Buscar tickets primeiro
+      const { data: ticketsData, error: ticketsError } = await supabase
         .from('tickets')
-        .select(`
-          *,
-          events:event_id (
-            title,
-            date,
-            time
-          )
-        `)
+        .select('*')
         .eq('user_id', session?.user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (ticketsError) throw ticketsError;
+
+      if (!ticketsData || ticketsData.length === 0) {
+        return [];
+      }
+
+      // Buscar eventos separadamente
+      const eventIds = [...new Set(ticketsData.map(ticket => ticket.event_id))];
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('id, title, date, time')
+        .in('id', eventIds);
+
+      if (eventsError) throw eventsError;
+
+      // Combinar os dados
+      const ticketsWithEvents = ticketsData.map(ticket => {
+        const event = eventsData?.find(e => e.id === ticket.event_id);
+        return {
+          ...ticket,
+          events: event || { title: 'Evento não encontrado', date: new Date().toISOString().split('T')[0], time: '00:00' }
+        };
+      });
+
+      return ticketsWithEvents;
     },
     enabled: !!session?.user?.id
   });
