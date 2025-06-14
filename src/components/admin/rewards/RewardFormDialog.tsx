@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,7 @@ export function RewardFormDialog({
   ];
 
   // Update form data when editing reward changes
-  useState(() => {
+  useEffect(() => {
     if (editingReward) {
       setFormData({
         name: editingReward.name,

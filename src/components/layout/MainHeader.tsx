@@ -31,7 +31,7 @@ export function MainHeader() {
           <Link to="/" className="mr-6 flex items-center space-x-2">
             <Calendar className="h-6 w-6" />
             <span className="hidden font-bold sm:inline-block">
-              EventPlatform
+              Plataforma de Eventos
             </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
