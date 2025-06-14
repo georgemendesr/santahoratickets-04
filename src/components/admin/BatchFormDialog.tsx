@@ -19,6 +19,8 @@ interface BatchFormDialogProps {
   eventId: string;
 }
 
+type VisibilityType = 'public' | 'guest_only' | 'internal_pdv';
+
 export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, eventId }: BatchFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,7 +31,7 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
     start_time: editingBatch?.start_date?.split('T')[1]?.substring(0, 5) || "",
     end_date: editingBatch?.end_date?.split('T')[0] || "",
     end_time: editingBatch?.end_date?.split('T')[1]?.substring(0, 5) || "",
-    visibility: editingBatch?.visibility || "public",
+    visibility: (editingBatch?.visibility || "public") as VisibilityType,
     is_visible: editingBatch?.is_visible !== false,
     description: editingBatch?.description || "",
     min_purchase: editingBatch?.min_purchase?.toString() || "1",
@@ -147,6 +149,12 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
     }
   };
 
+  const handleVisibilityChange = (value: string) => {
+    if (value === 'public' || value === 'guest_only' || value === 'internal_pdv') {
+      setFormData({ ...formData, visibility: value });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -250,7 +258,7 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
             <Label className="text-sm font-medium mb-3 block">Disponibilidade do ingresso</Label>
             <RadioGroup
               value={formData.visibility}
-              onValueChange={(value) => setFormData({ ...formData, visibility: value })}
+              onValueChange={handleVisibilityChange}
               className="space-y-3"
             >
               <div className="flex items-center space-x-2">
