@@ -5,7 +5,7 @@ import { Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types";
 
 export function useRole(session: Session | null) {
-  const { data: role } = useQuery({
+  const { data: role, isLoading: loading } = useQuery({
     queryKey: ["user-role", session?.user.id],
     queryFn: async () => {
       if (!session?.user.id) return "user" as UserRole;
@@ -35,5 +35,6 @@ export function useRole(session: Session | null) {
   return {
     role,
     isAdmin,
+    loading
   };
 }
