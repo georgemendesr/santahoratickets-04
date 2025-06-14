@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { load } from "https://deno.land/std@0.192.0/dotenv/mod.ts";
 
@@ -223,7 +224,33 @@ Deno.serve(async (req) => {
           console.log('Ticket created successfully:', newTicket);
         }
 
-        // Busca o número de telefone do usuário
+        // Enviar email com ingressos
+        try {
+          console.log('Sending ticket email for payment:', payment.id);
+          
+          const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-ticket-email`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              payment_id: payment.id,
+              user_email: user.email
+            })
+          });
+
+          if (!emailResponse.ok) {
+            const errorText = await emailResponse.text();
+            console.error('Error sending ticket email:', errorText);
+          } else {
+            console.log('Ticket email sent successfully');
+          }
+        } catch (emailError) {
+          console.error('Error sending ticket email:', emailError);
+        }
+
+        // Busca o número de telefone do usuário para WhatsApp (futuro)
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('phone')
@@ -234,21 +261,11 @@ Deno.serve(async (req) => {
           // Formata o número de telefone (remove caracteres especiais)
           const phoneNumber = profile.phone.replace(/\D/g, '')
           
-          // Envia WhatsApp
-          await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-whatsapp`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              payment_id: payment.id,
-              phone_number: phoneNumber
-            })
-          })
+          // Envia WhatsApp (implementação futura)
+          console.log('WhatsApp will be implemented later for phone:', phoneNumber);
         }
       } catch (error) {
-        console.error('Erro ao enviar WhatsApp:', error)
+        console.error('Error processing approved payment:', error)
       }
     }
 
