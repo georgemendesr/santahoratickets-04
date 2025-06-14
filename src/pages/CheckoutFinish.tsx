@@ -1,7 +1,6 @@
 
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCheckoutQueries } from "@/hooks/useCheckoutQueries";
 import { useCheckoutState } from "@/hooks/useCheckoutState";
@@ -39,19 +38,12 @@ const CheckoutFinish = () => {
     );
   }
 
-  // Só mostra o aviso de login quando o usuário tentar fazer o pagamento
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSubmitProfile(e);
   };
 
-  // Verificar login apenas quando for fazer o pagamento
-  const handlePaymentSubmit = (paymentData: { 
-    token?: string; 
-    installments?: number; 
-    paymentMethodId: string;
-    paymentType: "credit_card" | "pix";
-  }) => {
+  const handlePaymentSubmit = () => {
     if (!session) {
       toast.error(
         "É necessário fazer login para finalizar a compra",
@@ -75,7 +67,7 @@ const CheckoutFinish = () => {
       });
       return;
     }
-    handlePayment(paymentData);
+    handlePayment();
   };
 
   return (

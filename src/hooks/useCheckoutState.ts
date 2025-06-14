@@ -1,2 +1,2 @@
 
-export { useCheckoutState } from "./checkout/useCheckoutState";
+export { useCheckoutPro as useCheckoutState } from "./checkout/useCheckoutPro";

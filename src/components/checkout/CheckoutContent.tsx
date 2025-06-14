@@ -3,9 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Event, Batch } from "@/types";
 import { OrderSummary } from "./OrderSummary";
 import { CustomerForm } from "./CustomerForm";
-import { CreditCardForm } from "./credit-card/CreditCardForm";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PIXForm } from "./payment/PIXForm";
+import { CheckoutProForm } from "./CheckoutProForm";
 
 interface CheckoutContentProps {
   event: Event;
@@ -22,12 +20,7 @@ interface CheckoutContentProps {
   onPhoneChange: (value: string) => void;
   onEmailChange: (value: string) => void;
   onSubmitProfile: (e: React.FormEvent) => void;
-  onSubmitPayment: (paymentData: {
-    token?: string;
-    installments?: number;
-    paymentMethodId: string;
-    paymentType: "credit_card" | "pix";
-  }) => void;
+  onSubmitPayment: () => void;
 }
 
 export function CheckoutContent({
@@ -77,30 +70,11 @@ export function CheckoutContent({
             />
           ) : (
             <div className="pt-6 border-t border-border/50">
-              <Tabs defaultValue="credit_card" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-8">
-                  <TabsTrigger value="credit_card" className="text-base">
-                    Cartão de Crédito
-                  </TabsTrigger>
-                  <TabsTrigger value="pix" className="text-base">
-                    PIX
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="credit_card" className="mt-4 space-y-6">
-                  <CreditCardForm
-                    amount={batch.price * quantity}
-                    onSubmit={(data) => onSubmitPayment({ ...data, paymentType: "credit_card" })}
-                    isSubmitting={isLoading}
-                  />
-                </TabsContent>
-                <TabsContent value="pix" className="mt-4 space-y-6">
-                  <PIXForm
-                    amount={batch.price * quantity}
-                    onSubmit={() => onSubmitPayment({ paymentMethodId: "pix", paymentType: "pix" })}
-                    isSubmitting={isLoading}
-                  />
-                </TabsContent>
-              </Tabs>
+              <CheckoutProForm
+                amount={batch.price * quantity}
+                onSubmit={onSubmitPayment}
+                isSubmitting={isLoading}
+              />
             </div>
           )}
         </div>
