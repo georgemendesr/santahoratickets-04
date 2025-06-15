@@ -60,7 +60,7 @@ const Admin = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Painel Administrativo</h1>
           <Button 
-            onClick={() => navigate("/criar-evento")}
+            onClick={() => navigate("/eventos/criar")}
             className="flex items-center gap-2"
           >
             <PlusCircle className="h-4 w-4" />
