@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
-import { Menu, Home, Calendar, Star, Gift, Users, LogOut, User, Ticket, Settings } from "lucide-react";
+import { Menu, Home, Calendar, Star, Gift, Users, LogOut, User, Ticket, Settings, BarChart3 } from "lucide-react";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
@@ -18,7 +18,8 @@ export function MobileNavigation() {
     setOpen(false);
   };
 
-  const navItems = [
+  // Navegação para usuários comuns
+  const userNavItems = [
     { to: "/", icon: Home, label: "Início" },
     { to: "/eventos", icon: Calendar, label: "Eventos" },
     { to: "/fidelidade", icon: Star, label: "Fidelidade" },
@@ -26,13 +27,23 @@ export function MobileNavigation() {
     { to: "/indique", icon: Users, label: "Indique Amigos" },
   ];
 
-  const userItems = session ? [
+  // Navegação para administradores
+  const adminNavItems = [
+    { to: "/", icon: Home, label: "Início" },
+    { to: "/admin", icon: Settings, label: "Dashboard Admin" },
+    { to: "/eventos", icon: Calendar, label: "Eventos" },
+    { to: "/admin/usuarios", icon: Users, label: "Usuários" },
+    { to: "/admin/relatorios", icon: BarChart3, label: "Relatórios" },
+    { to: "/admin/recompensas", icon: Gift, label: "Recompensas" },
+  ];
+
+  const navItems = isAdmin ? adminNavItems : userNavItems;
+
+  const userItems = session && !isAdmin ? [
     { to: "/meus-ingressos", icon: Ticket, label: "Meus Ingressos" },
     { to: "/perfil", icon: User, label: "Perfil" },
-  ] : [];
-
-  const adminItems = session && isAdmin ? [
-    { to: "/admin", icon: Settings, label: "Painel Admin" },
+  ] : session && isAdmin ? [
+    { to: "/perfil", icon: User, label: "Perfil" },
   ] : [];
 
   return (
@@ -53,6 +64,9 @@ export function MobileNavigation() {
               >
                 EventManager
               </Link>
+              {isAdmin && (
+                <p className="text-xs text-muted-foreground mt-1">Painel Administrativo</p>
+              )}
             </div>
             
             <nav className="flex-1 p-4 space-y-2">
@@ -62,7 +76,7 @@ export function MobileNavigation() {
                   to={item.to}
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors touch-manipulation ${
-                    location.pathname === item.to
+                    location.pathname === item.to || (item.to === '/admin' && location.pathname.startsWith('/admin'))
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }`}
@@ -79,22 +93,6 @@ export function MobileNavigation() {
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors touch-manipulation ${
                     location.pathname === item.to
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
-                </Link>
-              ))}
-
-              {adminItems.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors touch-manipulation font-medium ${
-                    location.pathname === item.to || location.pathname.startsWith('/admin')
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }`}
