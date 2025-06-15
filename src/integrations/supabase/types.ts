@@ -534,6 +534,7 @@ export type Database = {
       }
       tickets: {
         Row: {
+          batch_id: string | null
           check_in_time: string | null
           checked_in_by: string | null
           created_at: string
@@ -552,6 +553,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          batch_id?: string | null
           check_in_time?: string | null
           checked_in_by?: string | null
           created_at?: string
@@ -570,6 +572,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          batch_id?: string | null
           check_in_time?: string | null
           checked_in_by?: string | null
           created_at?: string
@@ -587,7 +590,15 @@ export type Database = {
           used?: boolean
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_tickets_batch_id"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {

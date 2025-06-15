@@ -15,4 +15,5 @@ export interface Ticket {
   checked_in_by?: string;
   participant_name?: string;
   participant_email?: string;
+  batch_id?: string;
 }

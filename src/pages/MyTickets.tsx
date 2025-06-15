@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +66,8 @@ const MyTickets = () => {
     return events?.find(event => event.id === eventId);
   };
 
-  const getBatchForTicket = (batchId: string) => {
+  const getBatchForTicket = (batchId?: string) => {
+    if (!batchId) return null;
     return batches?.find(batch => batch.id === batchId);
   };
 
