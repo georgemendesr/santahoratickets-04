@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,19 +32,10 @@ export function MainHeader() {
                 // Menu para administradores
                 <>
                   <Button variant="ghost" asChild>
-                    <Link to="/admin/dashboard">Dashboard</Link>
+                    <Link to="/admin">Admin</Link>
                   </Button>
                   <Button variant="ghost" asChild>
-                    <Link to="/admin/lotes">Lotes</Link>
-                  </Button>
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/usuarios">Usuários</Link>
-                  </Button>
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/financeiro">Financeiro</Link>
-                  </Button>
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/vouchers">Vouchers</Link>
+                    <Link to="/validar-ingresso">Validar Ingresso</Link>
                   </Button>
                 </>
               ) : (
@@ -58,7 +48,7 @@ export function MainHeader() {
                     <Link to="/fidelidade">Fidelidade</Link>
                   </Button>
                   <Button variant="ghost" asChild>
-                    <Link to="/referrals">Indique e Ganhe</Link>
+                    <Link to="/indicacoes">Indique e Ganhe</Link>
                   </Button>
                 </>
               )}
