@@ -13,7 +13,9 @@ import {
   DollarSign,
   CalendarDays,
   Ticket,
-  TrendingUp
+  TrendingUp,
+  Gift,
+  UserCheck
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
@@ -172,7 +174,7 @@ const Admin = () => {
         </div>
 
         {/* Cards de Ações */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -196,9 +198,9 @@ const Admin = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Ticket className="h-5 w-5" />
-                Tipos de Ingressos
+                Lotes de Ingressos
               </CardTitle>
-              <CardDescription>Gerenciar lotes de ingressos</CardDescription>
+              <CardDescription>Gerenciar tipos e lotes de ingressos</CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
@@ -233,18 +235,18 @@ const Admin = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <LayoutTemplate className="h-5 w-5" />
-                Layout de Vouchers
+                <UserCheck className="h-5 w-5" />
+                Participantes
               </CardTitle>
-              <CardDescription>Personalizar design dos ingressos</CardDescription>
+              <CardDescription>Gerenciar participantes dos eventos</CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => navigate("/admin/vouchers")}
+                onClick={() => navigate("/admin/participantes")}
               >
-                Personalizar
+                Ver Participantes
               </Button>
             </CardContent>
           </Card>
@@ -264,6 +266,44 @@ const Admin = () => {
                 onClick={() => navigate("/admin/financeiro")}
               >
                 Ver Relatórios
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LayoutTemplate className="h-5 w-5" />
+                Design de Vouchers
+              </CardTitle>
+              <CardDescription>Personalizar design dos ingressos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/admin/vouchers")}
+              >
+                Personalizar
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                Recompensas
+              </CardTitle>
+              <CardDescription>Sistema de fidelidade e recompensas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/admin/recompensas")}
+              >
+                Gerenciar
               </Button>
             </CardContent>
           </Card>

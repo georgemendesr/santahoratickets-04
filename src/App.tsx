@@ -43,19 +43,21 @@ function AppContent() {
       <Route path="/eventos/criar" element={<CreateEvent />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/event/:id" element={<EventDetails />} />
-      <Route path="/edit/:id" element={<EditEvent />} />
+      <Route path="/eventos/:id" element={<EventDetails />} />
+      <Route path="/eventos/:id/editar" element={<EditEvent />} />
+      <Route path="/checkout" element={<CheckoutFinish />} />
       <Route path="/checkout/finish" element={<CheckoutFinish />} />
       <Route path="/meus-ingressos" element={<MyTickets />} />
       <Route path="/vouchers" element={<Vouchers />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/dashboard" element={<Admin />} />
       <Route path="/admin/financeiro" element={<AdminFinanceiro />} />
       <Route path="/admin/participantes" element={<AdminParticipants />} />
       <Route path="/admin/usuarios" element={<AdminUsers />} />
       <Route path="/admin/vouchers" element={<AdminVouchers />} />
       <Route path="/admin/lotes" element={<AdminBatches />} />
-      <Route path="/fidelidade" element={<Fidelity />} />
       <Route path="/admin/recompensas" element={<AdminRewards />} />
+      <Route path="/fidelidade" element={<Fidelity />} />
       <Route path="/referrals" element={<Referrals />} />
     </Routes>
   );

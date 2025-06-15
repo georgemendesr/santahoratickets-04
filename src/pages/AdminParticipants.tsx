@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { Users, TrendingUp, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BackButton } from "@/components/common/BackButton";
 
 const AdminParticipants = () => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ const AdminParticipants = () => {
         <div className="flex flex-col gap-6 sm:gap-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
+              <BackButton to="/admin" className="mb-4" />
               <h1 className="text-2xl sm:text-3xl font-bold">Participantes</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Gerencie participantes e visualize relatórios de vendas

@@ -33,7 +33,7 @@ export function MainHeader() {
                 // Menu para administradores
                 <>
                   <Button variant="ghost" asChild>
-                    <Link to="/admin">Dashboard</Link>
+                    <Link to="/admin/dashboard">Dashboard</Link>
                   </Button>
                   <Button variant="ghost" asChild>
                     <Link to="/admin/lotes">Lotes</Link>
