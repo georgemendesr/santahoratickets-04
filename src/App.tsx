@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter,
   Routes,
@@ -32,34 +33,40 @@ import { useReferralTracking } from "@/hooks/useReferralTracking";
 
 const queryClient = new QueryClient();
 
-function App() {
+function AppContent() {
   useReferralTracking();
 
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/eventos" element={<Events />} />
+      <Route path="/eventos/criar" element={<CreateEvent />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/event/:id" element={<EventDetails />} />
+      <Route path="/edit/:id" element={<EditEvent />} />
+      <Route path="/checkout/finish" element={<CheckoutFinish />} />
+      <Route path="/meus-ingressos" element={<MyTickets />} />
+      <Route path="/vouchers" element={<Vouchers />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/financeiro" element={<AdminFinanceiro />} />
+      <Route path="/admin/participantes" element={<AdminParticipants />} />
+      <Route path="/admin/usuarios" element={<AdminUsers />} />
+      <Route path="/admin/vouchers" element={<AdminVouchers />} />
+      <Route path="/admin/lotes" element={<AdminBatches />} />
+      <Route path="/fidelidade" element={<Fidelity />} />
+      <Route path="/admin/recompensas" element={<AdminRewards />} />
+      <Route path="/referrals" element={<Referrals />} />
+    </Routes>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/eventos" element={<Events />} />
-          <Route path="/eventos/criar" element={<CreateEvent />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/edit/:id" element={<EditEvent />} />
-          <Route path="/checkout/finish" element={<CheckoutFinish />} />
-          <Route path="/meus-ingressos" element={<MyTickets />} />
-          <Route path="/vouchers" element={<Vouchers />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/financeiro" element={<AdminFinanceiro />} />
-          <Route path="/admin/participantes" element={<AdminParticipants />} />
-          <Route path="/admin/usuarios" element={<AdminUsers />} />
-          <Route path="/admin/vouchers" element={<AdminVouchers />} />
-          <Route path="/admin/lotes" element={<AdminBatches />} />
-          <Route path="/fidelidade" element={<Fidelity />} />
-          <Route path="/admin/recompensas" element={<AdminRewards />} />
-          <Route path="/referrals" element={<Referrals />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </QueryClientProvider>
   );

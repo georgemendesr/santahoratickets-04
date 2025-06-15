@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -39,6 +40,8 @@ export default function Auth() {
 
       if (error) throw error;
 
+      // Processar indicação armazenada após login
+      processStoredReferral();
       toast.success("Login realizado com sucesso!");
       navigate("/");
     } catch (error: any) {
@@ -74,18 +77,11 @@ export default function Auth() {
     }
   };
 
-  // Atualizar o handleSuccess para processar indicação armazenada
-  const handleSuccess = () => {
-    console.log("Auth successful, redirecting...");
-    processStoredReferral(); // Processar indicação se houver
-    navigate(from, { replace: true });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 to-secondary/20">
       <div className="container mx-auto px-4 py-8">
         <ReferralBanner />
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-lg mx-auto">
           <CardHeader>
             <CardTitle>Bem-vindo!</CardTitle>
             <CardDescription>
