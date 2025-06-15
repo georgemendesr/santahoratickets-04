@@ -27,6 +27,7 @@ import AdminFinanceiro from "./pages/AdminFinanceiro";
 import AdminReports from "./pages/AdminReports";
 import AdminVouchers from "./pages/AdminVouchers";
 import AdminRewards from "./pages/AdminRewards";
+import AdminEventCheckins from "./pages/AdminEventCheckins";
 import Referrals from "./pages/Referrals";
 import Rewards from "./pages/Rewards";
 import ValidateTicket from "./pages/ValidateTicket";
@@ -71,6 +72,7 @@ function App() {
               <Route path="/admin/relatorios" element={<AdminReports />} />
               <Route path="/admin/vouchers" element={<AdminVouchers />} />
               <Route path="/admin/recompensas" element={<AdminRewards />} />
+              <Route path="/admin/eventos/:eventId/checkins" element={<AdminEventCheckins />} />
               <Route path="/testing" element={<TestingDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
