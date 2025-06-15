@@ -664,6 +664,14 @@ export type Database = {
         Args: { user_id: string; role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      process_referral_reward: {
+        Args: {
+          p_referrer_id: string
+          p_referred_id: string
+          p_event_id: string
+        }
+        Returns: undefined
+      }
       update_batch_tickets: {
         Args: { p_event_id: string; p_quantity: number }
         Returns: undefined

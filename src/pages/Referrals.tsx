@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useReferrals } from "@/hooks/useReferrals";
+import { useReferralSystem } from "@/hooks/useReferralSystem";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -191,9 +191,9 @@ const Referrals = () => {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Share2 className="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 className="font-semibold mb-2">1. Compartilhe</h3>
+                <h3 className="font-semibold mb-2">1. Compartilhe o Evento</h3>
                 <p className="text-sm text-muted-foreground">
-                  Envie seu código de convite para amigos via WhatsApp, email ou redes sociais
+                  Na página do evento, clique em "Criar Código de Convite" e compartilhe o link com seu código
                 </p>
               </div>
 
@@ -201,9 +201,9 @@ const Referrals = () => {
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Users className="h-6 w-6 text-green-600" />
                 </div>
-                <h3 className="font-semibold mb-2">2. Amigo se Cadastra</h3>
+                <h3 className="font-semibold mb-2">2. Amigo Compra Ingresso</h3>
                 <p className="text-sm text-muted-foreground">
-                  Quando seu amigo usar seu código e se cadastrar, a indicação fica pendente
+                  Quando seu amigo acessar o link e comprar ingresso, o código será aplicado automaticamente
                 </p>
               </div>
 
@@ -211,9 +211,9 @@ const Referrals = () => {
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Gift className="h-6 w-6 text-purple-600" />
                 </div>
-                <h3 className="font-semibold mb-2">3. Ganhe Pontos</h3>
+                <h3 className="font-semibold mb-2">3. Vocês Ganham Pontos</h3>
                 <p className="text-sm text-muted-foreground">
-                  Quando seu amigo compra o primeiro ingresso, vocês dois ganham pontos!
+                  Você ganha 100 pontos e seu amigo ganha 50 pontos de bônus!
                 </p>
               </div>
             </div>
@@ -221,10 +221,11 @@ const Referrals = () => {
             <Separator />
 
             <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-semibold mb-2">🎁 Recompensas</h4>
+              <h4 className="font-semibold mb-2">🎁 Recompensas por Evento</h4>
               <ul className="space-y-1 text-sm">
                 <li>• <strong>Você ganha:</strong> 100 pontos por cada amigo que comprar</li>
                 <li>• <strong>Seu amigo ganha:</strong> 50 pontos de bônus ao comprar</li>
+                <li>• <strong>Um código por evento:</strong> Cada evento tem seu próprio código</li>
                 <li>• <strong>Sem limite:</strong> Convide quantos amigos quiser!</li>
               </ul>
             </div>
