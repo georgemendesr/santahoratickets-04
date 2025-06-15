@@ -47,41 +47,68 @@ export function UserRolesTable() {
     }
   };
 
+  const checkCurrentUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log("[UserRolesTable] Current user ID:", user.id);
+        
+        const { data: roleData, error } = await supabase
+          .from("user_roles")
+          .select("*")
+          .eq("user_id", user.id);
+          
+        console.log("[UserRolesTable] Current user role data:", roleData);
+        if (error) {
+          console.error("[UserRolesTable] Error fetching current user role:", error);
+        }
+      }
+    } catch (error) {
+      console.error("[UserRolesTable] Error checking current user role:", error);
+    }
+  };
+
   if (!users) {
     return <div>Carregando usuários...</div>;
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.name || "N/A"}</TableCell>
-              <TableCell>{user.email || "N/A"}</TableCell>
-              <TableCell>{user.role}</TableCell>
-              <TableCell>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={updating}
-                  onClick={() => toggleUserRole(user.id, user.role as UserRole)}
-                >
-                  Tornar {user.role === "admin" ? "Usuário" : "Admin"}
-                </Button>
-              </TableCell>
+    <div className="space-y-4">
+      <Button onClick={checkCurrentUserRole} variant="outline">
+        Debug: Verificar meu role atual
+      </Button>
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.name || "N/A"}</TableCell>
+                <TableCell>{user.email || "N/A"}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={updating}
+                    onClick={() => toggleUserRole(user.id, user.role as UserRole)}
+                  >
+                    Tornar {user.role === "admin" ? "Usuário" : "Admin"}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
