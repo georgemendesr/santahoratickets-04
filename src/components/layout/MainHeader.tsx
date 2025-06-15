@@ -29,19 +29,35 @@ export function MainHeader() {
           </Button>
           {session && (
             <>
-              <Button variant="ghost" asChild>
-                <Link to="/meus-ingressos">Meus Ingressos</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link to="/fidelidade">Fidelidade</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link to="/referrals">Indique e Ganhe</Link>
-              </Button>
-              {isAdmin && (
-                <Button variant="ghost" asChild>
-                  <Link to="/admin">Admin</Link>
-                </Button>
+              {isAdmin ? (
+                // Menu para administradores
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link to="/admin">Dashboard</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/admin/usuarios">Usuários</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/admin/financeiro">Financeiro</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/admin/vouchers">Vouchers</Link>
+                  </Button>
+                </>
+              ) : (
+                // Menu para usuários comuns
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link to="/meus-ingressos">Meus Ingressos</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/fidelidade">Fidelidade</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/referrals">Indique e Ganhe</Link>
+                  </Button>
+                </>
               )}
             </>
           )}
