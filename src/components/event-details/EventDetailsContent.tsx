@@ -17,8 +17,9 @@ interface EventDetailsContentProps {
   referrer: { name: string } | null;
   referralCode: string | null;
   onShare: () => void;
-  onPurchase: () => void;
+  onPurchase: (batchId: string, quantity: number) => void;
   onEdit: () => void;
+  isPurchasing?: boolean;
 }
 
 export function EventDetailsContent({
@@ -30,7 +31,8 @@ export function EventDetailsContent({
   referralCode,
   onShare,
   onPurchase,
-  onEdit
+  onEdit,
+  isPurchasing = false
 }: EventDetailsContentProps) {
   const getLowStockAlert = (availableTickets: number) => {
     if (availableTickets <= 5 && availableTickets > 0) {
@@ -71,19 +73,30 @@ export function EventDetailsContent({
           </CardContent>
         </Card>
 
-        <BatchesTable batches={batches} />
-
         <Card>
           <CardContent className="p-6">
-            <EventActions
-              event={event}
-              isAdmin={isAdmin}
+            <h3 className="text-lg font-semibold mb-4">Ingressos Disponíveis</h3>
+            <BatchesTable 
+              batches={batches || []} 
               onPurchase={onPurchase}
-              onShare={onShare}
-              onEdit={onEdit}
+              isLoading={isPurchasing}
             />
           </CardContent>
         </Card>
+
+        {isAdmin && (
+          <Card>
+            <CardContent className="p-6">
+              <EventActions
+                event={event}
+                isAdmin={isAdmin}
+                onPurchase={() => {}} // Admin não compra pelo frontend público
+                onShare={onShare}
+                onEdit={onEdit}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {profile && <LoyaltyCard points={profile.loyalty_points} />}
 

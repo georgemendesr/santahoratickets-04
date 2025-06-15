@@ -30,6 +30,8 @@ const EventDetails = () => {
     setPhone,
     createProfileMutation,
     createReferralMutation,
+    handlePurchase,
+    isPurchasing,
     isLoading
   } = useEventDetails(id);
 
@@ -48,21 +50,6 @@ const EventDetails = () => {
     createReferralMutation.mutate();
   };
 
-  const handlePurchase = () => {
-    if (!event?.id) {
-      toast.error("Evento não encontrado");
-      return;
-    }
-
-    if (!session) {
-      toast.error("Faça login para comprar ingressos");
-      navigate('/auth');
-      return;
-    }
-    
-    navigate(`/checkout/finish?event=${event.id}&quantity=1`);
-  };
-
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createProfileMutation.mutate();
@@ -76,7 +63,10 @@ const EventDetails = () => {
   if (isLoading) {
     return (
       <EventLayout onBack={() => navigate(-1)}>
-        <p>Carregando...</p>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="ml-2">Carregando evento...</p>
+        </div>
       </EventLayout>
     );
   }
@@ -84,7 +74,9 @@ const EventDetails = () => {
   if (!event) {
     return (
       <EventLayout onBack={() => navigate(-1)}>
-        <p>Evento não encontrado</p>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Evento não encontrado</p>
+        </div>
       </EventLayout>
     );
   }
@@ -101,6 +93,7 @@ const EventDetails = () => {
         onShare={handleShare}
         onPurchase={handlePurchase}
         onEdit={handleEdit}
+        isPurchasing={isPurchasing}
       />
 
       <ProfileDialog

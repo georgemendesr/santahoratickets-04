@@ -42,7 +42,7 @@ export const useEventDetails = (eventId: string | undefined) => {
     enabled: !!eventId,
   });
 
-  const { data: batches, isLoading: isLoadingBatches } = useQuery({
+  const { data: batches, isLoading: isLoadingBatches, refetch: refetchBatches } = useQuery({
     queryKey: ["batches", eventId],
     queryFn: async () => {
       if (!eventId) throw new Error("ID do evento não fornecido");
@@ -51,6 +51,7 @@ export const useEventDetails = (eventId: string | undefined) => {
         .from("batches")
         .select("*")
         .eq("event_id", eventId)
+        .eq("is_visible", true)
         .order("order_number", { ascending: true });
 
       if (error) {
@@ -97,19 +98,45 @@ export const useEventDetails = (eventId: string | undefined) => {
     },
   });
 
-  const createPaymentPreference = useMutation({
-    mutationFn: async () => {
-      if (!session?.user.id || !event) return null;
+  const purchaseTicketMutation = useMutation({
+    mutationFn: async ({ batchId, quantity }: { batchId: string; quantity: number }) => {
+      if (!session?.user.id) throw new Error("Usuário não autenticado");
 
+      // Buscar o lote para calcular o valor total
+      const { data: batch, error: batchError } = await supabase
+        .from("batches")
+        .select("*")
+        .eq("id", batchId)
+        .single();
+
+      if (batchError || !batch) throw new Error("Lote não encontrado");
+
+      // Validar quantidade disponível
+      if (batch.available_tickets < quantity) {
+        throw new Error("Quantidade solicitada não disponível");
+      }
+
+      // Validar quantidade mínima e máxima
+      if (quantity < batch.min_purchase) {
+        throw new Error(`Quantidade mínima: ${batch.min_purchase}`);
+      }
+
+      if (batch.max_purchase && quantity > batch.max_purchase) {
+        throw new Error(`Quantidade máxima: ${batch.max_purchase}`);
+      }
+
+      const totalAmount = batch.price * quantity;
+
+      // Criar preferência de pagamento
       const { data, error } = await supabase
         .from("payment_preferences")
         .insert([
           {
             user_id: session.user.id,
-            event_id: event.id,
-            ticket_quantity: 1,
-            total_amount: event.price,
-            init_point: "URL_DO_CHECKOUT",
+            event_id: eventId!,
+            ticket_quantity: quantity,
+            total_amount: totalAmount,
+            init_point: `checkout-${batchId}-${Date.now()}`,
             status: "pending"
           }
         ])
@@ -117,19 +144,44 @@ export const useEventDetails = (eventId: string | undefined) => {
         .single();
 
       if (error) throw error;
+
+      // Atualizar quantidade disponível no lote
+      const { error: updateError } = await supabase
+        .from("batches")
+        .update({ 
+          available_tickets: batch.available_tickets - quantity 
+        })
+        .eq("id", batchId);
+
+      if (updateError) throw updateError;
+
       return data;
     },
     onSuccess: (data) => {
-      if (data) {
-        toast.success("Pedido criado com sucesso!");
-        navigate("/");
-      }
+      toast.success("Compra realizada com sucesso!");
+      refetchBatches(); // Atualizar dados dos lotes
+      navigate(`/checkout/finish?payment=${data.id}`);
     },
     onError: (error) => {
-      console.error("Erro ao criar preferência de pagamento:", error);
-      toast.error("Erro ao processar pedido. Por favor, tente novamente.");
-    }
+      toast.error(error.message || "Erro ao processar compra");
+      console.error("Erro na compra:", error);
+    },
   });
+
+  const handlePurchase = (batchId: string, quantity: number) => {
+    if (!session) {
+      toast.error("Faça login para comprar ingressos");
+      navigate('/auth');
+      return;
+    }
+
+    if (!profile) {
+      setShowProfileDialog(true);
+      return;
+    }
+
+    purchaseTicketMutation.mutate({ batchId, quantity });
+  };
 
   return {
     event,
@@ -147,7 +199,8 @@ export const useEventDetails = (eventId: string | undefined) => {
     setPhone,
     createProfileMutation,
     createReferralMutation,
-    createPaymentPreference,
+    handlePurchase,
+    isPurchasing: purchaseTicketMutation.isPending,
     isLoading: isLoadingEvent || isLoadingBatches
   };
 };

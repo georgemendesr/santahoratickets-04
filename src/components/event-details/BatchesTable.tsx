@@ -9,9 +9,11 @@ import { differenceInDays, differenceInHours, differenceInMinutes } from "date-f
 
 interface BatchesTableProps {
   batches: Batch[];
+  onPurchase?: (batchId: string, quantity: number) => void;
+  isLoading?: boolean;
 }
 
-export function BatchesTable({ batches }: BatchesTableProps) {
+export function BatchesTable({ batches, onPurchase, isLoading }: BatchesTableProps) {
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
   const [now, setNow] = useState(new Date());
 
@@ -24,31 +26,52 @@ export function BatchesTable({ batches }: BatchesTableProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleIncrement = (batchId: string) => {
+  const handleIncrement = (batchId: string, maxPurchase?: number) => {
+    const currentQuantity = selectedQuantities[batchId] || 0;
+    const maxAllowed = maxPurchase || 10;
     setSelectedQuantities(prev => ({
       ...prev,
-      [batchId]: Math.min((prev[batchId] || 0) + 1, 10)
+      [batchId]: Math.min(currentQuantity + 1, maxAllowed)
     }));
   };
 
-  const handleDecrement = (batchId: string) => {
+  const handleDecrement = (batchId: string, minPurchase: number) => {
+    const currentQuantity = selectedQuantities[batchId] || 0;
     setSelectedQuantities(prev => ({
       ...prev,
-      [batchId]: Math.max((prev[batchId] || 0) - 1, 0)
+      [batchId]: Math.max(currentQuantity - 1, 0)
     }));
+  };
+
+  const handlePurchase = (batchId: string) => {
+    const quantity = selectedQuantities[batchId] || 0;
+    if (quantity > 0 && onPurchase) {
+      onPurchase(batchId, quantity);
+      // Reset quantity after purchase
+      setSelectedQuantities(prev => ({
+        ...prev,
+        [batchId]: 0
+      }));
+    }
   };
 
   const getBatchStatus = (batch: Batch) => {
-    switch (batch.status) {
-      case 'active':
-        return <Badge className="bg-green-500">Disponível</Badge>;
-      case 'ended':
-        return <Badge variant="secondary">Encerrado</Badge>;
-      case 'sold_out':
-        return <Badge variant="destructive">Esgotado</Badge>;
-      default:
-        return null;
+    const startDate = new Date(batch.start_date);
+    const endDate = batch.end_date ? new Date(batch.end_date) : null;
+
+    if (batch.available_tickets === 0) {
+      return <Badge variant="destructive">Esgotado</Badge>;
     }
+
+    if (now < startDate) {
+      return <Badge variant="outline">Aguardando Início</Badge>;
+    }
+
+    if (endDate && now > endDate) {
+      return <Badge variant="secondary">Encerrado</Badge>;
+    }
+
+    return <Badge className="bg-green-500">Disponível</Badge>;
   };
 
   const getTimeRemaining = (endDate: string) => {
@@ -69,14 +92,49 @@ export function BatchesTable({ batches }: BatchesTableProps) {
     }
   };
 
+  const isAvailableForPurchase = (batch: Batch) => {
+    const startDate = new Date(batch.start_date);
+    const endDate = batch.end_date ? new Date(batch.end_date) : null;
+    
+    return batch.is_visible && 
+           batch.available_tickets > 0 && 
+           now >= startDate && 
+           (!endDate || now <= endDate) &&
+           batch.visibility === 'public'; // Por enquanto só público
+  };
+
+  const getAvailableStock = (batch: Batch) => {
+    if (batch.available_tickets <= 5 && batch.available_tickets > 0) {
+      return (
+        <span className="text-yellow-600 font-medium">
+          {batch.available_tickets} restantes
+        </span>
+      );
+    }
+    return <span>{batch.available_tickets} disponíveis</span>;
+  };
+
+  // Filtrar apenas lotes visíveis e válidos para exibição
+  const visibleBatches = batches.filter(batch => 
+    batch.is_visible && batch.visibility === 'public'
+  );
+
   // Agrupar lotes por grupo
-  const groupedBatches = batches.reduce((groups, batch) => {
+  const groupedBatches = visibleBatches.reduce((groups, batch) => {
     const group = batch.batch_group || 'default';
     return {
       ...groups,
       [group]: [...(groups[group] || []), batch]
     };
   }, {} as Record<string, Batch[]>);
+
+  if (visibleBatches.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Nenhum ingresso disponível no momento</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -90,73 +148,108 @@ export function BatchesTable({ batches }: BatchesTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Lote</TableHead>
+                <TableHead>Tipo de Ingresso</TableHead>
                 <TableHead>Preço</TableHead>
+                <TableHead>Disponibilidade</TableHead>
                 <TableHead>Encerra em</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Quantidade</TableHead>
+                <TableHead>Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {batchesInGroup.map((batch) => (
-                <TableRow key={batch.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{batch.title}</p>
-                      {batch.description && (
-                        <p className="text-sm text-muted-foreground">{batch.description}</p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(batch.price)}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm font-medium">
-                      {batch.end_date ? getTimeRemaining(batch.end_date) : "-"}
-                    </span>
-                  </TableCell>
-                  <TableCell>{getBatchStatus(batch)}</TableCell>
-                  <TableCell>
-                    {batch.status === 'active' && (
-                      <div className="space-y-2">
+              {batchesInGroup.map((batch) => {
+                const isAvailable = isAvailableForPurchase(batch);
+                const selectedQty = selectedQuantities[batch.id] || 0;
+                const canPurchase = selectedQty >= batch.min_purchase && selectedQty > 0;
+
+                return (
+                  <TableRow key={batch.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{batch.title}</p>
+                        {batch.description && (
+                          <p className="text-sm text-muted-foreground">{batch.description}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Mín: {batch.min_purchase} {batch.max_purchase && `| Máx: ${batch.max_purchase}`}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-lg">
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        }).format(batch.price)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {getAvailableStock(batch)}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium">
+                        {batch.end_date ? getTimeRemaining(batch.end_date) : "Sem prazo"}
+                      </span>
+                    </TableCell>
+                    <TableCell>{getBatchStatus(batch)}</TableCell>
+                    <TableCell>
+                      {isAvailable ? (
                         <div className="flex items-center gap-2">
                           <Button 
                             variant="outline" 
                             size="icon"
-                            onClick={() => handleDecrement(batch.id)}
-                            disabled={(selectedQuantities[batch.id] || 0) <= 0}
+                            onClick={() => handleDecrement(batch.id, batch.min_purchase)}
+                            disabled={selectedQty <= 0}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
                           <span className="font-medium text-lg w-8 text-center">
-                            {selectedQuantities[batch.id] || 0}
+                            {selectedQty}
                           </span>
                           <Button 
                             variant="outline" 
                             size="icon"
-                            onClick={() => handleIncrement(batch.id)}
-                            disabled={(selectedQuantities[batch.id] || 0) >= 10}
+                            onClick={() => handleIncrement(batch.id, batch.max_purchase)}
+                            disabled={selectedQty >= (batch.max_purchase || 10) || selectedQty >= batch.available_tickets}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
-                        {selectedQuantities[batch.id] > 0 && (
-                          <p className="text-sm text-muted-foreground">
-                            Você pagará: {new Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(batch.price * (selectedQuantities[batch.id] || 0))}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Indisponível</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isAvailable && (
+                        <div className="space-y-2">
+                          <Button
+                            onClick={() => handlePurchase(batch.id)}
+                            disabled={!canPurchase || isLoading}
+                            className="w-full bg-orange-500 hover:bg-orange-600"
+                            size="sm"
+                          >
+                            {isLoading ? "Processando..." : "Comprar"}
+                          </Button>
+                          {selectedQty > 0 && (
+                            <p className="text-sm text-muted-foreground text-center">
+                              Total: {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(batch.price * selectedQty)}
+                            </p>
+                          )}
+                          {selectedQty > 0 && selectedQty < batch.min_purchase && (
+                            <p className="text-xs text-red-600 text-center">
+                              Mínimo: {batch.min_purchase} ingressos
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
