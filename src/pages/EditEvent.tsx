@@ -125,7 +125,7 @@ const EditEvent = () => {
           <h1 className="text-3xl font-bold">Editar Evento</h1>
         </div>
 
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <EventForm
             onSubmit={onSubmit}
             defaultValues={{
@@ -140,8 +140,8 @@ const EditEvent = () => {
             imageFieldHelperText="Deixe em branco para manter a imagem atual"
           />
 
-          {/* Seção de Lotes - só aparece para admin */}
-          {isAdmin && id && (
+          {/* Seção de Lotes */}
+          {id && (
             <EventBatchesSection 
               eventId={id}
               eventTitle={event.title}
