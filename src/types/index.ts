@@ -6,3 +6,4 @@ export * from './user.types';
 export * from './loyalty.types';
 export * from './referral.types';
 export * from './database.types';
+export * from './reports.types';

@@ -254,6 +254,25 @@ const Admin = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Relatórios de Vendas
+              </CardTitle>
+              <CardDescription>Análise financeira e operacional</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/admin/relatorios")}
+              >
+                Ver Relatórios
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
                 Financeiro
               </CardTitle>
