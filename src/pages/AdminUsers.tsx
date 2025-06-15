@@ -9,18 +9,22 @@ import { useEffect } from "react";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
-  const { session, loading } = useAuth();
-  const { isAdmin } = useRole(session);
+  const { session, loading: authLoading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useRole(session);
+
+  // Wait for both auth and role to load before making any decisions
+  const isLoading = authLoading || roleLoading;
 
   useEffect(() => {
-    if (!loading && (!session || !isAdmin)) {
+    // Only redirect if we're not loading and user is not admin
+    if (!isLoading && (!session || !isAdmin)) {
       console.log("[AdminUsers] Access denied, redirecting to home");
       navigate("/");
     }
-  }, [loading, session, isAdmin, navigate]);
+  }, [isLoading, session, isAdmin, navigate]);
 
-  // Show loading while checking authentication
-  if (loading || !session || !isAdmin) {
+  // Show loading while checking authentication and role
+  if (isLoading) {
     return (
       <MainLayout>
         <div className="container max-w-7xl mx-auto py-8">
@@ -30,6 +34,12 @@ const AdminUsers = () => {
         </div>
       </MainLayout>
     );
+  }
+
+  // If not loading and user is not authenticated or not admin, don't render anything
+  // (redirect will happen in useEffect)
+  if (!session || !isAdmin) {
+    return null;
   }
 
   return (

@@ -32,8 +32,8 @@ import {
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
-  const { isAdmin } = useRole(session);
+  const { session, loading: authLoading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useRole(session);
 
   const { data: dashboardData } = useQuery({
     queryKey: ["admin-dashboard"],
@@ -48,6 +48,23 @@ const Admin = () => {
     },
   });
 
+  // Wait for both auth and role to load before making any decisions
+  const isLoading = authLoading || roleLoading;
+
+  // Show loading while checking authentication and role
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container max-w-7xl mx-auto py-8">
+          <div className="flex justify-center items-center min-h-[200px]">
+            <p>Verificando permissões...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // If not admin, redirect to home
   if (!isAdmin) {
     navigate("/");
     return null;
