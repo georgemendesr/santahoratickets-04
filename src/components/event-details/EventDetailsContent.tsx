@@ -4,10 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EventInfo } from "./EventInfo";
 import { EventActions } from "./EventActions";
-import { BatchesTable } from "./BatchesTable";
+import { TicketAvailability } from "./TicketAvailability";
 import { LoyaltyCard } from "./LoyaltyCard";
 import { ReferralCard } from "./ReferralCard";
-import { EventImage } from "./EventImage";
+import { EventPoster } from "./EventPoster";
 import { Participant } from "@/components/checkout/ParticipantForm";
 
 interface EventDetailsContentProps {
@@ -56,7 +56,7 @@ export function EventDetailsContent({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <EventImage src={event?.image} alt={event?.title} />
+        <EventPoster imageUrl={event?.image} title={event?.title} />
       </div>
 
       <div className="space-y-6">
@@ -74,16 +74,11 @@ export function EventDetailsContent({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Ingressos Disponíveis</h3>
-            <BatchesTable 
-              batches={batches || []} 
-              onPurchase={onPurchase}
-              isLoading={isPurchasing}
-            />
-          </CardContent>
-        </Card>
+        <TicketAvailability 
+          batches={batches || []} 
+          onPurchase={onPurchase}
+          isPurchasing={isPurchasing}
+        />
 
         {isAdmin && (
           <Card>

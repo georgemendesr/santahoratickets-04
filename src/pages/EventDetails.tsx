@@ -1,21 +1,23 @@
+
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EventLayout } from "@/components/event-details/EventLayout";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Clock, MapPin, ArrowLeft } from "lucide-react";
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { EventReferralCard } from "@/components/event-details/EventReferralCard";
 import { ReferralBanner } from "@/components/event-details/ReferralBanner";
-import { EventDetailsContent } from "@/components/event-details/EventDetailsContent";
+import { EventDetailsHeader } from "@/components/event-details/EventDetailsHeader";
+import { EventPoster } from "@/components/event-details/EventPoster";
+import { EventDescription } from "@/components/event-details/EventDescription";
+import { TicketAvailability } from "@/components/event-details/TicketAvailability";
+import { EventActions } from "@/components/event-details/EventActions";
+import { LoyaltyCard } from "@/components/event-details/LoyaltyCard";
 import { Participant } from "@/components/checkout/ParticipantForm";
 import { Event, Batch } from "@/types/event.types";
+import { Card, CardContent } from "@/components/ui/card";
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -26,6 +28,8 @@ const EventDetails = () => {
   const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ["event", id],
     queryFn: async () => {
+      if (!id) throw new Error("ID do evento não fornecido");
+      
       const { data, error } = await supabase
         .from('events')
         .select('*')
@@ -39,6 +43,7 @@ const EventDetails = () => {
 
       return data as Event;
     },
+    enabled: !!id,
   });
 
   const { data: batches = [], isLoading: batchesLoading } = useQuery({
@@ -143,21 +148,21 @@ const EventDetails = () => {
   if (isLoading) {
     return (
       <EventLayout onBack={handleBack}>
-        <div className="mb-6">
-          <Skeleton className="h-8 w-32 mb-2" />
-          <Skeleton className="h-6 w-64" />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-40 w-full" />
+        <div className="max-w-6xl mx-auto space-y-8">
+          <Skeleton className="h-12 w-3/4 mx-auto" />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Skeleton className="h-[400px] w-full rounded-xl" />
+            
+            <div className="space-y-6">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-48 w-full" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
           </div>
         </div>
       </EventLayout>
@@ -167,9 +172,12 @@ const EventDetails = () => {
   if (!event) {
     return (
       <EventLayout onBack={handleBack}>
-        <div className="text-center">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Evento não encontrado
+          </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Evento não encontrado.
+            O evento que você está procurando não existe ou foi removido.
           </p>
         </div>
       </EventLayout>
@@ -178,93 +186,60 @@ const EventDetails = () => {
 
   return (
     <EventLayout onBack={handleBack}>
-      {/* Banner de referral se houver código na URL */}
-      <ReferralBanner eventId={id!} />
-      
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          {event.title}
-        </h1>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            {format(new Date(event.date), 'PPPP', { locale: ptBR })}
-          </Badge>
-          <Badge variant="secondary">
-            <Clock className="h-4 w-4 mr-2" />
-            {event.time}
-          </Badge>
-          <Badge variant="secondary">
-            <MapPin className="h-4 w-4 mr-2" />
-            {event.location}
-          </Badge>
-        </div>
-      </div>
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Banner de referral se houver código na URL */}
+        <ReferralBanner eventId={id!} />
+        
+        {/* Event Header */}
+        <EventDetailsHeader event={event} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Event Image */}
-          {event.image && (
-            <Card>
-              <CardContent className="p-0">
-                <img 
-                  src={event.image} 
-                  alt={event.title}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              </CardContent>
-            </Card>
-          )}
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Event Poster */}
+          <div>
+            <EventPoster imageUrl={event.image} title={event.title} />
+          </div>
 
-          {/* Event Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Sobre o Evento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                {event.description}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Event Location */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Local
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 dark:text-gray-400">
-                {event.location}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          {/* Usar o novo componente EventDetailsContent que usa o sistema de lotes */}
-          <EventDetailsContent
-            event={event}
-            batches={batches}
-            isAdmin={isAdmin}
-            profile={profile}
-            referrer={null}
-            referralCode={null}
-            onShare={handleShare}
-            onPurchase={handlePurchase}
-            onEdit={handleEdit}
-          />
-          
-          {/* Card de indicação e compartilhamento */}
-          {session && event && (
-            <EventReferralCard 
-              eventId={event.id} 
-              eventTitle={event.title} 
+          {/* Right Column - Ticket Information */}
+          <div className="space-y-6">
+            <TicketAvailability 
+              batches={batches}
+              onPurchase={handlePurchase}
             />
-          )}
+
+            {/* Admin Actions */}
+            {isAdmin && (
+              <Card>
+                <CardContent className="p-6">
+                  <EventActions
+                    event={event}
+                    isAdmin={isAdmin}
+                    onPurchase={() => {}} // Admin não compra pelo frontend público
+                    onShare={handleShare}
+                    onEdit={handleEdit}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Loyalty Card */}
+            {profile && <LoyaltyCard points={profile.loyalty_points} />}
+          </div>
+        </div>
+
+        {/* Bottom Section - Event Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <EventDescription event={event} />
+          
+          {/* Referral Card */}
+          <div>
+            {session && event && (
+              <EventReferralCard 
+                eventId={event.id} 
+                eventTitle={event.title} 
+              />
+            )}
+          </div>
         </div>
       </div>
     </EventLayout>
