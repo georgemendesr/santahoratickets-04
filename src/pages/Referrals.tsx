@@ -22,7 +22,7 @@ const Referrals = () => {
     return null;
   }
 
-  const userReferralCode = referrals.find(r => r.referrer_user_id === session.user.id)?.invite_code;
+  const userReferralCode = referrals.find(r => r.referrer_id === session.user.id)?.code;
   const referralLink = `${window.location.origin}?ref=${userReferralCode}`;
 
   const handleCreateReferral = () => {
@@ -77,7 +77,7 @@ const Referrals = () => {
                 <Trophy className="h-5 w-5 text-green-500" />
                 <div>
                   <p className="text-2xl font-bold">{stats?.completedReferrals || 0}</p>
-                  <p className="text-sm text-muted-foreground">Concluídas</p>
+                  <p className="text-sm text-muted-foreground">Utilizadas</p>
                 </div>
               </div>
             </CardContent>
@@ -245,18 +245,16 @@ const Referrals = () => {
                 {referrals.map((referral) => (
                   <div key={referral.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <p className="font-medium">Código: {referral.invite_code}</p>
+                      <p className="font-medium">Código: {referral.code}</p>
                       <p className="text-sm text-muted-foreground">
                         Criado em: {new Date(referral.created_at).toLocaleDateString('pt-BR')}
                       </p>
-                      {referral.invited_email && (
-                        <p className="text-sm text-muted-foreground">
-                          Email convidado: {referral.invited_email}
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Utilizações: {referral.used_count}
+                      </p>
                     </div>
-                    <Badge variant={referral.status === 'completed' ? 'default' : 'secondary'}>
-                      {referral.status === 'completed' ? 'Concluída' : 'Pendente'}
+                    <Badge variant={referral.used_count > 0 ? 'default' : 'secondary'}>
+                      {referral.used_count > 0 ? 'Utilizada' : 'Pendente'}
                     </Badge>
                   </div>
                 ))}

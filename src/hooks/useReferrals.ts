@@ -9,17 +9,15 @@ export function useReferrals() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
 
-  // Como estamos usando a nova tabela criada via SQL, vamos fazer queries diretas
   const { data: referrals, isLoading } = useQuery({
     queryKey: ["user-referrals", session?.user.id],
     queryFn: async (): Promise<Referral[]> => {
       if (!session?.user.id) return [];
 
-      // Query direta para a nova tabela que criamos
       const { data, error } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referrer_user_id', session.user.id)
+        .eq('referrer_id', session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -45,7 +43,7 @@ export function useReferrals() {
       const { data: referrals } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referrer_user_id', session.user.id);
+        .eq('referrer_id', session.user.id);
 
       const { data: points } = await supabase
         .from('fidelity_points')
@@ -54,8 +52,8 @@ export function useReferrals() {
         .eq('source', 'referral_reward');
 
       const totalReferrals = referrals?.length || 0;
-      const completedReferrals = referrals?.filter(r => r.status === 'completed').length || 0;
-      const pendingReferrals = referrals?.filter(r => r.status === 'pending').length || 0;
+      const completedReferrals = referrals?.filter(r => r.used_count > 0).length || 0;
+      const pendingReferrals = referrals?.filter(r => r.used_count === 0).length || 0;
       const totalPointsEarned = points?.reduce((sum, p) => sum + p.points, 0) || 0;
 
       return {
@@ -74,20 +72,22 @@ export function useReferrals() {
         throw new Error("Usuário não autenticado");
       }
 
-      // Usar a função que criamos no SQL
+      // Use the existing function to generate unique code
       const { data: codeData, error: codeError } = await supabase
-        .rpc('generate_invite_code');
+        .rpc('generate_unique_referral_code');
 
       if (codeError || !codeData) {
         throw new Error("Erro ao gerar código de convite");
       }
 
+      // For now, we'll create with a placeholder event_id - this should be updated when used for specific events
       const { data, error } = await supabase
         .from('referrals')
         .insert({
-          referrer_user_id: session.user.id,
-          invite_code: codeData,
-          status: 'pending'
+          referrer_id: session.user.id,
+          code: codeData,
+          event_id: '00000000-0000-0000-0000-000000000000', // Placeholder, should be updated per event
+          used_count: 0
         })
         .select()
         .single();
@@ -115,27 +115,27 @@ export function useReferrals() {
         throw new Error("Usuário não autenticado");
       }
 
-      // Buscar o referral pelo código
+      // Find the referral by code
       const { data: referral, error: referralError } = await supabase
         .from('referrals')
         .select('*')
-        .eq('invite_code', inviteCode)
+        .eq('code', inviteCode)
         .single();
 
       if (referralError || !referral) {
         throw new Error("Código de convite inválido");
       }
 
-      // Verificar se não é o próprio usuário
-      if (referral.referrer_user_id === session.user.id) {
+      // Check if not the same user
+      if (referral.referrer_id === session.user.id) {
         throw new Error("Você não pode usar seu próprio código de convite");
       }
 
-      // Atualizar o referral com o usuário indicado
+      // Update the used count
       const { error: updateError } = await supabase
         .from('referrals')
         .update({
-          referred_user_id: session.user.id
+          used_count: referral.used_count + 1
         })
         .eq('id', referral.id);
 

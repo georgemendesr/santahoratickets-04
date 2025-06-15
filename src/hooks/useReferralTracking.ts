@@ -8,15 +8,15 @@ export function useReferralTracking() {
   const { registerReferralUse } = useReferrals();
 
   useEffect(() => {
-    // Verificar se há código de referência na URL
+    // Check if there's a referral code in the URL
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
     
     if (refCode) {
-      // Armazenar no localStorage para usar depois do cadastro
+      // Store in localStorage to use after signup
       localStorage.setItem('referral_code', refCode);
       
-      // Se o usuário já está logado, registrar a indicação imediatamente
+      // If user is already logged in, register the referral immediately
       if (session?.user.id) {
         const storedCode = localStorage.getItem('referral_code');
         if (storedCode) {
@@ -27,7 +27,7 @@ export function useReferralTracking() {
     }
   }, [session, registerReferralUse]);
 
-  // Função para registrar indicação após cadastro
+  // Function to register referral after signup
   const processStoredReferral = () => {
     const storedCode = localStorage.getItem('referral_code');
     if (storedCode && session?.user.id) {
