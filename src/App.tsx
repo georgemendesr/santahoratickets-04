@@ -1,4 +1,3 @@
-
 import {
   BrowserRouter,
   Routes,
@@ -28,10 +27,14 @@ import AdminVouchers from "./pages/AdminVouchers";
 import AdminBatches from "./pages/AdminBatches";
 import Fidelity from "./pages/Fidelity";
 import AdminRewards from "./pages/AdminRewards";
+import Referrals from "@/pages/Referrals";
+import { useReferralTracking } from "@/hooks/useReferralTracking";
 
 const queryClient = new QueryClient();
 
 function App() {
+  useReferralTracking();
+
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster />
@@ -55,6 +58,7 @@ function App() {
           <Route path="/admin/lotes" element={<AdminBatches />} />
           <Route path="/fidelidade" element={<Fidelity />} />
           <Route path="/admin/recompensas" element={<AdminRewards />} />
+          <Route path="/referrals" element={<Referrals />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

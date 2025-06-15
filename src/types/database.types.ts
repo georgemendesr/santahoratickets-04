@@ -4,7 +4,7 @@ import type { Ticket } from './ticket.types';
 import type { PaymentPreference } from './payment.types';
 import type { UserProfile, UserRoleData } from './user.types';
 import type { LoyaltyPointsHistory, Reward, RewardRedemption } from './loyalty.types';
-import type { Referral, ReferralUse } from './referral.types';
+import type { Referral } from './referral.types';
 
 export interface Database {
   public: {
@@ -38,11 +38,6 @@ export interface Database {
         Row: Referral;
         Insert: Omit<Referral, 'id' | 'created_at'>;
         Update: Partial<Omit<Referral, 'id' | 'created_at'>>;
-      };
-      referral_uses: {
-        Row: ReferralUse;
-        Insert: Omit<ReferralUse, 'id' | 'created_at'>;
-        Update: Partial<Omit<ReferralUse, 'id' | 'created_at'>>;
       };
       rewards: {
         Row: Reward;
