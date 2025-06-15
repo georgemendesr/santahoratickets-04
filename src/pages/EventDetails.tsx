@@ -15,6 +15,7 @@ import { EventDescription } from "@/components/event-details/EventDescription";
 import { TicketAvailability } from "@/components/event-details/TicketAvailability";
 import { EventActions } from "@/components/event-details/EventActions";
 import { LoyaltyCard } from "@/components/event-details/LoyaltyCard";
+import { SalesSimulationWrapper } from "@/components/event-details/SalesSimulationWrapper";
 import { Participant } from "@/components/checkout/ParticipantForm";
 import { Event, Batch } from "@/types/event.types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -186,62 +187,64 @@ const EventDetails = () => {
 
   return (
     <EventLayout onBack={handleBack}>
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Banner de referral se houver código na URL */}
-        <ReferralBanner eventId={id!} />
-        
-        {/* Event Header */}
-        <EventDetailsHeader event={event} />
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Event Poster */}
-          <div>
-            <EventPoster imageUrl={event.image} title={event.title} />
-          </div>
-
-          {/* Right Column - Ticket Information */}
-          <div className="space-y-6">
-            <TicketAvailability 
-              batches={batches}
-              onPurchase={handlePurchase}
-            />
-
-            {/* Admin Actions */}
-            {isAdmin && (
-              <Card>
-                <CardContent className="p-6">
-                  <EventActions
-                    event={event}
-                    isAdmin={isAdmin}
-                    onPurchase={() => {}} // Admin não compra pelo frontend público
-                    onShare={handleShare}
-                    onEdit={handleEdit}
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Loyalty Card */}
-            {profile && <LoyaltyCard points={profile.loyalty_points} />}
-          </div>
-        </div>
-
-        {/* Bottom Section - Event Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <EventDescription event={event} />
+      <SalesSimulationWrapper event={event}>
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Banner de referral se houver código na URL */}
+          <ReferralBanner eventId={id!} />
           
-          {/* Referral Card */}
-          <div>
-            {session && event && (
-              <EventReferralCard 
-                eventId={event.id} 
-                eventTitle={event.title} 
+          {/* Event Header */}
+          <EventDetailsHeader event={event} />
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Event Poster */}
+            <div>
+              <EventPoster imageUrl={event.image} title={event.title} />
+            </div>
+
+            {/* Right Column - Ticket Information */}
+            <div className="space-y-6">
+              <TicketAvailability 
+                batches={batches}
+                onPurchase={handlePurchase}
               />
-            )}
+
+              {/* Admin Actions */}
+              {isAdmin && (
+                <Card>
+                  <CardContent className="p-6">
+                    <EventActions
+                      event={event}
+                      isAdmin={isAdmin}
+                      onPurchase={() => {}} // Admin não compra pelo frontend público
+                      onShare={handleShare}
+                      onEdit={handleEdit}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Loyalty Card */}
+              {profile && <LoyaltyCard points={profile.loyalty_points} />}
+            </div>
+          </div>
+
+          {/* Bottom Section - Event Details */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <EventDescription event={event} />
+            
+            {/* Referral Card */}
+            <div>
+              {session && event && (
+                <EventReferralCard 
+                  eventId={event.id} 
+                  eventTitle={event.title} 
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </SalesSimulationWrapper>
     </EventLayout>
   );
 };
