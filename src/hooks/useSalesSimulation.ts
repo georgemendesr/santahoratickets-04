@@ -37,28 +37,41 @@ export const useSalesSimulation = ({
   // Carregar contador do localStorage
   useEffect(() => {
     const savedCount = localStorage.getItem(getStorageKey());
-    if (savedCount) {
-      setSimulationCount(parseInt(savedCount, 10));
-    }
+    const count = savedCount ? parseInt(savedCount, 10) : 0;
+    setSimulationCount(count);
+    console.log(`[SalesSimulation] Loaded count from storage: ${count} for event ${eventId}`);
   }, [eventId]);
 
   // Salvar contador no localStorage
   const updateSimulationCount = (newCount: number) => {
     setSimulationCount(newCount);
     localStorage.setItem(getStorageKey(), newCount.toString());
+    console.log(`[SalesSimulation] Updated count to: ${newCount} for event ${eventId}`);
   };
 
   const showSalesNotification = () => {
-    if (isAdmin || simulationCount >= maxSimulations) {
+    console.log(`[SalesSimulation] Attempting to show notification - isAdmin: ${isAdmin}, count: ${simulationCount}, maxSimulations: ${maxSimulations}`);
+    
+    if (isAdmin) {
+      console.log(`[SalesSimulation] Skipping notification - user is admin`);
+      return;
+    }
+
+    if (simulationCount >= maxSimulations) {
+      console.log(`[SalesSimulation] Skipping notification - max simulations reached (${simulationCount}/${maxSimulations})`);
       return;
     }
 
     const now = new Date();
+    console.log(`[SalesSimulation] Current time: ${now.toISOString()}, Event end: ${eventEndDate.toISOString()}`);
+    
     if (now > eventEndDate) {
+      console.log(`[SalesSimulation] Skipping notification - event has ended`);
       return;
     }
 
     const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    console.log(`[SalesSimulation] Showing toast: ${randomMessage}`);
     
     toast({
       description: randomMessage,
@@ -70,24 +83,52 @@ export const useSalesSimulation = ({
   };
 
   useEffect(() => {
-    if (isAdmin || simulationCount >= maxSimulations) {
+    console.log(`[SalesSimulation] Setting up simulation effect for event ${eventId}`);
+    console.log(`[SalesSimulation] isAdmin: ${isAdmin}, simulationCount: ${simulationCount}, maxSimulations: ${maxSimulations}`);
+    console.log(`[SalesSimulation] eventEndDate: ${eventEndDate.toISOString()}, now: ${new Date().toISOString()}`);
+
+    if (isAdmin) {
+      console.log(`[SalesSimulation] Not setting up timer - user is admin`);
+      return;
+    }
+
+    if (simulationCount >= maxSimulations) {
+      console.log(`[SalesSimulation] Not setting up timer - max simulations reached`);
       return;
     }
 
     const now = new Date();
     if (now > eventEndDate) {
+      console.log(`[SalesSimulation] Not setting up timer - event has ended`);
       return;
     }
 
+    // Para testar, vamos usar um intervalo mais curto inicialmente (30 segundos)
+    const testInterval = 30 * 1000; // 30 segundos para teste
     // Gerar intervalo aleatório entre min e max
     const randomInterval = Math.random() * (maxInterval - minInterval) + minInterval;
     
+    // Usar intervalo de teste se for a primeira simulação
+    const interval = simulationCount === 0 ? testInterval : randomInterval;
+    
+    console.log(`[SalesSimulation] Setting timer for ${interval}ms (${interval/1000}s)`);
+    
     const timeoutId = setTimeout(() => {
+      console.log(`[SalesSimulation] Timer fired after ${interval}ms`);
       showSalesNotification();
-    }, randomInterval);
+    }, interval);
 
-    return () => clearTimeout(timeoutId);
-  }, [simulationCount, isAdmin, eventEndDate, minInterval, maxInterval, maxSimulations]);
+    return () => {
+      console.log(`[SalesSimulation] Cleaning up timer`);
+      clearTimeout(timeoutId);
+    };
+  }, [simulationCount, isAdmin, eventEndDate, minInterval, maxInterval, maxSimulations, eventId]);
+
+  // Log inicial do estado do hook
+  useEffect(() => {
+    console.log(`[SalesSimulation] Hook initialized for event ${eventId}`);
+    console.log(`[SalesSimulation] Initial state - isAdmin: ${isAdmin}, session: ${!!session}`);
+  }, [eventId, isAdmin, session]);
 
   return {
     simulationCount,
