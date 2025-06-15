@@ -9,7 +9,7 @@ export interface Event {
   price: number;
   image: string;
   available_tickets: number;
-  status?: 'published' | 'draft' | 'ended';
+  status?: string; // Changed from union type to string
   created_at?: string;
   gross_revenue?: number;
   net_revenue?: number;
@@ -37,10 +37,10 @@ export interface Batch {
   total_tickets: number;
   start_date: string;
   end_date?: string;
-  status: 'active' | 'ended' | 'sold_out';
+  status: string; // Changed from union type to string
   created_at?: string;
   order_number: number;
-  visibility: 'public' | 'guest_only' | 'internal_pdv';
+  visibility: string; // Changed from union type to string
   is_visible: boolean;
   min_purchase: number;
   max_purchase?: number;

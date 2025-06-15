@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +15,7 @@ import { EventReferralCard } from "@/components/event-details/EventReferralCard"
 import { ReferralBanner } from "@/components/event-details/ReferralBanner";
 import { EventDetailsContent } from "@/components/event-details/EventDetailsContent";
 import { Participant } from "@/components/checkout/ParticipantForm";
+import { Event, Batch } from "@/types/event.types";
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -37,7 +37,7 @@ const EventDetails = () => {
         throw error;
       }
 
-      return data || null;
+      return data as Event;
     },
   });
 
@@ -60,7 +60,7 @@ const EventDetails = () => {
 
       // Filtrar lotes disponíveis (ativo e dentro do período de venda)
       const now = new Date();
-      return data.filter(batch => {
+      return (data as Batch[]).filter(batch => {
         const startDate = new Date(batch.start_date);
         const endDate = batch.end_date ? new Date(batch.end_date) : null;
         
