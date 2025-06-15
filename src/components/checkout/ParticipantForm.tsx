@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { User, Mail } from "lucide-react";
+import { User, Mail, Phone } from "lucide-react";
 
 export interface Participant {
   name: string;
   email: string;
+  phone?: string;
 }
 
 interface ParticipantFormProps {
@@ -26,7 +27,7 @@ export function ParticipantForm({
   onSubmit,
   isLoading = false
 }: ParticipantFormProps) {
-  const [errors, setErrors] = useState<{ [key: number]: { name?: string; email?: string } }>({});
+  const [errors, setErrors] = useState<{ [key: number]: { name?: string; email?: string; phone?: string } }>({});
 
   const updateParticipant = (index: number, field: keyof Participant, value: string) => {
     const newParticipants = [...participants];
@@ -43,7 +44,7 @@ export function ParticipantForm({
   };
 
   const validateForm = () => {
-    const newErrors: { [key: number]: { name?: string; email?: string } } = {};
+    const newErrors: { [key: number]: { name?: string; email?: string; phone?: string } } = {};
     let hasErrors = false;
 
     participants.forEach((participant, index) => {
@@ -88,7 +89,7 @@ export function ParticipantForm({
                 Participante {index + 1}
               </h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={`name-${index}`}>
                     <User className="inline w-4 h-4 mr-1" />
@@ -122,6 +123,24 @@ export function ParticipantForm({
                   />
                   {errors[index]?.email && (
                     <p className="text-sm text-red-500">{errors[index].email}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`phone-${index}`}>
+                    <Phone className="inline w-4 h-4 mr-1" />
+                    Telefone
+                  </Label>
+                  <Input
+                    id={`phone-${index}`}
+                    type="tel"
+                    placeholder="(11) 99999-9999"
+                    value={participants[index]?.phone || ""}
+                    onChange={(e) => updateParticipant(index, "phone", e.target.value)}
+                    className={errors[index]?.phone ? "border-red-500" : ""}
+                  />
+                  {errors[index]?.phone && (
+                    <p className="text-sm text-red-500">{errors[index].phone}</p>
                   )}
                 </div>
               </div>
