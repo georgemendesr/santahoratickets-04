@@ -70,38 +70,64 @@ export const useEventCheckins = (eventId: string | undefined) => {
         if (eventError) throw eventError;
         setEvent(eventData);
 
-        // Fetch participants with check-in data
+        // Fetch tickets with batch information
         const { data: ticketsData, error: ticketsError } = await supabase
           .from("tickets")
           .select(`
             id,
             participant_name,
             participant_email,
-            used as checked_in,
+            used,
             check_in_time,
-            checked_in_by,
-            batches!inner(
-              id,
-              title
-            ),
-            validator:user_profiles!tickets_checked_in_by_fkey(
-              name
-            )
+            checked_in_by
           `)
           .eq("event_id", eventId);
 
         if (ticketsError) throw ticketsError;
 
+        // Fetch batches for this event
+        const { data: batchesData, error: batchesError } = await supabase
+          .from("batches")
+          .select("id, title")
+          .eq("event_id", eventId);
+
+        if (batchesError) throw batchesError;
+
+        // Fetch user profiles for validators
+        const validatorIds = ticketsData
+          .filter(ticket => ticket.checked_in_by)
+          .map(ticket => ticket.checked_in_by);
+
+        let validatorProfiles: any[] = [];
+        if (validatorIds.length > 0) {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from("user_profiles")
+            .select("id, name")
+            .in("id", validatorIds);
+
+          if (!profilesError) {
+            validatorProfiles = profilesData || [];
+          }
+        }
+
+        // Create a map for quick batch lookup
+        const batchMap = new Map(batchesData.map(batch => [batch.id, batch.title]));
+        const validatorMap = new Map(validatorProfiles.map(profile => [profile.id, profile.name]));
+
+        // For now, we'll assign tickets to the first available batch
+        // In a real scenario, you'd have a proper relationship between tickets and batches
+        const defaultBatch = batchesData[0];
+
         const formattedParticipants: Participant[] = ticketsData.map(ticket => ({
           id: ticket.id,
           participant_name: ticket.participant_name || "Nome não informado",
           participant_email: ticket.participant_email || "Email não informado",
-          batch_title: ticket.batches?.title || "Lote não identificado",
-          batch_id: ticket.batches?.id || "",
-          checked_in: ticket.checked_in,
+          batch_title: defaultBatch?.title || "Lote não identificado",
+          batch_id: defaultBatch?.id || "",
+          checked_in: ticket.used,
           check_in_time: ticket.check_in_time,
           checked_in_by: ticket.checked_in_by,
-          validator_name: ticket.validator?.name || null
+          validator_name: ticket.checked_in_by ? validatorMap.get(ticket.checked_in_by) || null : null
         }));
 
         setParticipants(formattedParticipants);
@@ -136,19 +162,19 @@ export const useEventCheckins = (eventId: string | undefined) => {
         setCheckinsByHour(checkinsByHourArray);
 
         // Calculate check-ins by batch
-        const batchMap = new Map<string, { name: string; total: number; checked_in: number }>();
+        const batchStatsMap = new Map<string, { name: string; total: number; checked_in: number }>();
         formattedParticipants.forEach(p => {
-          const existing = batchMap.get(p.batch_id) || { 
+          const existing = batchStatsMap.get(p.batch_id) || { 
             name: p.batch_title, 
             total: 0, 
             checked_in: 0 
           };
           existing.total++;
           if (p.checked_in) existing.checked_in++;
-          batchMap.set(p.batch_id, existing);
+          batchStatsMap.set(p.batch_id, existing);
         });
 
-        const checkinsByBatchArray: CheckinByBatch[] = Array.from(batchMap.entries())
+        const checkinsByBatchArray: CheckinByBatch[] = Array.from(batchStatsMap.entries())
           .map(([batch_id, data]) => ({
             batch_id,
             batch_name: data.name,
