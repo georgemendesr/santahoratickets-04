@@ -172,7 +172,7 @@ const Admin = () => {
         </div>
 
         {/* Cards de Ações */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -188,6 +188,25 @@ const Admin = () => {
                 onClick={() => navigate("/eventos")}
               >
                 Ver Eventos
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Ticket className="h-5 w-5" />
+                Tipos de Ingressos
+              </CardTitle>
+              <CardDescription>Gerenciar lotes de ingressos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/admin/lotes")}
+              >
+                Gerenciar Lotes
               </Button>
             </CardContent>
           </Card>

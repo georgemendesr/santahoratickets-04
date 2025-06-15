@@ -36,6 +36,9 @@ export function MainHeader() {
                     <Link to="/admin">Dashboard</Link>
                   </Button>
                   <Button variant="ghost" asChild>
+                    <Link to="/admin/lotes">Lotes</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
                     <Link to="/admin/usuarios">Usuários</Link>
                   </Button>
                   <Button variant="ghost" asChild>

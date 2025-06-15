@@ -6,21 +6,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { EventLayout } from "@/components/event-details/EventLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Clock, MapPin, ArrowLeft } from "lucide-react";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { EventReferralCard } from "@/components/event-details/EventReferralCard";
 import { ReferralBanner } from "@/components/event-details/ReferralBanner";
+import { EventDetailsContent } from "@/components/event-details/EventDetailsContent";
+import { Participant } from "@/components/checkout/ParticipantForm";
 
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { isAdmin } = useRole(session);
 
-  const { data: event, isLoading, error } = useQuery({
+  const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ["event", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -38,15 +41,104 @@ const EventDetails = () => {
     },
   });
 
-  useEffect(() => {
-    if (error) {
-      console.error("Erro ao carregar evento:", error);
-    }
-  }, [error]);
+  const { data: batches = [], isLoading: batchesLoading } = useQuery({
+    queryKey: ["batches", id],
+    queryFn: async () => {
+      if (!id) return [];
+
+      const { data, error } = await supabase
+        .from('batches')
+        .select('*')
+        .eq('event_id', id)
+        .eq('is_visible', true)
+        .order('order_number');
+
+      if (error) {
+        console.error("Error fetching batches:", error);
+        throw error;
+      }
+
+      // Filtrar lotes disponíveis (ativo e dentro do período de venda)
+      const now = new Date();
+      return data.filter(batch => {
+        const startDate = new Date(batch.start_date);
+        const endDate = batch.end_date ? new Date(batch.end_date) : null;
+        
+        return batch.status === 'active' && 
+               now >= startDate && 
+               (!endDate || now <= endDate);
+      });
+    },
+    enabled: !!id,
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
 
   const handleBack = () => {
-    navigate('/events');
+    navigate('/eventos');
   };
+
+  const handlePurchase = (batchId: string, quantity: number, participants: Participant[]) => {
+    const searchParams = new URLSearchParams({
+      event: id!,
+      batch: batchId,
+      quantity: quantity.toString(),
+    });
+
+    // Adicionar dados dos participantes aos searchParams se necessário
+    participants.forEach((participant, index) => {
+      searchParams.append(`participant_${index}_name`, participant.name);
+      if (participant.email) {
+        searchParams.append(`participant_${index}_email`, participant.email);
+      }
+      if (participant.phone) {
+        searchParams.append(`participant_${index}_phone`, participant.phone);
+      }
+    });
+
+    navigate(`/checkout?${searchParams.toString()}`);
+  };
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/eventos/${id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: event?.title,
+        text: event?.description,
+        url: url,
+      });
+    } else {
+      navigator.clipboard.writeText(url);
+      console.log('Link copiado para a área de transferência');
+    }
+  };
+
+  const handleEdit = () => {
+    navigate(`/eventos/${id}/editar`);
+  };
+
+  useEffect(() => {
+    if (eventError) {
+      console.error("Erro ao carregar evento:", eventError);
+    }
+  }, [eventError]);
+
+  const isLoading = eventLoading || batchesLoading;
 
   if (isLoading) {
     return (
@@ -153,52 +245,18 @@ const EventDetails = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Tickets Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ingressos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Preço:</span>
-                  <span className="text-lg font-bold">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(event.price)}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Disponíveis:</span>
-                  <span className={`font-medium ${event.available_tickets <= 5 ? 'text-red-600' : 'text-green-600'}`}>
-                    {event.available_tickets} ingressos
-                  </span>
-                </div>
-
-                {event.available_tickets <= 5 && event.available_tickets > 0 && (
-                  <p className="text-sm text-yellow-600 font-medium">
-                    Últimas unidades disponíveis!
-                  </p>
-                )}
-
-                {event.available_tickets === 0 && (
-                  <p className="text-sm text-red-600 font-medium">
-                    Ingressos esgotados
-                  </p>
-                )}
-
-                <Button 
-                  className="w-full" 
-                  disabled={event.available_tickets === 0}
-                  onClick={() => navigate(`/checkout/${event.id}`)}
-                >
-                  {event.available_tickets === 0 ? 'Esgotado' : 'Comprar Ingresso'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Usar o novo componente EventDetailsContent que usa o sistema de lotes */}
+          <EventDetailsContent
+            event={event}
+            batches={batches}
+            isAdmin={isAdmin}
+            profile={profile}
+            referrer={null}
+            referralCode={null}
+            onShare={handleShare}
+            onPurchase={handlePurchase}
+            onEdit={handleEdit}
+          />
           
           {/* Card de indicação e compartilhamento */}
           {session && event && (
