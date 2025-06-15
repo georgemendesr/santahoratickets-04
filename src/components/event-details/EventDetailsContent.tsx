@@ -8,6 +8,7 @@ import { BatchesTable } from "./BatchesTable";
 import { LoyaltyCard } from "./LoyaltyCard";
 import { ReferralCard } from "./ReferralCard";
 import { EventImage } from "./EventImage";
+import { Participant } from "@/components/checkout/ParticipantForm";
 
 interface EventDetailsContentProps {
   event: Event;
@@ -17,7 +18,7 @@ interface EventDetailsContentProps {
   referrer: { name: string } | null;
   referralCode: string | null;
   onShare: () => void;
-  onPurchase: (batchId: string, quantity: number) => void;
+  onPurchase: (batchId: string, quantity: number, participants: Participant[]) => void;
   onEdit: () => void;
   isPurchasing?: boolean;
 }

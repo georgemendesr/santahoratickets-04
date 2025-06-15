@@ -296,6 +296,7 @@ export type Database = {
       payment_preferences: {
         Row: {
           attempts: number | null
+          batch_id: string | null
           card_token: string | null
           created_at: string
           error_message: string | null
@@ -316,6 +317,7 @@ export type Database = {
         }
         Insert: {
           attempts?: number | null
+          batch_id?: string | null
           card_token?: string | null
           created_at?: string
           error_message?: string | null
@@ -336,6 +338,7 @@ export type Database = {
         }
         Update: {
           attempts?: number | null
+          batch_id?: string | null
           card_token?: string | null
           created_at?: string
           error_message?: string | null
@@ -354,7 +357,15 @@ export type Database = {
           total_amount?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_preferences_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_uses: {
         Row: {
@@ -528,6 +539,9 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          order_id: string | null
+          participant_email: string | null
+          participant_name: string | null
           purchase_date: string
           qr_code: string
           qr_code_background: string | null
@@ -543,6 +557,9 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          order_id?: string | null
+          participant_email?: string | null
+          participant_name?: string | null
           purchase_date?: string
           qr_code: string
           qr_code_background?: string | null
@@ -558,6 +575,9 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          order_id?: string | null
+          participant_email?: string | null
+          participant_name?: string | null
           purchase_date?: string
           qr_code?: string
           qr_code_background?: string | null

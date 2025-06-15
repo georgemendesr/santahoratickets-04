@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { Participant } from "@/components/checkout/ParticipantForm";
 
 export const useEventDetails = (eventId: string | undefined) => {
   const [searchParams] = useSearchParams();
@@ -99,10 +100,29 @@ export const useEventDetails = (eventId: string | undefined) => {
   });
 
   const purchaseTicketMutation = useMutation({
-    mutationFn: async ({ batchId, quantity }: { batchId: string; quantity: number }) => {
+    mutationFn: async ({ 
+      batchId, 
+      quantity, 
+      participants 
+    }: { 
+      batchId: string; 
+      quantity: number; 
+      participants: Participant[];
+    }) => {
       if (!session?.user.id) throw new Error("Usuário não autenticado");
 
-      // Buscar o lote para calcular o valor total
+      // Validate participants data
+      if (participants.length !== quantity) {
+        throw new Error("Número de participantes deve ser igual à quantidade de ingressos");
+      }
+
+      for (const participant of participants) {
+        if (!participant.name.trim() || !participant.email.trim()) {
+          throw new Error("Todos os campos dos participantes devem ser preenchidos");
+        }
+      }
+
+      // Get batch information
       const { data: batch, error: batchError } = await supabase
         .from("batches")
         .select("*")
@@ -111,12 +131,11 @@ export const useEventDetails = (eventId: string | undefined) => {
 
       if (batchError || !batch) throw new Error("Lote não encontrado");
 
-      // Validar quantidade disponível
+      // Validate quantity and availability
       if (batch.available_tickets < quantity) {
         throw new Error("Quantidade solicitada não disponível");
       }
 
-      // Validar quantidade mínima e máxima
       if (quantity < batch.min_purchase) {
         throw new Error(`Quantidade mínima: ${batch.min_purchase}`);
       }
@@ -127,13 +146,14 @@ export const useEventDetails = (eventId: string | undefined) => {
 
       const totalAmount = batch.price * quantity;
 
-      // Criar preferência de pagamento
+      // Create payment preference with batch_id
       const { data, error } = await supabase
         .from("payment_preferences")
         .insert([
           {
             user_id: session.user.id,
             event_id: eventId!,
+            batch_id: batchId,
             ticket_quantity: quantity,
             total_amount: totalAmount,
             init_point: `checkout-${batchId}-${Date.now()}`,
@@ -145,7 +165,23 @@ export const useEventDetails = (eventId: string | undefined) => {
 
       if (error) throw error;
 
-      // Atualizar quantidade disponível no lote
+      // Create individual tickets for each participant
+      const tickets = participants.map((participant, index) => ({
+        event_id: eventId!,
+        user_id: session.user.id,
+        order_id: data.id,
+        participant_name: participant.name,
+        participant_email: participant.email,
+        qr_code: `${eventId}-${data.id}-${index + 1}-${Date.now()}`
+      }));
+
+      const { error: ticketsError } = await supabase
+        .from("tickets")
+        .insert(tickets);
+
+      if (ticketsError) throw ticketsError;
+
+      // Update batch availability
       const { error: updateError } = await supabase
         .from("batches")
         .update({ 
@@ -159,8 +195,8 @@ export const useEventDetails = (eventId: string | undefined) => {
     },
     onSuccess: (data) => {
       toast.success("Compra realizada com sucesso!");
-      refetchBatches(); // Atualizar dados dos lotes
-      navigate(`/checkout/finish?payment=${data.id}`);
+      refetchBatches(); // Refresh batch data
+      navigate(`/my-tickets`); // Redirect to tickets page
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao processar compra");
@@ -168,7 +204,7 @@ export const useEventDetails = (eventId: string | undefined) => {
     },
   });
 
-  const handlePurchase = (batchId: string, quantity: number) => {
+  const handlePurchase = (batchId: string, quantity: number, participants: Participant[]) => {
     if (!session) {
       toast.error("Faça login para comprar ingressos");
       navigate('/auth');
@@ -180,7 +216,7 @@ export const useEventDetails = (eventId: string | undefined) => {
       return;
     }
 
-    purchaseTicketMutation.mutate({ batchId, quantity });
+    purchaseTicketMutation.mutate({ batchId, quantity, participants });
   };
 
   return {
