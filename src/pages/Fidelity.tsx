@@ -1,63 +1,22 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useFidelitySystem } from "@/hooks/useFidelitySystem";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FidelityBalance } from "@/components/fidelity/FidelityBalance";
-import { RewardsGrid } from "@/components/fidelity/RewardsGrid";
-import { PointsHistory } from "@/components/fidelity/PointsHistory";
-import { RedemptionHistory } from "@/components/fidelity/RedemptionHistory";
+import { Gift, Star, History, Trophy } from "lucide-react";
+import { useFidelity } from "@/hooks/useFidelity";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Fidelity = () => {
-  const navigate = useNavigate();
-  const { session } = useAuth();
-  const [redeemingRewardId, setRedeemingRewardId] = useState<string | null>(null);
-  
-  const {
-    balance,
-    pointsHistory,
-    redemptions,
-    rewards,
-    isLoading,
-    isRewardsLoading,
-    redeemReward,
-    isRedeeming,
-    error
-  } = useFidelitySystem();
+  const { userPoints, pointsBalance, redemptions, loadingPoints, loadingBalance, loadingRedemptions } = useFidelity();
 
-  if (!session) {
-    navigate('/auth');
-    return null;
-  }
-
-  const handleRedeemReward = (rewardId: string, pointsRequired: number) => {
-    if (balance < pointsRequired) {
-      return;
-    }
-    
-    setRedeemingRewardId(rewardId);
-    redeemReward({ rewardId });
-  };
-
-  // Reset redeeming state when mutation completes
-  React.useEffect(() => {
-    if (!isRedeeming) {
-      setRedeemingRewardId(null);
-    }
-  }, [isRedeeming]);
-
-  if (error) {
+  if (loadingPoints || loadingBalance || loadingRedemptions) {
     return (
       <MainLayout>
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-red-600">Erro ao carregar dados de fidelidade.</p>
-            </CardContent>
-          </Card>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Carregando...</div>
         </div>
       </MainLayout>
     );
@@ -67,116 +26,131 @@ const Fidelity = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Programa de Fidelidade</h1>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+            <Trophy className="h-8 w-8 text-yellow-500" />
+            Programa de Fidelidade
+          </h1>
           <p className="text-muted-foreground">
-            Acumule pontos e troque por recompensas exclusivas
+            Acumule pontos comprando ingressos e indicando amigos
           </p>
         </div>
 
-        {/* Card de Saldo */}
-        <div className="mb-8">
-          <FidelityBalance balance={balance} isLoading={isLoading} />
-        </div>
-
-        {/* Tabs para diferentes seções */}
-        <Tabs defaultValue="rewards" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="rewards">Recompensas</TabsTrigger>
-            <TabsTrigger value="history">Histórico de Pontos</TabsTrigger>
-            <TabsTrigger value="redemptions">Meus Resgates</TabsTrigger>
-          </TabsList>
-
-          {/* Tab de Recompensas */}
-          <TabsContent value="rewards">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recompensas Disponíveis</CardTitle>
-                <CardDescription>
-                  Troque seus pontos por recompensas exclusivas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RewardsGrid
-                  rewards={rewards}
-                  userBalance={balance}
-                  onRedeem={handleRedeemReward}
-                  isRedeeming={redeemingRewardId}
-                  isLoading={isRewardsLoading}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab de Histórico de Pontos */}
-          <TabsContent value="history">
-            <Card>
-              <CardHeader>
-                <CardTitle>Histórico de Pontos</CardTitle>
-                <CardDescription>
-                  Acompanhe como você ganhou seus pontos
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PointsHistory history={pointsHistory} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab de Resgates */}
-          <TabsContent value="redemptions">
-            <Card>
-              <CardHeader>
-                <CardTitle>Meus Resgates</CardTitle>
-                <CardDescription>
-                  Histórico das suas recompensas resgatadas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RedemptionHistory redemptions={redemptions} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Informações sobre como ganhar pontos */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Como Ganhar Pontos</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🎫</span>
-                </div>
-                <h3 className="font-semibold mb-2">Compre Ingressos</h3>
-                <p className="text-sm text-muted-foreground">
-                  Ganhe 1 ponto para cada R$ 5,00 gastos
-                </p>
+        {/* Saldo de Pontos */}
+        <Card className="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-yellow-800">Seus Pontos</h2>
+                <p className="text-yellow-600">Disponível para resgate</p>
               </div>
-
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">👥</span>
-                </div>
-                <h3 className="font-semibold mb-2">Indique Amigos</h3>
-                <p className="text-sm text-muted-foreground">
-                  Ganhe 100 pontos por indicação bem-sucedida
-                </p>
-              </div>
-
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">✅</span>
-                </div>
-                <h3 className="font-semibold mb-2">Compareça aos Eventos</h3>
-                <p className="text-sm text-muted-foreground">
-                  Pontos extras por check-in nos eventos
-                </p>
+              <div className="text-right">
+                <div className="text-4xl font-bold text-yellow-600">{pointsBalance}</div>
+                <div className="text-sm text-yellow-500">pontos</div>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        <Tabs defaultValue="history" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Histórico de Pontos
+            </TabsTrigger>
+            <TabsTrigger value="redemptions" className="flex items-center gap-2">
+              <Gift className="h-4 w-4" />
+              Meus Resgates
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="history">
+            <Card>
+              <CardHeader>
+                <CardTitle>Histórico de Pontos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {userPoints.length > 0 ? (
+                  <div className="space-y-4">
+                    {userPoints.map((point) => (
+                      <div key={point.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${point.points > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                          <div>
+                            <p className="font-medium">{point.description}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(point.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant={point.points > 0 ? "default" : "destructive"}>
+                          {point.points > 0 ? '+' : ''}{point.points} pontos
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Nenhum ponto ainda</h3>
+                    <p className="text-muted-foreground">
+                      Compre ingressos e indique amigos para acumular pontos!
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="redemptions">
+            <Card>
+              <CardHeader>
+                <CardTitle>Meus Resgates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {redemptions.length > 0 ? (
+                  <div className="space-y-4">
+                    {redemptions.map((redemption) => (
+                      <div key={redemption.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Gift className="h-8 w-8 text-primary" />
+                          <div>
+                            <p className="font-medium">{redemption.reward?.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(redemption.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={
+                            redemption.status === 'delivered' ? 'default' :
+                            redemption.status === 'approved' ? 'secondary' :
+                            redemption.status === 'cancelled' ? 'destructive' : 'outline'
+                          }>
+                            {redemption.status === 'pending' && 'Pendente'}
+                            {redemption.status === 'approved' && 'Aprovado'}
+                            {redemption.status === 'delivered' && 'Entregue'}
+                            {redemption.status === 'cancelled' && 'Cancelado'}
+                          </Badge>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            -{redemption.points_used} pontos
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Nenhum resgate ainda</h3>
+                    <p className="text-muted-foreground">
+                      Vá para a página de recompensas para resgatar seus pontos!
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -58,8 +57,8 @@ function App() {
               <Route path="/checkout-finish" element={<CheckoutFinish />} />
               <Route path="/payment-status" element={<PaymentStatus />} />
               <Route path="/fidelidade" element={<Fidelity />} />
-              <Route path="/indicacoes" element={<Referrals />} />
               <Route path="/recompensas" element={<Rewards />} />
+              <Route path="/indicacoes" element={<Referrals />} />
               <Route path="/validar-ingresso" element={<ValidateTicket />} />
               <Route path="/vouchers" element={<Vouchers />} />
               <Route path="/admin" element={<Admin />} />

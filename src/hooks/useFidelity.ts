@@ -1,105 +1,129 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { FidelityPoint, FidelityReward, FidelityRedemption } from "@/types/fidelity.types";
 
-interface FidelityData {
-  balance: number;
-  pointsHistory: any[];
-  redemptions: any[];
-}
-
-export function useFidelity() {
-  const { session } = useAuth();
+export const useFidelity = () => {
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["fidelity-data", session?.user.id],
-    queryFn: async (): Promise<FidelityData> => {
-      if (!session?.access_token) {
-        throw new Error("No session available");
-      }
+  // Buscar pontos do usuário
+  const { data: userPoints = [], isLoading: loadingPoints } = useQuery({
+    queryKey: ["user-fidelity-points"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fidelity_points")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      console.log("[useFidelity] Fetching fidelity data");
-
-      const { data, error } = await supabase.functions.invoke('fidelity/get-user-balance', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error("[useFidelity] Error:", error);
-        throw error;
-      }
-
-      console.log("[useFidelity] Data received:", data);
-      return data.data;
-    },
-    enabled: !!session?.user.id,
+      if (error) throw error;
+      return data as FidelityPoint[];
+    }
   });
 
-  const redeemMutation = useMutation({
-    mutationFn: async ({ rewardId }: { rewardId: string }) => {
-      if (!session?.access_token) {
-        throw new Error("No session available");
-      }
+  // Buscar saldo de pontos
+  const { data: pointsBalance = 0, isLoading: loadingBalance } = useQuery({
+    queryKey: ["user-points-balance"],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Usuário não logado");
 
-      const { data, error } = await supabase.functions.invoke('fidelity/redeem-reward', {
-        body: { rewardId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      const { data, error } = await supabase.rpc("get_user_points_balance", {
+        user_id_param: user.user.id
       });
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+      return data as number;
+    }
+  });
+
+  // Buscar recompensas disponíveis
+  const { data: rewards = [], isLoading: loadingRewards } = useQuery({
+    queryKey: ["fidelity-rewards"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fidelity_rewards")
+        .select("*")
+        .eq("active", true)
+        .order("points_required", { ascending: true });
+
+      if (error) throw error;
+      return data as FidelityReward[];
+    }
+  });
+
+  // Buscar resgates do usuário
+  const { data: redemptions = [], isLoading: loadingRedemptions } = useQuery({
+    queryKey: ["user-redemptions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fidelity_redemptions")
+        .select(`
+          *,
+          reward:fidelity_rewards(*)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as FidelityRedemption[];
+    }
+  });
+
+  // Resgatar recompensa
+  const redeemReward = useMutation({
+    mutationFn: async ({ rewardId, pointsRequired }: { rewardId: string; pointsRequired: number }) => {
+      // Verificar se tem pontos suficientes
+      if (pointsBalance < pointsRequired) {
+        throw new Error("Pontos insuficientes para este resgate");
       }
 
-      return data.data;
+      const { data, error } = await supabase
+        .from("fidelity_redemptions")
+        .insert({
+          reward_id: rewardId,
+          points_used: pointsRequired,
+          status: "pending"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Deduzir pontos criando entrada negativa
+      const { error: pointsError } = await supabase
+        .from("fidelity_points")
+        .insert({
+          points: -pointsRequired,
+          source: "manual",
+          reference_id: data.id,
+          description: "Resgate de recompensa"
+        });
+
+      if (pointsError) throw pointsError;
+
+      return data;
     },
     onSuccess: () => {
       toast.success("Recompensa resgatada com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["fidelity-data"] });
-      queryClient.invalidateQueries({ queryKey: ["rewards"] });
+      queryClient.invalidateQueries({ queryKey: ["user-points-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["user-fidelity-points"] });
+      queryClient.invalidateQueries({ queryKey: ["user-redemptions"] });
     },
     onError: (error: any) => {
-      console.error("Error redeeming reward:", error);
       toast.error(error.message || "Erro ao resgatar recompensa");
-    },
+    }
   });
 
   return {
-    data,
-    isLoading,
-    error,
-    refetch,
-    redeemReward: redeemMutation.mutate,
-    isRedeeming: redeemMutation.isPending,
+    userPoints,
+    pointsBalance,
+    rewards,
+    redemptions,
+    loadingPoints,
+    loadingBalance,
+    loadingRewards,
+    loadingRedemptions,
+    redeemReward: redeemReward.mutate,
+    isRedeeming: redeemReward.isPending
   };
-}
-
-export function useRewards() {
-  const { data: rewards, isLoading } = useQuery({
-    queryKey: ["rewards"],
-    queryFn: async () => {
-      console.log("[useRewards] Fetching rewards");
-
-      const { data, error } = await supabase.functions.invoke('fidelity/list-rewards');
-
-      if (error) {
-        console.error("[useRewards] Error:", error);
-        throw error;
-      }
-
-      console.log("[useRewards] Rewards received:", data);
-      return data.data;
-    },
-  });
-
-  return {
-    rewards: rewards || [],
-    isLoading,
-  };
-}
+};

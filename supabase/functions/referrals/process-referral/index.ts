@@ -1,48 +1,62 @@
 
-import { corsHeaders, successResponse, errorResponse, handleCors } from '../../_shared/responses.ts';
-import { validateAuthToken } from '../../_shared/auth.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-const handler = async (req: Request): Promise<Response> => {
-  console.log('referrals/process-referral function called');
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return handleCors();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { user, supabase } = await validateAuthToken(req.headers.get('Authorization'));
-    const { referralCode, eventId } = await req.json();
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    console.log('Processing referral:', { referralCode, eventId, userId: user.id });
+    const { referral_code, user_id, event_id } = await req.json();
+
+    console.log('Processing referral:', { referral_code, user_id, event_id });
 
     // Buscar o referral pelo código
     const { data: referral, error: referralError } = await supabase
       .from('referrals')
       .select('*')
-      .eq('code', referralCode)
-      .eq('event_id', eventId)
+      .eq('code', referral_code)
+      .eq('event_id', event_id)
       .single();
 
     if (referralError || !referral) {
-      console.error('Referral not found:', referralError);
-      return errorResponse('Código de convite inválido ou expirado', 400);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Código de indicação inválido' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
     }
 
-    // Verificar se não é o próprio usuário
-    if (referral.referrer_id === user.id) {
-      return errorResponse('Você não pode usar seu próprio código de convite', 400);
+    // Verificar se o usuário não está tentando usar seu próprio código
+    if (referral.referrer_id === user_id) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não é possível usar seu próprio código de indicação' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
     }
 
-    // Verificar se já usou este código antes
+    // Verificar se o usuário já usou este código
     const { data: existingUse } = await supabase
       .from('referral_uses')
       .select('id')
       .eq('referral_id', referral.id)
-      .eq('user_id', user.id)
+      .eq('user_id', user_id)
       .single();
 
     if (existingUse) {
-      return errorResponse('Você já utilizou este código de convite', 400);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Código de indicação já utilizado por este usuário' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
     }
 
     // Registrar o uso do referral
@@ -50,16 +64,19 @@ const handler = async (req: Request): Promise<Response> => {
       .from('referral_uses')
       .insert({
         referral_id: referral.id,
-        user_id: user.id,
-        event_id: eventId
+        user_id: user_id,
+        event_id: event_id
       });
 
     if (useError) {
       console.error('Error creating referral use:', useError);
-      return errorResponse('Erro ao registrar uso do convite', 500);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao processar indicação' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
     }
 
-    // Atualizar contador de usos
+    // Atualizar contador no referral
     const { error: updateError } = await supabase
       .from('referrals')
       .update({ used_count: referral.used_count + 1 })
@@ -69,28 +86,51 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error updating referral count:', updateError);
     }
 
-    // Processar recompensas de pontos
-    const { error: rewardError } = await supabase
-      .rpc('process_referral_reward', {
-        p_referrer_id: referral.referrer_id,
-        p_referred_id: user.id,
-        p_event_id: eventId
+    // Adicionar pontos para quem indicou (100 pontos)
+    const { error: pointsReferrerError } = await supabase
+      .from('fidelity_points')
+      .insert({
+        user_id: referral.referrer_id,
+        points: 100,
+        source: 'referral',
+        reference_id: event_id,
+        description: 'Pontos por indicação bem-sucedida'
       });
 
-    if (rewardError) {
-      console.error('Error processing referral rewards:', rewardError);
+    if (pointsReferrerError) {
+      console.error('Error adding points to referrer:', pointsReferrerError);
     }
 
-    console.log('Referral processed successfully');
-    return successResponse({ 
-      message: 'Código de convite aplicado com sucesso!',
-      referrerId: referral.referrer_id 
-    });
+    // Adicionar pontos para quem foi indicado (50 pontos)
+    const { error: pointsReferredError } = await supabase
+      .from('fidelity_points')
+      .insert({
+        user_id: user_id,
+        points: 50,
+        source: 'referral',
+        reference_id: event_id,
+        description: 'Bônus por usar código de indicação'
+      });
+
+    if (pointsReferredError) {
+      console.error('Error adding points to referred user:', pointsReferredError);
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Indicação processada com sucesso! Pontos adicionados para ambos os usuários.',
+        points_earned: 50,
+        points_given: 100
+      }),
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
 
   } catch (error: any) {
     console.error('Error in process-referral function:', error);
-    return errorResponse(error.message || 'Erro ao processar convite', 500);
+    return new Response(
+      JSON.stringify({ success: false, error: 'Erro interno do servidor' }),
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
   }
-};
-
-Deno.serve(handler);
+});
