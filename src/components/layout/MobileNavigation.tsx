@@ -4,11 +4,13 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
-import { Menu, Home, Calendar, Star, Gift, Users, LogOut, User, Ticket } from "lucide-react";
+import { useRole } from "@/hooks/useRole";
+import { Menu, Home, Calendar, Star, Gift, Users, LogOut, User, Ticket, Settings } from "lucide-react";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
   const { session, signOut } = useAuth();
+  const { isAdmin } = useRole(session);
   const location = useLocation();
 
   const handleSignOut = async () => {
@@ -27,6 +29,10 @@ export function MobileNavigation() {
   const userItems = session ? [
     { to: "/meus-ingressos", icon: Ticket, label: "Meus Ingressos" },
     { to: "/perfil", icon: User, label: "Perfil" },
+  ] : [];
+
+  const adminItems = session && isAdmin ? [
+    { to: "/admin", icon: Settings, label: "Painel Admin" },
   ] : [];
 
   return (
@@ -73,6 +79,22 @@ export function MobileNavigation() {
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors touch-manipulation ${
                     location.pathname === item.to
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              ))}
+
+              {adminItems.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors touch-manipulation font-medium ${
+                    location.pathname === item.to || location.pathname.startsWith('/admin')
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }`}

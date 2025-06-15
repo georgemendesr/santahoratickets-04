@@ -1,12 +1,14 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, User, Ticket } from "lucide-react";
+import { useRole } from "@/hooks/useRole";
+import { LogOut, User, Ticket, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { MobileNavigation } from "./MobileNavigation";
 
 export function MainHeader() {
   const { session, signOut } = useAuth();
+  const { isAdmin } = useRole(session);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -37,6 +39,11 @@ export function MainHeader() {
           <Link to="/indique" className="text-muted-foreground hover:text-foreground transition-colors">
             Indique Amigos
           </Link>
+          {isAdmin && (
+            <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -54,6 +61,14 @@ export function MainHeader() {
                   Perfil
                 </Link>
               </Button>
+              {isAdmin && (
+                <Button variant="ghost" size="sm" asChild className="hidden sm:flex touch-manipulation">
+                  <Link to="/admin">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:flex touch-manipulation">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
