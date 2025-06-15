@@ -86,7 +86,7 @@ export function VoucherCard({
     }
   };
 
-  // Prioriza nome do participante, depois do ticket, e por último do comprador
+  // Prioriza nome do participante passado como prop, depois do ticket, e por último do comprador
   const displayName = participantName || ticket.participant_name || customerName;
 
   return (

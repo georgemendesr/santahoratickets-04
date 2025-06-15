@@ -13,4 +13,6 @@ export interface Ticket {
   qr_code_logo_size?: number;
   check_in_time?: string;
   checked_in_by?: string;
+  participant_name?: string;
+  participant_email?: string;
 }
