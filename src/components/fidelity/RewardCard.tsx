@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useRewards } from "@/hooks/useFidelity";
+import { useFidelity } from "@/hooks/useFidelity";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Gift, Star, Award, BadgePercent } from "lucide-react";
 
@@ -20,9 +20,9 @@ const iconMap = {
 };
 
 export function RewardCard({ userBalance, onRedeem, isRedeeming }: RewardCardProps) {
-  const { rewards, isLoading } = useRewards();
+  const { rewards, loadingRewards } = useFidelity();
 
-  if (isLoading) {
+  if (loadingRewards) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
