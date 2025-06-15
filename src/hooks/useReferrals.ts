@@ -49,7 +49,7 @@ export function useReferrals() {
         .from('fidelity_points')
         .select('points')
         .eq('user_id', session.user.id)
-        .eq('source', 'referral_reward');
+        .eq('source', 'referral');
 
       const totalReferrals = referrals?.length || 0;
       const completedReferrals = referrals?.filter(r => r.used_count > 0).length || 0;

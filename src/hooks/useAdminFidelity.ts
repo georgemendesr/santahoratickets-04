@@ -41,7 +41,7 @@ export const useAdminFidelity = () => {
 
   // Criar/editar recompensa
   const saveReward = useMutation({
-    mutationFn: async (reward: Partial<FidelityReward>) => {
+    mutationFn: async (reward: Partial<FidelityReward> & { name: string; description: string; points_required: number }) => {
       if (reward.id) {
         const { data, error } = await supabase
           .from("fidelity_rewards")

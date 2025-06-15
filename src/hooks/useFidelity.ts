@@ -11,9 +11,13 @@ export const useFidelity = () => {
   const { data: userPoints = [], isLoading: loadingPoints } = useQuery({
     queryKey: ["user-fidelity-points"],
     queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Usuário não logado");
+
       const { data, error } = await supabase
         .from("fidelity_points")
         .select("*")
+        .eq("user_id", user.user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -56,12 +60,16 @@ export const useFidelity = () => {
   const { data: redemptions = [], isLoading: loadingRedemptions } = useQuery({
     queryKey: ["user-redemptions"],
     queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Usuário não logado");
+
       const { data, error } = await supabase
         .from("fidelity_redemptions")
         .select(`
           *,
           reward:fidelity_rewards(*)
         `)
+        .eq("user_id", user.user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -72,6 +80,9 @@ export const useFidelity = () => {
   // Resgatar recompensa
   const redeemReward = useMutation({
     mutationFn: async ({ rewardId, pointsRequired }: { rewardId: string; pointsRequired: number }) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Usuário não logado");
+
       // Verificar se tem pontos suficientes
       if (pointsBalance < pointsRequired) {
         throw new Error("Pontos insuficientes para este resgate");
@@ -80,6 +91,7 @@ export const useFidelity = () => {
       const { data, error } = await supabase
         .from("fidelity_redemptions")
         .insert({
+          user_id: user.user.id,
           reward_id: rewardId,
           points_used: pointsRequired,
           status: "pending"
@@ -93,6 +105,7 @@ export const useFidelity = () => {
       const { error: pointsError } = await supabase
         .from("fidelity_points")
         .insert({
+          user_id: user.user.id,
           points: -pointsRequired,
           source: "manual",
           reference_id: data.id,

@@ -33,6 +33,7 @@ import ValidateTicket from "./pages/ValidateTicket";
 import Vouchers from "./pages/Vouchers";
 import TestingDashboard from "./pages/TestingDashboard";
 import NotFound from "./pages/NotFound";
+import Indique from "./pages/Indique";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ function App() {
               <Route path="/fidelidade" element={<Fidelity />} />
               <Route path="/recompensas" element={<Rewards />} />
               <Route path="/indicacoes" element={<Referrals />} />
+              <Route path="/indique" element={<Indique />} />
               <Route path="/validar-ingresso" element={<ValidateTicket />} />
               <Route path="/vouchers" element={<Vouchers />} />
               <Route path="/admin" element={<Admin />} />

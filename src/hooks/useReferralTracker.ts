@@ -5,7 +5,7 @@ import { useAuth } from './useAuth';
 
 export function useReferralTracker(eventId: string) {
   const { session } = useAuth();
-  const { processReferral } = useReferralSystem(eventId);
+  const { processReferral } = useReferralSystem();
 
   useEffect(() => {
     // Verificar se existe código de referral na URL
@@ -22,7 +22,7 @@ export function useReferralTracker(eventId: string) {
   const processStoredReferral = () => {
     const storedCode = localStorage.getItem(`referral_code_${eventId}`);
     if (storedCode && session?.user.id) {
-      processReferral({ referralCode: storedCode });
+      processReferral(storedCode, eventId);
       localStorage.removeItem(`referral_code_${eventId}`);
     }
   };

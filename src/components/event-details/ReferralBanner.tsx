@@ -16,7 +16,7 @@ export function ReferralBanner({ eventId }: ReferralBannerProps) {
   const [referralCode, setReferralCode] = useState<string>("");
   const [inputCode, setInputCode] = useState<string>("");
   const { session } = useAuth();
-  const { processReferral, isProcessingReferral } = useReferralSystem(eventId);
+  const { processReferral, isProcessing } = useReferralSystem();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -31,7 +31,7 @@ export function ReferralBanner({ eventId }: ReferralBannerProps) {
 
   const handleApplyCode = () => {
     if (inputCode.trim()) {
-      processReferral({ referralCode: inputCode.trim() });
+      processReferral(inputCode.trim(), eventId);
       setShowBanner(false);
     }
   };
@@ -73,9 +73,9 @@ export function ReferralBanner({ eventId }: ReferralBannerProps) {
           />
           <Button 
             onClick={handleApplyCode}
-            disabled={isProcessingReferral || !inputCode.trim()}
+            disabled={isProcessing || !inputCode.trim()}
           >
-            {isProcessingReferral ? "Aplicando..." : "Aplicar"}
+            {isProcessing ? "Aplicando..." : "Aplicar"}
           </Button>
         </div>
       </AlertDescription>
