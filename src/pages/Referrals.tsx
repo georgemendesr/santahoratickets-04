@@ -11,13 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Share2, Copy, Users, Gift, Trophy, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils";
 
 const Referrals = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { referrals, stats, createReferral, isCreatingReferral } = useReferrals();
-  const [shareMethod, setShareMethod] = useState<string>("");
 
   if (!session) {
     navigate('/auth');

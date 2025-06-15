@@ -9,11 +9,13 @@ export function useReferrals() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
 
+  // Como estamos usando a nova tabela criada via SQL, vamos fazer queries diretas
   const { data: referrals, isLoading } = useQuery({
-    queryKey: ["referrals", session?.user.id],
+    queryKey: ["user-referrals", session?.user.id],
     queryFn: async (): Promise<Referral[]> => {
       if (!session?.user.id) return [];
 
+      // Query direta para a nova tabela que criamos
       const { data, error } = await supabase
         .from('referrals')
         .select('*')
@@ -72,7 +74,7 @@ export function useReferrals() {
         throw new Error("Usuário não autenticado");
       }
 
-      // Gerar código único
+      // Usar a função que criamos no SQL
       const { data: codeData, error: codeError } = await supabase
         .rpc('generate_invite_code');
 
@@ -98,7 +100,7 @@ export function useReferrals() {
     },
     onSuccess: () => {
       toast.success("Código de indicação criado com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["referrals"] });
+      queryClient.invalidateQueries({ queryKey: ["user-referrals"] });
       queryClient.invalidateQueries({ queryKey: ["referral-stats"] });
     },
     onError: (error: any) => {
