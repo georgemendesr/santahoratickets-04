@@ -6,11 +6,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { EventForm, type EventFormData } from "@/components/EventForm";
+import { EventBatchesSection } from "@/components/admin/EventBatchesSection";
+import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { type Event } from "@/types";
 
 const EditEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const { isAdmin } = useRole(session);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', id],
@@ -44,7 +49,7 @@ const EditEvent = () => {
     },
     onSuccess: () => {
       toast.success("Evento atualizado com sucesso!");
-      navigate("/");
+      // Não navegar automaticamente para permitir gerenciar lotes
     },
     onError: (error) => {
       toast.error("Erro ao atualizar evento");
@@ -136,6 +141,15 @@ const EditEvent = () => {
             submitText={updateEventMutation.isPending ? "Atualizando evento..." : "Atualizar Evento"}
             imageFieldHelperText="Deixe em branco para manter a imagem atual"
           />
+
+          {/* Seção de Lotes - só aparece para admin */}
+          {isAdmin && id && (
+            <EventBatchesSection 
+              eventId={id}
+              eventTitle={event.title}
+              isAdmin={isAdmin}
+            />
+          )}
         </div>
       </div>
     </div>

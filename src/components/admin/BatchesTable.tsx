@@ -12,11 +12,12 @@ import { BatchFormDialog } from "./BatchFormDialog";
 interface BatchesTableProps {
   batches: Batch[];
   eventId: string;
+  eventTitle?: string;
   onBatchesChange: () => void;
   isAdmin: boolean;
 }
 
-export function BatchesTable({ batches, eventId, onBatchesChange, isAdmin }: BatchesTableProps) {
+export function BatchesTable({ batches, eventId, eventTitle, onBatchesChange, isAdmin }: BatchesTableProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -87,7 +88,7 @@ export function BatchesTable({ batches, eventId, onBatchesChange, isAdmin }: Bat
         </div>
         <h3 className="text-lg font-semibold mb-2">Nenhum lote cadastrado</h3>
         <p className="text-muted-foreground mb-6">
-          Comece criando o primeiro tipo de ingresso para este evento
+          {eventTitle ? `Comece criando o primeiro tipo de ingresso para "${eventTitle}"` : "Comece criando o primeiro tipo de ingresso para este evento"}
         </p>
         {isAdmin && (
           <Button onClick={() => setIsDialogOpen(true)} className="bg-orange-500 hover:bg-orange-600">
@@ -111,7 +112,14 @@ export function BatchesTable({ batches, eventId, onBatchesChange, isAdmin }: Bat
       <div className="rounded-lg border">
         <div className="p-4 border-b bg-muted/50">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Tipos de Ingressos</h3>
+            <div>
+              <h3 className="font-semibold">Tipos de Ingressos</h3>
+              {eventTitle && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Evento: {eventTitle}
+                </p>
+              )}
+            </div>
             {isAdmin && (
               <Button 
                 onClick={() => setIsDialogOpen(true)}
