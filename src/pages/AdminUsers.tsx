@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { UserRolesTable } from "@/components/admin/UserRolesTable";
+import { BackButton } from "@/components/common/BackButton";
 import { useEffect } from "react";
 
 const AdminUsers = () => {
@@ -34,6 +35,7 @@ const AdminUsers = () => {
   return (
     <MainLayout>
       <div className="container max-w-7xl mx-auto py-8">
+        <BackButton to="/admin" className="mb-6" />
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gerenciamento de Usuários</h1>
         </div>

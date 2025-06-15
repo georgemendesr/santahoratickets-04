@@ -12,6 +12,7 @@ import { AdminRewardsHeader } from "@/components/admin/rewards/AdminRewardsHeade
 import { RewardsTable } from "@/components/admin/rewards/RewardsTable";
 import { RewardFormDialog } from "@/components/admin/rewards/RewardFormDialog";
 import { BackButton } from "@/components/common/BackButton";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 const AdminRewards = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const AdminRewards = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+      <MainLayout>
         <div className="container mx-auto px-4 py-8">
           <BackButton to="/admin" className="mb-4" />
           
@@ -62,12 +63,12 @@ const AdminRewards = () => {
             <Skeleton className="h-96 w-full" />
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+    <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <BackButton to="/admin" className="mb-4" />
 
@@ -87,7 +88,7 @@ const AdminRewards = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
