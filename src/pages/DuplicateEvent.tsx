@@ -54,8 +54,9 @@ const DuplicateEvent = () => {
         date: data.date,
         time: data.time,
         location: data.location,
-        price: parseFloat(data.price),
-        available_tickets: parseInt(data.available_tickets),
+        // Valores padrão para compatibilidade com eventos antigos
+        price: event?.price || 0,
+        available_tickets: event?.available_tickets || 0,
         image: imagePath,
         status: "published" as const
       };
@@ -132,8 +133,6 @@ const DuplicateEvent = () => {
               date: event.date,
               time: event.time,
               location: event.location,
-              price: event.price.toString(),
-              available_tickets: event.available_tickets.toString(),
             }}
             isSubmitting={createEventMutation.isPending}
             submitText={createEventMutation.isPending ? "Duplicando evento..." : "Duplicar Evento"}
