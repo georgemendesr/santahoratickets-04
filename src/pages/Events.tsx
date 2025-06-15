@@ -24,12 +24,21 @@ const Events = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`
-          *,
-          batches!inner(*)
-        `)
+        .select("*")
         .eq("status", "active")
         .order("date", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: batches } = useQuery({
+    queryKey: ["batches"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("batches")
+        .select("*");
 
       if (error) throw error;
       return data;
@@ -59,14 +68,18 @@ const Events = () => {
     });
   };
 
-  const getMinPrice = (batches: any[]) => {
-    if (!batches || batches.length === 0) return 0;
-    return Math.min(...batches.map(batch => batch.price));
+  const getEventBatches = (eventId: string) => {
+    return batches?.filter(batch => batch.event_id === eventId) || [];
   };
 
-  const getTotalTickets = (batches: any[]) => {
-    if (!batches || batches.length === 0) return 0;
-    return batches.reduce((total, batch) => total + batch.available_tickets, 0);
+  const getMinPrice = (eventBatches: any[]) => {
+    if (!eventBatches || eventBatches.length === 0) return 0;
+    return Math.min(...eventBatches.map(batch => batch.price));
+  };
+
+  const getTotalTickets = (eventBatches: any[]) => {
+    if (!eventBatches || eventBatches.length === 0) return 0;
+    return eventBatches.reduce((total, batch) => total + batch.available_tickets, 0);
   };
 
   return (
@@ -125,8 +138,9 @@ const Events = () => {
         ) : (
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {filteredEvents.map((event) => {
-              const minPrice = getMinPrice(event.batches);
-              const totalTickets = getTotalTickets(event.batches);
+              const eventBatches = getEventBatches(event.id);
+              const minPrice = getMinPrice(eventBatches);
+              const totalTickets = getTotalTickets(eventBatches);
               
               return (
                 <Card 
@@ -134,10 +148,10 @@ const Events = () => {
                   className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
                   onClick={() => navigate(`/evento/${event.id}`)}
                 >
-                  {event.image_url && (
+                  {event.image && (
                     <div className="relative h-48 overflow-hidden">
                       <img
-                        src={event.image_url}
+                        src={event.image}
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

@@ -29,12 +29,7 @@ const MyTickets = () => {
 
       const { data, error } = await supabase
         .from("tickets")
-        .select(`
-          *,
-          event:events(*),
-          batch:batches(*),
-          payment:payments(*)
-        `)
+        .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
@@ -43,6 +38,38 @@ const MyTickets = () => {
     },
     enabled: !!session?.user?.id
   });
+
+  const { data: events } = useQuery({
+    queryKey: ["events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*");
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: batches } = useQuery({
+    queryKey: ["batches"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("batches")
+        .select("*");
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const getEventForTicket = (eventId: string) => {
+    return events?.find(event => event.id === eventId);
+  };
+
+  const getBatchForTicket = (batchId: string) => {
+    return batches?.find(batch => batch.id === batchId);
+  };
 
   const generateQRCode = async (qrCode: string) => {
     try {
@@ -55,6 +82,9 @@ const MyTickets = () => {
   };
 
   const downloadTicket = async (ticket: any) => {
+    const event = getEventForTicket(ticket.event_id);
+    if (!event) return;
+
     const qrDataURL = await generateQRCode(ticket.qr_code);
     if (!qrDataURL) return;
 
@@ -74,15 +104,15 @@ const MyTickets = () => {
     ctx.fillStyle = "#000000";
     ctx.font = "bold 20px Arial";
     ctx.textAlign = "center";
-    ctx.fillText(ticket.event.title, canvas.width / 2, 50);
+    ctx.fillText(event.title, canvas.width / 2, 50);
 
     // Event details
     ctx.font = "16px Arial";
-    const eventDate = new Date(ticket.event.date).toLocaleDateString("pt-BR");
+    const eventDate = new Date(event.date).toLocaleDateString("pt-BR");
     ctx.fillText(eventDate, canvas.width / 2, 100);
     
-    if (ticket.event.location) {
-      ctx.fillText(ticket.event.location, canvas.width / 2, 130);
+    if (event.location) {
+      ctx.fillText(event.location, canvas.width / 2, 130);
     }
 
     // QR Code
@@ -96,7 +126,7 @@ const MyTickets = () => {
       
       // Download
       const link = document.createElement("a");
-      link.download = `ingresso-${ticket.event.title}-${ticket.id}.png`;
+      link.download = `ingresso-${event.title}-${ticket.id}.png`;
       link.href = canvas.toDataURL();
       link.click();
     };
@@ -114,11 +144,14 @@ const MyTickets = () => {
   };
 
   const getStatusBadge = (ticket: any) => {
-    if (ticket.used_at) {
+    if (ticket.check_in_time) {
       return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Utilizado</Badge>;
     }
     
-    const eventDate = new Date(ticket.event.date);
+    const event = getEventForTicket(ticket.event_id);
+    if (!event) return <Badge variant="secondary">Evento não encontrado</Badge>;
+    
+    const eventDate = new Date(event.date);
     const now = new Date();
     
     if (eventDate < now) {
@@ -186,92 +219,107 @@ const MyTickets = () => {
           </div>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            {tickets.map((ticket) => (
-              <Card key={ticket.id} className="overflow-hidden">
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg sm:text-xl mb-2">{ticket.event.title}</CardTitle>
-                      <CardDescription className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 shrink-0" />
-                          <span>{formatDate(ticket.event.date)}</span>
-                        </div>
-                        {ticket.event.location && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-4 w-4 shrink-0" />
-                            <span className="line-clamp-1">{ticket.event.location}</span>
-                          </div>
-                        )}
-                      </CardDescription>
-                    </div>
-                    <div className="flex flex-col sm:items-end gap-2">
-                      {getStatusBadge(ticket)}
-                      {ticket.batch && (
-                        <Badge variant="outline" className="text-xs">
-                          {ticket.batch.title}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Código do Ingresso</p>
-                      <code className="block text-xs bg-muted p-2 rounded font-mono break-all">
-                        {ticket.qr_code}
-                      </code>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        onClick={() => downloadTicket(ticket)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto touch-manipulation"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Baixar Ingresso
-                      </Button>
-                      
-                      <Button
-                        onClick={() => {
-                          generateQRCode(ticket.qr_code).then(qrDataURL => {
-                            if (qrDataURL) {
-                              const newWindow = window.open();
-                              newWindow?.document.write(`
-                                <html>
-                                  <head><title>QR Code - ${ticket.event.title}</title></head>
-                                  <body style="margin:0; padding:20px; text-align:center; font-family:Arial;">
-                                    <h2>${ticket.event.title}</h2>
-                                    <img src="${qrDataURL}" style="max-width:300px;" />
-                                    <p style="font-family:monospace; font-size:12px; word-break:break-all;">${ticket.qr_code}</p>
-                                  </body>
-                                </html>
-                              `);
-                            }
-                          });
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full sm:w-auto touch-manipulation"
-                      >
-                        <QrCode className="h-4 w-4 mr-2" />
-                        Ver QR Code
-                      </Button>
-                    </div>
-                  </div>
+            {tickets.map((ticket) => {
+              const event = getEventForTicket(ticket.event_id);
+              const batch = getBatchForTicket(ticket.batch_id);
+              
+              if (!event) {
+                return (
+                  <Card key={ticket.id} className="overflow-hidden">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-muted-foreground">Evento não encontrado</CardTitle>
+                    </CardHeader>
+                  </Card>
+                );
+              }
 
-                  {ticket.used_at && (
-                    <div className="text-sm text-muted-foreground bg-green-50 p-3 rounded-lg">
-                      <strong>Check-in realizado:</strong> {formatDate(ticket.used_at)}
+              return (
+                <Card key={ticket.id} className="overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg sm:text-xl mb-2">{event.title}</CardTitle>
+                        <CardDescription className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-4 w-4 shrink-0" />
+                            <span>{formatDate(event.date)}</span>
+                          </div>
+                          {event.location && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <MapPin className="h-4 w-4 shrink-0" />
+                              <span className="line-clamp-1">{event.location}</span>
+                            </div>
+                          )}
+                        </CardDescription>
+                      </div>
+                      <div className="flex flex-col sm:items-end gap-2">
+                        {getStatusBadge(ticket)}
+                        {batch && (
+                          <Badge variant="outline" className="text-xs">
+                            {batch.title}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Código do Ingresso</p>
+                        <code className="block text-xs bg-muted p-2 rounded font-mono break-all">
+                          {ticket.qr_code}
+                        </code>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={() => downloadTicket(ticket)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto touch-manipulation"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Baixar Ingresso
+                        </Button>
+                        
+                        <Button
+                          onClick={() => {
+                            generateQRCode(ticket.qr_code).then(qrDataURL => {
+                              if (qrDataURL) {
+                                const newWindow = window.open();
+                                newWindow?.document.write(`
+                                  <html>
+                                    <head><title>QR Code - ${event.title}</title></head>
+                                    <body style="margin:0; padding:20px; text-align:center; font-family:Arial;">
+                                      <h2>${event.title}</h2>
+                                      <img src="${qrDataURL}" style="max-width:300px;" />
+                                      <p style="font-family:monospace; font-size:12px; word-break:break-all;">${ticket.qr_code}</p>
+                                    </body>
+                                  </html>
+                                `);
+                              }
+                            });
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full sm:w-auto touch-manipulation"
+                        >
+                          <QrCode className="h-4 w-4 mr-2" />
+                          Ver QR Code
+                        </Button>
+                      </div>
+                    </div>
+
+                    {ticket.check_in_time && (
+                      <div className="text-sm text-muted-foreground bg-green-50 p-3 rounded-lg">
+                        <strong>Check-in realizado:</strong> {formatDate(ticket.check_in_time)}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
