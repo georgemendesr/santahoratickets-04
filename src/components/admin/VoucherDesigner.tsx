@@ -18,7 +18,7 @@ interface Participant {
 }
 
 export function VoucherDesigner() {
-  const [customerName, setCustomerName] = useState("João da Silva");
+  const [participantName, setParticipantName] = useState("João da Silva");
   const [orderNumber, setOrderNumber] = useState("123456");
   const [batchTitle, setBatchTitle] = useState("1º Lote");
   const [ticketPrice, setTicketPrice] = useState(50);
@@ -177,12 +177,12 @@ export function VoucherDesigner() {
 
             <div>
               <Label className="text-sm font-medium mb-1 block">
-                Nome do Comprador
+                Nome do Participante
               </Label>
               <Input
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Nome do comprador"
+                value={participantName}
+                onChange={(e) => setParticipantName(e.target.value)}
+                placeholder="Nome do participante que vai usar o ingresso"
               />
             </div>
 
@@ -308,7 +308,7 @@ export function VoucherDesigner() {
             eventTitle={eventTitle}
             eventDate={eventDate}
             eventTime={eventTime}
-            customerName={customerName}
+            participantName={participantName}
             orderNumber={orderNumber}
             batchTitle={batchTitle}
             ticketPrice={ticketPrice}

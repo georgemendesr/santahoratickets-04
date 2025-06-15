@@ -16,6 +16,7 @@ interface VoucherCardProps {
   batchTitle?: string;
   ticketPrice?: number;
   customerName?: string;
+  participantName?: string;
   orderNumber?: string;
 }
 
@@ -27,6 +28,7 @@ export function VoucherCard({
   batchTitle,
   ticketPrice,
   customerName,
+  participantName,
   orderNumber
 }: VoucherCardProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -84,6 +86,9 @@ export function VoucherCard({
     }
   };
 
+  // Prioriza nome do participante, depois do ticket, e por último do comprador
+  const displayName = participantName || ticket.participant_name || customerName;
+
   return (
     <Card className="relative overflow-hidden bg-white w-full max-w-[320px] mx-auto shadow-lg">
       {/* Borda superior laranja */}
@@ -120,10 +125,10 @@ export function VoucherCard({
 
         {/* Informações detalhadas */}
         <div className="space-y-2 text-xs border-t border-b border-orange-200 py-3">
-          {customerName && (
+          {displayName && (
             <div className="flex items-center gap-2">
               <User className="h-3 w-3 text-gray-500 flex-shrink-0" />
-              <span className="font-medium truncate">{customerName}</span>
+              <span className="font-medium truncate">{displayName}</span>
             </div>
           )}
           
