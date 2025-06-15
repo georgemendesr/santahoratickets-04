@@ -36,7 +36,7 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
     description: editingBatch?.description || "",
     min_purchase: editingBatch?.min_purchase?.toString() || "1",
     max_purchase: editingBatch?.max_purchase?.toString() || "",
-    batch_group: editingBatch?.batch_group || ""
+    batch_group: editingBatch?.batch_group || "none"
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,7 +90,7 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
         description: formData.description || null,
         min_purchase: minPurchase,
         max_purchase: maxPurchase,
-        batch_group: formData.batch_group || null,
+        batch_group: formData.batch_group === "none" ? null : formData.batch_group,
         event_id: eventId,
         order_number: editingBatch?.order_number || 1,
         status: 'active'
@@ -138,7 +138,7 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
       description: "",
       min_purchase: "1",
       max_purchase: "",
-      batch_group: ""
+      batch_group: "none"
     });
   };
 
@@ -328,7 +328,7 @@ export function BatchFormDialog({ isOpen, onClose, onSuccess, editingBatch, even
                 <SelectValue placeholder="Agrupar exibição dos tipos de ingressos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum grupo</SelectItem>
+                <SelectItem value="none">Nenhum grupo</SelectItem>
                 <SelectItem value="vip">VIP</SelectItem>
                 <SelectItem value="promocional">Promocional</SelectItem>
                 <SelectItem value="especial">Especial</SelectItem>
