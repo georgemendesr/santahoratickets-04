@@ -1,9 +1,20 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 
 export function MainHeader() {
   const { session, signOut } = useAuth();
+  const { isAdmin, role, loading } = useRole(session);
+
+  console.log("[MainHeader] Current state:", { 
+    hasSession: !!session, 
+    isAdmin, 
+    role, 
+    loading,
+    userId: session?.user?.id 
+  });
 
   return (
     <header className="bg-background border-b">
@@ -14,19 +25,24 @@ export function MainHeader() {
 
         <div className="flex items-center space-x-4">
           <Button variant="ghost" asChild>
-            <Link to="/events">Eventos</Link>
+            <Link to="/eventos">Eventos</Link>
           </Button>
           {session && (
             <>
               <Button variant="ghost" asChild>
-                <Link to="/my-tickets">Meus Ingressos</Link>
+                <Link to="/meus-ingressos">Meus Ingressos</Link>
               </Button>
               <Button variant="ghost" asChild>
-                <Link to="/fidelity">Fidelidade</Link>
+                <Link to="/fidelidade">Fidelidade</Link>
               </Button>
               <Button variant="ghost" asChild>
                 <Link to="/referrals">Indique e Ganhe</Link>
               </Button>
+              {isAdmin && (
+                <Button variant="ghost" asChild>
+                  <Link to="/admin">Admin</Link>
+                </Button>
+              )}
             </>
           )}
           {!session ? (

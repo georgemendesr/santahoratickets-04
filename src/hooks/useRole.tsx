@@ -8,7 +8,10 @@ export function useRole(session: Session | null) {
   const { data: role, isLoading: loading } = useQuery({
     queryKey: ["user-role", session?.user.id],
     queryFn: async () => {
-      if (!session?.user.id) return "user" as UserRole;
+      if (!session?.user.id) {
+        console.log("[useRole] No session or user ID");
+        return "user" as UserRole;
+      }
       
       console.log("[useRole] Fetching role for user:", session.user.id);
 
@@ -24,13 +27,15 @@ export function useRole(session: Session | null) {
       }
 
       console.log("[useRole] User role data:", data);
-      return (data?.role ?? "user") as UserRole;
+      const userRole = (data?.role ?? "user") as UserRole;
+      console.log("[useRole] Final role:", userRole);
+      return userRole;
     },
     enabled: !!session?.user.id,
   });
 
   const isAdmin = role === "admin";
-  console.log("[useRole] Is admin?", isAdmin, "Role:", role);
+  console.log("[useRole] Is admin?", isAdmin, "Role:", role, "Session:", !!session);
 
   return {
     role,
