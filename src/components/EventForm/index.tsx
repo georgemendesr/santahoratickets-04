@@ -6,7 +6,6 @@ import { Form } from "@/components/ui/form";
 import { BasicInfoFields } from "./BasicInfoFields";
 import { DateTimeFields } from "./DateTimeFields";
 import { LocationField } from "./LocationField";
-import { TicketingFields } from "./TicketingFields";
 import { ImageUploadField } from "./ImageUploadField";
 import { eventFormSchema, type EventFormProps } from "./schema";
 
@@ -28,8 +27,6 @@ export const EventForm = ({
       date: "",
       time: "",
       location: "",
-      price: "",
-      available_tickets: "",
     },
   });
 
@@ -39,7 +36,6 @@ export const EventForm = ({
         <BasicInfoFields form={form} />
         <DateTimeFields form={form} />
         <LocationField form={form} />
-        <TicketingFields form={form} />
         
         {showImageField && (
           <ImageUploadField helperText={imageFieldHelperText} />

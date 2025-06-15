@@ -36,8 +36,9 @@ const EditEvent = () => {
     mutationFn: async (data: EventFormData & { image?: string }) => {
       const updateData = {
         ...data,
-        price: parseFloat(data.price),
-        available_tickets: parseInt(data.available_tickets),
+        // Manter os valores existentes de price e available_tickets para compatibilidade
+        price: event?.price || 0,
+        available_tickets: event?.available_tickets || 0,
       };
 
       const { error } = await supabase
@@ -49,7 +50,6 @@ const EditEvent = () => {
     },
     onSuccess: () => {
       toast.success("Evento atualizado com sucesso!");
-      // Não navegar automaticamente para permitir gerenciar lotes
     },
     onError: (error) => {
       toast.error("Erro ao atualizar evento");
@@ -134,8 +134,6 @@ const EditEvent = () => {
               date: event.date,
               time: event.time,
               location: event.location,
-              price: event.price.toString(),
-              available_tickets: event.available_tickets.toString(),
             }}
             isSubmitting={updateEventMutation.isPending}
             submitText={updateEventMutation.isPending ? "Atualizando evento..." : "Atualizar Evento"}

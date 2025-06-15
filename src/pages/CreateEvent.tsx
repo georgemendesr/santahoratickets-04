@@ -24,9 +24,7 @@ export default function CreateEvent() {
     startTime: "",
     endDate: "",
     endTime: "",
-    location: "",
-    price: "",
-    availableTickets: ""
+    location: ""
   });
   
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -67,7 +65,10 @@ export default function CreateEvent() {
       // Simular delay de salvamento
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success("Evento criado com sucesso!");
+      toast.success("Evento criado com sucesso! Agora configure os lotes de ingressos.");
+      
+      // Simular redirecionamento para página de lotes do evento criado
+      // navigate(`/admin/lotes?event=${eventId}`);
       navigate("/eventos");
     } catch (error) {
       toast.error("Erro ao criar evento");
@@ -96,7 +97,7 @@ export default function CreateEvent() {
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Criar Evento</h1>
                 <p className="text-muted-foreground">
-                  Configure um novo evento para sua plataforma
+                  Configure um novo evento. Após salvá-lo, você poderá configurar os lotes de ingressos.
                 </p>
               </div>
             </div>
@@ -174,30 +175,6 @@ export default function CreateEvent() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="price">Preço (R$)</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="availableTickets">Ingressos Disponíveis</Label>
-                      <Input
-                        id="availableTickets"
-                        type="number"
-                        value={formData.availableTickets}
-                        onChange={(e) => setFormData({ ...formData, availableTickets: e.target.value })}
-                        placeholder="100"
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <Label>Imagem do Evento (Cartaz) *</Label>
                     <div className="mt-2">
@@ -242,6 +219,14 @@ export default function CreateEvent() {
                     </div>
                   </div>
 
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">📋 Próximo Passo</h4>
+                    <p className="text-sm text-blue-700">
+                      Após salvar o evento, você será redirecionado para configurar os <strong>lotes de ingressos</strong> 
+                      onde poderá definir preços, quantidades e períodos de venda.
+                    </p>
+                  </div>
+
                   <div className="flex justify-end gap-4">
                     <Button
                       type="button"
@@ -254,7 +239,7 @@ export default function CreateEvent() {
                       type="submit"
                       disabled={isSubmitting || !formData.title || !formData.startDate || !formData.startTime}
                     >
-                      {isSubmitting ? "Salvando..." : "Salvar Evento"}
+                      {isSubmitting ? "Salvando..." : "Salvar e Configurar Lotes"}
                     </Button>
                   </div>
                 </form>

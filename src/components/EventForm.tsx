@@ -20,8 +20,6 @@ const schema = z.object({
   date: z.string().min(1, "A data é obrigatória"),
   time: z.string().min(1, "O horário é obrigatório"),
   location: z.string().min(1, "O local é obrigatório"),
-  price: z.string().min(1, "O preço é obrigatório"),
-  available_tickets: z.string().min(1, "A quantidade de ingressos é obrigatória"),
 });
 
 export type EventFormData = z.infer<typeof schema>;
@@ -51,8 +49,6 @@ export const EventForm = ({
       date: "",
       time: "",
       location: "",
-      price: "",
-      available_tickets: "",
     },
   });
 
@@ -133,47 +129,6 @@ export const EventForm = ({
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Preço do ingresso</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="available_tickets"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Quantidade de ingressos</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder="100"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
         {showImageField && (
           <div className="space-y-2">
