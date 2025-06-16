@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
-import { Menu, Home, Calendar, Star, Gift, Users, LogOut, User, Ticket, Settings, BarChart3 } from "lucide-react";
+import { Menu, Home, Calendar, Star, Gift, Users, LogOut, User, Ticket, Settings, BarChart3, DollarSign } from "lucide-react";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
@@ -31,10 +31,10 @@ export function MobileNavigation() {
   const adminNavItems = [
     { to: "/", icon: Home, label: "Início" },
     { to: "/admin", icon: Settings, label: "Dashboard Admin" },
-    { to: "/eventos", icon: Calendar, label: "Eventos" },
+    { to: "/eventos", icon: Calendar, label: "Gerenciar Eventos" },
     { to: "/admin/usuarios", icon: Users, label: "Usuários" },
     { to: "/admin/relatorios", icon: BarChart3, label: "Relatórios" },
-    { to: "/admin/recompensas", icon: Gift, label: "Recompensas" },
+    { to: "/admin/financeiro", icon: DollarSign, label: "Financeiro" },
   ];
 
   const navItems = isAdmin ? adminNavItems : userNavItems;
@@ -59,13 +59,17 @@ export function MobileNavigation() {
             <div className="p-6 border-b">
               <Link 
                 to="/" 
-                className="text-xl font-bold text-primary"
+                className="flex items-center gap-2"
                 onClick={() => setOpen(false)}
               >
-                EventManager
+                <img 
+                  src="/lovable-uploads/0791f14f-3770-44d6-8ff3-1e714a1d1243.png"
+                  alt="Santa Hora"
+                  className="h-8"
+                />
               </Link>
               {isAdmin && (
-                <p className="text-xs text-muted-foreground mt-1">Painel Administrativo</p>
+                <p className="text-xs text-muted-foreground mt-2">Painel Administrativo</p>
               )}
             </div>
             

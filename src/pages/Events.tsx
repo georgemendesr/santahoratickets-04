@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Calendar, MapPin, Users } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, Calendar, MapPin, Users, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 
@@ -18,15 +19,23 @@ const Events = () => {
   const { session } = useAuth();
   const { isAdmin } = useRole(session);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: events, isLoading } = useQuery({
-    queryKey: ["events"],
+    queryKey: ["events", isAdmin],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("status", "active")
-        .order("date", { ascending: true });
+      let query = supabase.from("events").select("*");
+      
+      // Para usuários comuns: apenas eventos ativos e futuros
+      if (!isAdmin) {
+        const today = new Date().toISOString().split('T')[0];
+        query = query
+          .eq("status", "active")
+          .gte("date", today);
+      }
+      
+      // Para admins: todos os eventos
+      const { data, error } = await query.order("date", { ascending: true });
 
       if (error) throw error;
       return data;
@@ -45,11 +54,25 @@ const Events = () => {
     }
   });
 
-  const filteredEvents = events?.filter(event =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.location?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Filtrar eventos com base na busca e status (para admins)
+  const filteredEvents = events?.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!isAdmin) return matchesSearch;
+    
+    // Filtros para admin
+    if (statusFilter === "all") return matchesSearch;
+    if (statusFilter === "active") return matchesSearch && event.status === "active";
+    if (statusFilter === "draft") return matchesSearch && event.status === "draft";
+    if (statusFilter === "ended") {
+      const today = new Date().toISOString().split('T')[0];
+      return matchesSearch && event.date < today;
+    }
+    
+    return matchesSearch;
+  }) || [];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
@@ -82,13 +105,28 @@ const Events = () => {
     return eventBatches.reduce((total, batch) => total + batch.available_tickets, 0);
   };
 
+  const getEventStatus = (event: any) => {
+    const today = new Date().toISOString().split('T')[0];
+    const eventBatches = getEventBatches(event.id);
+    const totalTickets = getTotalTickets(eventBatches);
+    
+    if (event.date < today) return { label: "Encerrado", variant: "secondary" as const };
+    if (totalTickets === 0) return { label: "Esgotado", variant: "destructive" as const };
+    if (event.status === "draft") return { label: "Rascunho", variant: "outline" as const };
+    return { label: "Disponível", variant: "default" as const };
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Eventos</h1>
-            <p className="text-muted-foreground">Descubra os melhores eventos próximos a você</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              {isAdmin ? "Gerenciar Eventos" : "Eventos"}
+            </h1>
+            <p className="text-muted-foreground">
+              {isAdmin ? "Gerencie todos os eventos da plataforma" : "Descubra os melhores eventos próximos a você"}
+            </p>
           </div>
           
           {isAdmin && (
@@ -99,7 +137,7 @@ const Events = () => {
           )}
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -109,6 +147,23 @@ const Events = () => {
               className="pl-10 py-3"
             />
           </div>
+          
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="active">Ativos</SelectItem>
+                  <SelectItem value="draft">Rascunhos</SelectItem>
+                  <SelectItem value="ended">Encerrados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
@@ -141,6 +196,7 @@ const Events = () => {
               const eventBatches = getEventBatches(event.id);
               const minPrice = getMinPrice(eventBatches);
               const totalTickets = getTotalTickets(eventBatches);
+              const status = getEventStatus(event);
               
               return (
                 <Card 
@@ -164,15 +220,9 @@ const Events = () => {
                       <CardTitle className="text-lg sm:text-xl line-clamp-2 group-hover:text-primary transition-colors">
                         {event.title}
                       </CardTitle>
-                      {totalTickets > 0 ? (
-                        <Badge variant="default" className="shrink-0">
-                          Disponível
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="shrink-0">
-                          Esgotado
-                        </Badge>
-                      )}
+                      <Badge variant={status.variant} className="shrink-0">
+                        {status.label}
+                      </Badge>
                     </div>
                     
                     <div className="space-y-2 text-sm text-muted-foreground">
@@ -211,7 +261,7 @@ const Events = () => {
                       </div>
                       
                       <Button size="sm" className="touch-manipulation">
-                        Ver Detalhes
+                        {isAdmin ? "Gerenciar" : "Ver Detalhes"}
                       </Button>
                     </div>
                   </CardContent>

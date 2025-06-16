@@ -16,9 +16,13 @@ export default function Index() {
     queryKey: ["events"],
     queryFn: async () => {
       try {
+        const today = new Date().toISOString().split('T')[0];
+        
         const { data, error } = await supabase
           .from("events")
           .select("*")
+          .eq("status", "active")
+          .gte("date", today)
           .order("date", { ascending: true });
 
         if (error) throw error;
